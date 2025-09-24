@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -31,9 +31,8 @@ const MachineryShowcase = () => {
     label: string;
     imageSrc: string;
   };
-  // 8 segments with images representing different machinery types
   const segments: Segment[] = [
-    { id: 1, label: "Printing", imageSrc: "/images/technology/7-1_2160.jpg" },
+    { id: 1, label: "Printing", imageSrc: "/images/technology/7-1.jpg" },
     { id: 2, label: "Cutting", imageSrc: "/images/technology/tpp-01.png" },
     { id: 3, label: "Die Cut", imageSrc: "/images/technology/tpp-02.png" },
     { id: 4, label: "Laminate", imageSrc: "/images/aboutus/Endeavor_1.png" },
@@ -159,88 +158,29 @@ const MachineryShowcase = () => {
               <div className="absolute w-80 h-80 lg:w-96 lg:h-96 rounded-full bg-gradient-to-br from-purple-100/50 to-blue-100/50 blur-2xl animate-pulse"></div>
 
               {/* Main Circle Container */}
-              <div className="relative w-[28.8rem] h-[28.8rem] lg:w-[36rem] lg:h-[36rem]">
-                {/* Pizza-style Segments */}
-                <svg
-                  className="absolute inset-0 w-full h-full animate-scale-in"
-                  viewBox="0 0 100 100">
-                  <defs>
-                    {segments.map((segment, index) => (
-                      <clipPath
-                        id={`segment-clip-${segment.id}`}
-                        key={segment.id}>
-                        <path d={createSegmentPath(index)} />
-                      </clipPath>
-                    ))}
-                  </defs>
+              {/* Center - Circular Icon Display */}
+              <div className="relative flex items-center justify-center py-8 lg:py-0">
+                {/* Outer Glow Effect */}
+                <div className="absolute w-80 h-80 lg:w-96 lg:h-96 rounded-full bg-gradient-to-br from-purple-100/50 to-blue-100/50 blur-2xl animate-pulse"></div>
 
-                  {segments.map((segment, index) => {
-                    const path = createSegmentPath(index);
-                    const isHovered = hoveredSegment === segment.id;
+                {/* Main Circle Container */}
+                <div className="relative w-[28.8rem] h-[28.8rem] lg:w-[36rem] lg:h-[36rem]">
+                  {/* Main Circular Image */}
+                  <img
+                    src="/images/technology/machinery-circle.png"
+                    alt="Machinery Showcase"
+                    className="absolute inset-0 w-full h-full object-contain animate-scale-in"
+                  />
 
-                    return (
-                      <g
-                        key={segment.id}
-                        className="cursor-pointer"
-                        onMouseEnter={() => setHoveredSegment(segment.id)}
-                        onMouseLeave={() => setHoveredSegment(null)}>
-                        <image
-                          href={segment.imageSrc}
-                          x="0"
-                          y="0"
-                          width="100"
-                          height="100"
-                          clipPath={`url(#segment-clip-${segment.id})`}
-                          preserveAspectRatio="xMidYMid slice"
-                        />
-                        <path
-                          d={path}
-                          fill="rgba(255, 255, 255, 0.65)"
-                          opacity={isHovered ? 0.35 : 0.55}
-                          style={{ transition: "opacity 0.3s ease" }}
-                        />
-                        <path
-                          d={path}
-                          fill="none"
-                          stroke="white"
-                          strokeWidth="0.8"
-                        />
-                      </g>
-                    );
-                  })}
-
-                  {/* White separator lines */}
-                  {[...Array(8)].map((_, i) => {
-                    const angle = ((i * 45 - 90) * Math.PI) / 180;
-                    return (
-                      <line
-                        key={i}
-                        x1={50 + 25 * Math.cos(angle)}
-                        y1={50 + 25 * Math.sin(angle)}
-                        x2={50 + 50 * Math.cos(angle)}
-                        y2={50 + 50 * Math.sin(angle)}
-                        stroke="white"
-                        strokeWidth="2"
-                      />
-                    );
-                  })}
-                </svg>
-
-                {/* Center Logo */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-24 h-24 lg:w-28 lg:h-28 bg-white rounded-2xl shadow-xl flex items-center justify-center transform hover:scale-110 transition-transform duration-300">
-                    <span className="text-4xl lg:text-5xl font-bold text-red-500">
-                      TPP
-                    </span>
+                  {/* Center Logo */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-24 h-24 lg:w-28 lg:h-28 bg-white rounded-2xl shadow-xl flex items-center justify-center transform hover:scale-110 transition-transform duration-300">
+                      <span className="text-4xl lg:text-5xl font-bold text-red-500">
+                        TPP
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Hover Label */}
-                {hoveredSegment && (
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-3 py-1 rounded-full text-sm animate-fade-in whitespace-nowrap">
-                    {segments.find((s) => s.id === hoveredSegment)?.label}
-                  </div>
-                )}
               </div>
             </div>
 

@@ -105,7 +105,7 @@ const QCEquipmentDashboard = () => {
       {/* Header */}
       <div className="mb-12 flex justify-center">
         <h1 className="text-3xl font-bold text-gray-800 mb-2 inline-block pb-1 border-b-4 border-red-600 text-center">
-          การตรวจคุณภาพ
+          การควบคุมคุณภาพ
         </h1>
       </div>
 
