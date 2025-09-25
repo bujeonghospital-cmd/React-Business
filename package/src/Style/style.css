@@ -976,34 +976,30 @@ body {
   content: "▲";
 }
 
-/* ลูกศรโปร่งใสสำหรับลิงก์ปกติ (จัดแนวให้กว้างเท่ากัน) */
 .drawer-nav > div > .drawer-item::after {
   content: "▼";
-  opacity: 0; /* มองไม่เห็น แต่กันระยะไว้ */
+  opacity: 0;
   margin-left: 0.5rem;
   font-size: 0.9em;
 }
 
-/* === ไฮไลต์แบบ "เม็ดแคปซูล" หลังข้อความ โดยไม่ทำให้กว้างขึ้น === */
 .drawer-nav > div > .drawer-item::before,
 .drawer-details > summary::before {
   content: "";
   position: absolute;
-  /* ขยายพื้นหลังรอบข้อความเล็กน้อย แต่ไม่เพิ่มความกว้างจริงขององค์ประกอบ */
   left: -10px;
   right: -10px;
   top: -6px;
   bottom: -6px;
-  background: #eef5fb; /* ฟ้าอ่อนแบบในภาพ */
-  border-radius: 999px; /* มุมโค้งมาก ๆ */
+  background: #eef5fb;
+  border-radius: 999px;
   opacity: 0;
   transform: scale(0.98);
   transition: opacity 0.15s ease, transform 0.15s ease;
-  pointer-events: none; /* ไม่บังการคลิก */
-  z-index: -1; /* อยู่หลังตัวอักษร */
+  pointer-events: none;
+  z-index: -1;
 }
 
-/* แสดงไฮไลต์เมื่อ 'ชี้เมาส์' หรือ 'โฟกัส' */
 .drawer-nav > div > .drawer-item:hover::before,
 .drawer-details > summary:hover::before,
 .drawer-nav > div > .drawer-item:focus-visible::before,
@@ -1012,13 +1008,11 @@ body {
   transform: none;
 }
 
-/* สีตัวอักษรตอนชี้ (โทนแดงเข้ม) */
 .drawer-nav > div > .drawer-item:hover,
 .drawer-details > summary:hover {
   color: #b91c1c;
 }
 
-/* === จุดนำหน้ารายการย่อย (ใช้ของเดิมได้) === */
 .drawer-sub .drawer-item {
   position: relative;
   padding-left: 1.25rem;
@@ -1448,11 +1442,10 @@ img {
   }
 }
 
-/* ให้ภาพในการ์ดยืดเต็มกล่อง โดยไม่ทำลายกล่องเดิม */
 .ir-card {
-  position: relative; /* เรียงชั้นภาพให้ถูกต้อง */
-  overflow: hidden; /* ตัดเนื้อหาที่ล้น และรักษา border-radius ของการ์ด */
-  border-radius: 16px; /* ยืนยันค่ามุมให้แน่นอน (ตรงกับ JSX) */
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
 }
 
 .ir-card img {
@@ -1476,13 +1469,11 @@ img {
   transition: opacity 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
-/* เผื่อมีกรอบ/เงา ต้องไม่ให้ภาพไปทับ */
 .ir-card > .pointer-events-none,
 .ir-card > .overlay {
   z-index: 20;
 }
 
-/* หากต้องการให้ภาพเคลื่อน/สเกลนุ่ม ๆ ขณะโฮเวอร์ (ไม่บังคับ) */
 .ir-card:hover img.z-10,
 .ir-card:focus-within img.z-10 {
   transform: scale(1.02);
