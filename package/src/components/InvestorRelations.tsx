@@ -129,7 +129,7 @@ export default function InvestorRelations() {
         style={motionVars}>
         <div className="mx-auto w-full max-w-[1400px] px-4">
           <h2 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
-            minimally
+            นักลงทุนสัมพันธ์
           </h2>
 
           <div className="mt-6 md:mt-8" />

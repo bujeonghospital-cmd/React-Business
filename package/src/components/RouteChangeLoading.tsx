@@ -58,14 +58,12 @@ export default function RouteChangeLoading({
 
     scheduleHide();
 
-    // cleanup ต้องเป็นฟังก์ชัน
     return () => {
       if (timer.current) {
         window.clearTimeout(timer.current);
         timer.current = null;
       }
     };
-    // ใช้ .toString() เพื่อให้ effect รันเมื่อ query เปลี่ยน
   }, [pathname, searchParams?.toString(), minDuration]);
 
   return null;
