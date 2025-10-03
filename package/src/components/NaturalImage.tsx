@@ -1,4 +1,6 @@
-"use client";
+import ScaledCanvas from "./ScaledCanvas";
+("use client");
+import React from "react";
 
 import Image from "next/image";
 import clsx from "clsx";
@@ -21,18 +23,22 @@ export default function NaturalImage({
   bleed = false,
 }: NaturalImageProps) {
   return (
-    <div className={clsx(bleed ? "w-screen" : "w-full")}>
-      <div className={clsx("mx-auto", "max-w-[2048px]")}>
-        <Image
-          src={src}
-          width={width}
-          height={height}
-          alt={alt}
-          className={clsx("block w-full h-auto", className)}
-          sizes={bleed ? "100vw" : "(min-width:1024px) 1024px, 100vw"}
-          priority
-        />
+    <ScaledCanvas>
+      (
+      <div className={clsx(bleed ? "w-screen" : "w-full")}>
+        <div className={clsx("mx-auto", "max-w-[2048px]")}>
+          <Image
+            src={src}
+            width={width}
+            height={height}
+            alt={alt}
+            className={clsx("block w-full h-auto", className)}
+            sizes={bleed ? "100vw" : "(min-width:1024px) 1024px, 100vw"}
+            priority
+          />
+        </div>
       </div>
-    </div>
+      )
+    </ScaledCanvas>
   );
 }
