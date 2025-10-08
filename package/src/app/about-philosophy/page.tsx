@@ -67,7 +67,7 @@ export default function AboutPhilosophy() {
             </p>
           </div>
         </section>
-        <br />
+        <br className="flex flex-col gap-[16px]  [&>*]:!my-0"></br>
 
         {/* ส่วนล่าง */}
         <section className="relative isolate w-full overflow-hidden">
