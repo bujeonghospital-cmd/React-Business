@@ -55,7 +55,7 @@ export default function InvestorFinancialsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white mt-5">
       {/* Hero Section */}
       <section className="relative h-[400px] bg-gradient-to-r from-blue-50 to-blue-100 overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
