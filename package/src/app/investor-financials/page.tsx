@@ -453,110 +453,13 @@ export default function InvestorFinancials() {
 
   return (
     <div className="min-h-screen bg-gray-50 mt-5">
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes slideInRight {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0) translateX(0);
-          }
-          50% {
-            transform: translateY(-20px) translateX(10px);
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out forwards;
-        }
-
-        .animate-slideInLeft {
-          animation: slideInLeft 0.5s ease-out forwards;
-        }
-
-        .animate-pulse-slow {
-          animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes gradientShift {
-          0%,
-          100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-      `}</style>
-
       {/* Hero Section - Placeholder for image */}
-      <div
-        className="relative h-80 bg-gradient-to-r from-teal-500 via-teal-600 to-teal-700 flex items-center justify-center overflow-hidden"
-        style={{
-          backgroundSize: "200% 200%",
-          animation: "gradientShift 10s ease infinite",
-        }}
-      >
+      <div className="relative h-80 bg-gradient-to-r from-teal-500 via-teal-600 to-teal-700 flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-black bg-opacity-30" />
 
-        {/* Animated background particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white opacity-10"
-              style={{
-                width: Math.random() * 100 + 50 + "px",
-                height: Math.random() * 100 + 50 + "px",
-                left: Math.random() * 100 + "%",
-                top: Math.random() * 100 + "%",
-                animation: `float ${
-                  Math.random() * 10 + 5
-                }s ease-in-out infinite`,
-                animationDelay: `${Math.random() * 5}s`,
-              }}
-            />
-          ))}
+        {/* Simplified background pattern */}
+        <div className="absolute inset-0 overflow-hidden opacity-20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.1)_0%,transparent_50%)]" />
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center">
