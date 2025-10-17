@@ -2,6 +2,7 @@
 import ScaledCanvas from "../../components/ScaledCanvas";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Menu,
   X,
@@ -86,7 +87,7 @@ const features = [
 ];
 
 const products = Array.from({ length: 9 }).map((_, i) => ({
-  id: i + 1,
+  id: String(i + 1),
   sku: `FIC${800000 + i}`,
   name: `ชามกระดาษ 8oz ลายบลู #${i + 1}`,
   priceText: `ราคาเริ่ม ${540 + i * 10} บาท/แพ็ค`,
@@ -173,8 +174,8 @@ function FeatureTile({ t }: { t: (typeof features)[number] }) {
 
 function ProductCard({ p }: { p: (typeof products)[number] }) {
   return (
-    <a
-      href="#"
+    <Link
+      href={`/products-pakku-packaging/${p.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
     >
       <div className="aspect-square w-full overflow-hidden bg-white">
@@ -191,7 +192,7 @@ function ProductCard({ p }: { p: (typeof products)[number] }) {
         </div>
         <div className="mt-2 text-sm text-emerald-700">{p.priceText}</div>
       </div>
-    </a>
+    </Link>
   );
 }
 
