@@ -7,23 +7,23 @@ const MachineryShowcase = () => {
   const prefersReducedMotion = useReducedMotion();
 
   const leftMachines = [
-    "Sample Box Cutting Machine",
-    "Computer-to-Plate (CTP)",
-    "5-Colors Printing Machine",
-    "6-Colors Printing Machine",
-    "8-Colors Printing Machine",
+    "Sample Box Cutting Machine (1 unit)",
+    "Computer-to-Plate (CTP) (1 unit)",
+    "5-Colors Printing Machine (1 unit)",
+    "6-Colors Printing Machine (2 units)",
+    "8-Colors Printing Machine (1 unit)",
     "Corrugating Machine (B flute, E flute)",
-    "Laminating Machine",
+    "Laminating Machine (2 units)",
   ];
 
   const rightMachines = [
-    "Die Cutting Machine",
-    "Paper Stripping Machine",
-    "Auto Gluing Machine",
-    "Semi Auto Gluing Machine",
-    "Hologram Sticker Machine",
-    "Window Patching Machine",
-    "Food Packaging Forming Machine",
+    "Die Cutting Machine (4 units)",
+    "Paper Stripping Machine (1 unit)",
+    "Auto Gluing Machine (5 units)",
+    "Semi Auto Gluing Machine (2 units)",
+    "Hologram Sticker Machine (1 unit, 2 channels)",
+    "Window Patching Machine (2 units)",
+    "Food Forming Machine (1 Unit)",
   ];
 
   type Segment = {
@@ -97,9 +97,9 @@ const MachineryShowcase = () => {
       </div> */}
 
       {/* Main Content Container */}
-      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8 mt-6">
+      <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-12 md:py-16 lg:py-20">
         <div className="max-w-7xl w-full">
-          <div className="mx-auto mb-8 max-w-3xl text-center md:mb-12 ">
+          <div className="mx-auto mb-12 max-w-3xl text-center md:mb-16 lg:mb-20">
             <motion.h2
               initial={
                 prefersReducedMotion
@@ -109,7 +109,7 @@ const MachineryShowcase = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
-              className="text-2xl font-extrabold tracking-tight text-neutral-900 sm:text-3xl md:text-4xl inline-block border-b-4 border-red-600 "
+              className="text-3xl font-extrabold tracking-tight text-neutral-900 sm:text-4xl md:text-5xl inline-block border-b-[6px] border-red-600 pb-2"
             >
               {"ศักยภาพเครื่องจักรของเรา"}
             </motion.h2>
@@ -125,7 +125,7 @@ const MachineryShowcase = () => {
                 duration: prefersReducedMotion ? 0 : 0.6,
                 delay: prefersReducedMotion ? 0 : 0.05,
               }}
-              className="mt-2 text-sm leading-relaxed text-neutral-600 sm:text-base"
+              className="mt-4 text-base leading-relaxed text-neutral-600 sm:text-lg md:text-xl font-medium"
             >
               {
                 "ครบทุกกระบวนการ ตั้งแต่ก่อนพิมพ์ พิมพ์ ไปจนถึงหลังพิมพ์เพื่อคุณภาพและความรวดเร็วที่ไว้วางใจ"
@@ -134,7 +134,7 @@ const MachineryShowcase = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-x-16 xl:gap-x-24 2xl:gap-x-32 items-center">
             {/* Left Column - Machine List */}
-            <div className="space-y-3 lg:space-y-4 lg:pr-6 xl:pr-10 2xl:pr-14">
+            <div className="space-y-4 lg:space-y-5 lg:pr-6 xl:pr-10 2xl:pr-14">
               {leftMachines.map((machine, index) => (
                 <div
                   key={index}
@@ -144,12 +144,14 @@ const MachineryShowcase = () => {
                     animationFillMode: "both",
                   }}
                 >
-                  <div className="relative bg-white/80 backdrop-blur-sm px-4 py-3 lg:px-6 lg:py-4 rounded-l-full shadow-md hover:shadow-lg transform hover:-translate-x-2 transition-all duration-300 border-r-4 border-transparent hover:border-red-400">
-                    <div className="flex items-center justify-between">
-                      <div className="text-[16px] text-gray-700 font-medium group-hover:text-red-600 transition-colors">
+                  <div className="relative bg-gradient-to-r from-white via-white/95 to-white/80 backdrop-blur-sm px-5 py-4 lg:px-7 lg:py-5 rounded-l-full shadow-lg hover:shadow-2xl transform hover:-translate-x-3 hover:scale-[1.02] transition-all duration-300 border-r-[5px] border-transparent hover:border-red-500 group-hover:bg-gradient-to-r group-hover:from-red-50/30 group-hover:via-white/95 group-hover:to-white/80">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-[17px] lg:text-[18px] text-gray-800 font-semibold group-hover:text-red-600 transition-colors leading-none">
                         {machine}
                       </div>
-                      <div className="w-2 h-2 bg-gray-300 rounded-full group-hover:bg-red-400 transition-colors"></div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-gray-400 rounded-full group-hover:bg-red-500 transition-all group-hover:shadow-lg group-hover:shadow-red-500/50 flex-shrink-0"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -212,7 +214,7 @@ const MachineryShowcase = () => {
             </div>
 
             {/* Right Column - Machine List */}
-            <div className="space-y-3 lg:space-y-4 lg:pl-6 xl:pl-10 2xl:pl-14">
+            <div className="space-y-4 lg:space-y-5 lg:pl-6 xl:pl-10 2xl:pl-14">
               {rightMachines.map((machine, index) => (
                 <div
                   key={index}
@@ -222,10 +224,12 @@ const MachineryShowcase = () => {
                     animationFillMode: "both",
                   }}
                 >
-                  <div className="relative bg-white/80 backdrop-blur-sm px-4 py-3 lg:px-6 lg:py-4 rounded-r-full shadow-md hover:shadow-lg transform hover:translate-x-2 transition-all duration-300 border-l-4 border-transparent hover:border-red-400">
-                    <div className="flex items-center justify-between">
-                      <div className="w-2 h-2 bg-gray-300 rounded-full group-hover:bg-red-400 transition-colors"></div>
-                      <div className="text-[16px] text-gray-700 font-medium text-right group-hover:text-red-600 transition-colors">
+                  <div className="relative bg-gradient-to-l from-white via-white/95 to-white/80 backdrop-blur-sm px-5 py-4 lg:px-7 lg:py-5 rounded-r-full shadow-lg hover:shadow-2xl transform hover:translate-x-3 hover:scale-[1.02] transition-all duration-300 border-l-[5px] border-transparent hover:border-red-500 group-hover:bg-gradient-to-l group-hover:from-red-50/30 group-hover:via-white/95 group-hover:to-white/80">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-gray-400 rounded-full group-hover:bg-red-500 transition-all group-hover:shadow-lg group-hover:shadow-red-500/50 flex-shrink-0"></div>
+                      </div>
+                      <div className="text-[17px] lg:text-[18px] text-gray-800 font-semibold text-right group-hover:text-red-600 transition-colors leading-none">
                         {machine}
                       </div>
                     </div>

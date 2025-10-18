@@ -86,14 +86,139 @@ const features = [
   },
 ];
 
-const products = Array.from({ length: 9 }).map((_, i) => ({
-  id: String(i + 1),
-  sku: `FIC${800000 + i}`,
-  name: `ชามกระดาษ 8oz ลายบลู #${i + 1}`,
-  priceText: `ราคาเริ่ม ${540 + i * 10} บาท/แพ็ค`,
-  img: "/images/pakku-packaging/dev_291.png",
-}));
-
+// const products = Array.from({ length: 9 }).map((_, i) => ({
+//   id: String(i + 1),
+//   sku: `FIC${800000 + i}`,
+//   name: `ชามกระดาษ 8oz ลายบลู #${i + 1}`,
+//   priceText: `ราคาเริ่ม ${540 + i * 10} บาท/แพ็ค`,
+//   img: "/images/pakku-packaging/dev_291.png",
+// }));
+const products = [
+  {
+    id: "1",
+    sku: "FOOD TRAY",
+    name: `ถาดใส่อาหาร `,
+    size: `Size L 650 ml`,
+    Detail: `ขนาด 9.5x19x4 cm`,
+    priceText: `ราคาเริ่ม 150 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/1.png",
+  },
+  {
+    id: "2",
+    sku: "FOOD TRAY",
+    name: `ถาดใส่อาหาร`,
+    size: `Size S 180 ml`,
+    Detail: `ขนาด 11x11x4 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/2.png",
+  },
+  {
+    id: "3",
+    sku: "SNACK BOX",
+    name: `Snack Box`,
+    size: `Size M `,
+    Detail: `ขนาด 13x13x6 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/3.png",
+  },
+  {
+    id: "4",
+    sku: "BAKERY BOX",
+    name: `Bakery Box`,
+    size: `Size S `,
+    Detail: `ขนาด 14x14x4 cm`,
+    priceText: `ราคาเริ่ม 100 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/13.png",
+  },
+  {
+    id: "5",
+    sku: "CUP SLEEVE",
+    name: `สายคาดแก้ว`,
+    size: `Size L 16-22 oz`,
+    priceText: `ราคาเริ่ม 80 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/14.png",
+  },
+  {
+    id: "6",
+    sku: "CUP NOODLES",
+    name: `ถ้วยอาหาร`,
+    Detail: `ขนาด 9x10.5x3 cm`,
+    priceText: `ราคาเริ่ม 80 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/12.png",
+  },
+  {
+    id: "7",
+    sku: "กล่องเค้กสามเหลี่ยม",
+    name: `กล่องเค้กสามเหลี่ยม`,
+    Detail: `ขนาด 9x13.8x9 cm`,
+    priceText: `ราคาเริ่ม 120 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/9.png",
+  },
+  {
+    id: "8",
+    sku: "กล่องเค้กลิ้นชัก",
+    name: `กล่องเค้กลิ้นชัก`,
+    Detail: `ขนาด 8.7x17x6 cm`,
+    priceText: `ราคาเริ่ม 100 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/5.png",
+  },
+  {
+    id: "9",
+    sku: "กระดาษลูกฟูก E-B",
+    name: `กระดาษลูกฟูก E-B`,
+    Detail: `ขนาด 38x40 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/10.png",
+  },
+  {
+    id: "10",
+    sku: "กล่องเอนกประสงค์",
+    name: `กล่องเอนกประสงค์`,
+    Detail: `ขนาด 10x7.2x6.5 cm`,
+    priceText: `ราคาเริ่ม 250 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/6.png",
+  },
+  {
+    id: "11",
+    sku: "กระดาษเอนกประสงค์",
+    name: `กระดาษเอนกประสงค์`,
+    Detail: `ขนาด 40x45 cm`,
+    priceText: `ราคาเริ่ม 300 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/10.png",
+  },
+  {
+    id: "12",
+    sku: "ซองเครป",
+    name: `ซองเครป`,
+    Detail: `ขนาด 14.5x20 cm`,
+    priceText: `ราคาเริ่ม 150 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/7.png",
+  },
+  {
+    id: "13",
+    sku: "กล่องเค้กหูหิ้ว",
+    name: `กล่องเค้กหูหิ้ว`,
+    Detail: `ขนาด 9.5x14.2x14 cm`,
+    priceText: `ราคาเริ่ม 180 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/4.png",
+  },
+  {
+    id: "14",
+    sku: "ถาดใส่แก้วกาแฟ",
+    name: `ถาดใส่แก้วกาแฟ`,
+    Detail: `ขนาด 9.3x19.5x3.2 cm`,
+    priceText: `ราคาเริ่ม 220 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/11.png",
+  },
+  {
+    id: "15",
+    sku: "กล่องเค้กสามเหลี่ยม",
+    name: `กล่องเค้กสามเหลี่ยม`,
+    Detail: `ขนาด 10x10x10 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/9.png",
+  },
+];
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-lg font-semibold tracking-tight text-slate-800 flex items-center gap-2">
@@ -190,6 +315,8 @@ function ProductCard({ p }: { p: (typeof products)[number] }) {
         <div className="mt-1 line-clamp-2 text-[15px] font-medium text-slate-800">
           {p.name}
         </div>
+        <div> {p.size}</div>
+        <div> {p.Detail}</div>
         <div className="mt-2 text-sm text-emerald-700">{p.priceText}</div>
       </div>
     </Link>

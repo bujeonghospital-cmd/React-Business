@@ -2,27 +2,32 @@
 import ScaledCanvas from "./ScaledCanvas";
 import React, { useEffect, useRef } from "react";
 import "animate.css";
+import Link from "next/link";
 
 const data = [
   {
     title: "ข้อมูลทางการเงิน",
     staticImg: "/images/Header/IR-screen-1-img.png",
     animatedImg: "/images/Header/IR-screen-1.gif",
+    href: "investor-financials",
   },
   {
     title: "ข้อมูลราคาหลักทรัพย์",
     staticImg: "/images/Header/IR-screen-2-img.png",
     animatedImg: "/images/Header/IR-screen-2.gif",
+    href: "/investor-stock-price",
   },
   {
     title: "ข้อมูลผู้ถือหุ้น",
     staticImg: "/images/Header/IR-screen-3-img.png",
     animatedImg: "/images/Header/IR-screen-3.gif",
+    href: "/investor-shareholders",
   },
   {
     title: "รายงานประจำปี",
     staticImg: "/images/Header/IR-screen-4-img.png",
     animatedImg: "/images/Header/IR-screen-4.gif",
+    href: "",
   },
 ];
 
@@ -175,7 +180,13 @@ export default function InvestorRelations() {
                   role="img"
                   aria-label={item.title}
                 />
-
+                <Link
+                  href={item.href}
+                  className="absolute inset-0 z-40"
+                  aria-label={`ไปยัง ${item.title}`}
+                >
+                  <span className="sr-only">{item.title}</span>
+                </Link>
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent z-20 opacity-0"
                   data-ani="fadeIn slow"

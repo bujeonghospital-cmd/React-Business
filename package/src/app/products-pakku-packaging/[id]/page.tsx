@@ -18,7 +18,7 @@ const productsData = [
   {
     id: "1",
     sku: "FIC800000",
-    name: "ชามกระดาษ 8oz ลายบลู #1",
+    name: "ถาดใส่อาหาร Size L 650 ml #1",
     description: "ชามกระดาษคุณภาพสูง",
     shortDesc: "อีนเตอร์ดิอลสำสุด",
     price: "540",

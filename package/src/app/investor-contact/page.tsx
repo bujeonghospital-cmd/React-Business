@@ -463,7 +463,7 @@ export default function InvestorContactPage() {
         </motion.div>
 
         {/* Contact Cards Grid */}
-        <motion.div
+        {/* <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
@@ -478,7 +478,7 @@ export default function InvestorContactPage() {
               <ContactCard key={index} {...person} />
             ))}
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Contact Form Section */}
         <ContactForm />
