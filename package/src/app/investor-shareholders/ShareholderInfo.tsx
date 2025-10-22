@@ -530,10 +530,10 @@ export default function ShareholderInfo() {
                 <PieChart data={MAJOR_SHAREHOLDERS} />
               </div>
 
-              {/* Legend/Table for Top 5 */}
+              {/* Legend/Table for All Shareholders */}
               <div className="flex-1 w-full max-w-md">
-                <div className="space-y-2">
-                  {MAJOR_SHAREHOLDERS.slice(0, 5).map((sh, index) => (
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                  {MAJOR_SHAREHOLDERS.map((sh, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between gap-4 p-3 hover:bg-red-50 rounded-lg transition-colors border-l-4"
@@ -754,9 +754,9 @@ function PieChart({ data }: PieChartProps) {
   const outerRadius = 180;
   const innerRadius = 100;
 
-  // Calculate cumulative percentages for pie slices (only top 5)
+  // Calculate cumulative percentages for pie slices (all shareholders)
   let cumulativePercentage = 0;
-  const slices = data.slice(0, 5).map((item, index) => {
+  const slices = data.map((item, index) => {
     const percentage = parseFloat(item.percentage);
     const startAngle = (cumulativePercentage / 100) * 360;
     cumulativePercentage += percentage;
@@ -953,10 +953,10 @@ function PieChart({ data }: PieChartProps) {
           ) : (
             <>
               <div className="text-3xl sm:text-4xl font-bold text-red-800">
-                TOP {data.slice(0, 5).length}
+                {data.length}
               </div>
               <div className="text-sm text-gray-600 mt-1">ผู้ถือหุ้น</div>
-              <div className="text-xs text-gray-500">รายใหญ่</div>
+              <div className="text-xs text-gray-500">ทั้งหมด</div>
             </>
           )}
         </div>
