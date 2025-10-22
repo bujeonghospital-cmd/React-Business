@@ -39,7 +39,7 @@ const sidebar = [
   {
     title: "HOT ITEM",
     icon: <Flame className="h-4 w-4" />,
-    items: ["ถาดกระดาษ รุ่นปังโบ"],
+    items: ["ถาดใส่อาหาร Size L 650 ml"],
   },
   {
     title: "สินค้าใหม่",
@@ -416,7 +416,7 @@ export default function PakkuCatalogPage() {
             <div className="mt-8 flex items-center justify-between gap-4">
               <Breadcrumb />
               <div className="hidden text-sm text-slate-500 md:block">
-                แสดง 9 รายการ
+                แสดง {products.length} รายการ
               </div>
             </div>
 

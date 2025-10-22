@@ -98,7 +98,7 @@ const MachineryShowcase = () => {
 
       {/* Main Content Container */}
       <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-12 md:py-16 lg:py-20">
-        <div className="max-w-7xl w-full">
+        <div className="max-w-12xl w-full">
           <div className="mx-auto mb-12 max-w-3xl text-center md:mb-16 lg:mb-20">
             <motion.h2
               initial={
