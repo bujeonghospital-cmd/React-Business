@@ -29,6 +29,7 @@
     "next": "^15.2.4",
     "next-auth": "^4.24.7",
     "next-themes": "^0.3.0",
+    "pdf-poppler": "^0.2.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.4.1",
