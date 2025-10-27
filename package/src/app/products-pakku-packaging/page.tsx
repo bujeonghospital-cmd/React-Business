@@ -20,18 +20,23 @@ import {
 const slides = [
   {
     id: 1,
-    src: "/images/pakku-packaging/packaging__1.png",
-    alt: "Video – Pakku Packaging 1",
+    src: "/images/pakku-packaging/banner/pakku_banner_1.png",
+    alt: "Banner – Pakku Packaging 1",
   },
   {
     id: 2,
-    src: "/images/pakku-packaging/packaging__2.png",
-    alt: "Video – Pakku Packaging 2",
+    src: "/images/pakku-packaging/banner/pakku_banner_2.png",
+    alt: "Banner – Pakku Packaging 2",
   },
   {
     id: 3,
-    src: "/images/pakku-packaging/packaging__3.png",
-    alt: "Video – Pakku Packaging 3",
+    src: "/images/pakku-packaging/banner/pakku_banner_3.png",
+    alt: "Banner – Pakku Packaging 3",
+  },
+  {
+    id: 4,
+    src: "/images/pakku-packaging/banner/pakku_banner_4.png",
+    alt: "Banner – Pakku Packaging 4",
   },
 ];
 
@@ -403,8 +408,8 @@ export default function PakkuCatalogPage() {
 
   return (
     <ScaledCanvas>
-      <div className="min-h-screen bg-neutral-50 text-slate-900">
-        <section className="relative isolate w-screen left-1/2 -ml-[50vw]">
+      <div className="min-h-screen bg-neutral-50 text-slate-900 py-5">
+        <section className="relative w-full overflow-hidden h-[100svh] py-5">
           <div className="relative h-[min(72vh,750px)]">
             {slides.map((s, i) => (
               <img

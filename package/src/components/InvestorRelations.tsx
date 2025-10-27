@@ -213,14 +213,15 @@ export default function InvestorRelations() {
             ))}
           </div>
 
-          <div className="flex justify-center mt-6">
-            <button
-              className="ir-btn ir-btn-glow opacity-0"
+          <div className="flex justify-center mt-6 ">
+            <a
+              href="/investor-financials"
+              className="ir-btn ir-btn-glow opacity-0 inline-block"
               data-ani="fadeInUp slow"
               style={{ animationDelay: "240ms" }}
             >
               ดูทั้งหมด
-            </button>
+            </a>
           </div>
         </div>
       </section>

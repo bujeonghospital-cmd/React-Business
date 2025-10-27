@@ -48,7 +48,7 @@ const CardItem: React.FC<CardItemProps> = ({
       }}
       onClick={handleCardClick}
     >
-      {/* Image */}
+      {/* Image - Using standard img tag for testing */}
       <div
         className="w-full mb-3 md:mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 relative"
         style={{ aspectRatio: "4/3", position: "relative", minHeight: "200px" }}
@@ -69,7 +69,7 @@ const CardItem: React.FC<CardItemProps> = ({
           <div className="flex items-center justify-center h-full bg-gray-200">
             <div className="text-center p-4">
               <p className="text-gray-500 text-sm mb-2">ไม่พบรูปภาพ</p>
-              <p className="text-gray-400 text-xs break-all">{image}</p>
+              <p className="text-gray-400 text-xs">{image}</p>
             </div>
           </div>
         )}

@@ -186,13 +186,13 @@ const OurCustomers: React.FC = () => {
       originalHeight: 574,
       ...calculateOptimalDimensions(1928, 574),
     },
-    {
-      name: "Karshine",
-      logo: "/images/logos/karshine.png",
-      originalWidth: 976,
-      originalHeight: 219,
-      ...calculateOptimalDimensions(976, 219),
-    },
+    // {
+    //   name: "Karshine",
+    //   logo: "/images/logos/karshine.png",
+    //   originalWidth: 976,
+    //   originalHeight: 219,
+    //   ...calculateOptimalDimensions(976, 219),
+    // },
     {
       name: "KPI",
       logo: "/images/logos/kpi.png",

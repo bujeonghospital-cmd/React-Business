@@ -78,7 +78,7 @@ export default function AboutPhilosophy() {
   return (
     <ScaledCanvas>
       <>
-        <section className="relative w-full overflow-hidden min-h-[55svh] md:min-h-[60svh] lg:min-h-[70svh]">
+        <section className="relative w-full overflow-hidden h-[100svh]">
           <Image
             src="/images/aboutus/vision_tpp_1.png"
             alt="Tree with kids"
@@ -86,17 +86,17 @@ export default function AboutPhilosophy() {
             className="absolute inset-0 -z-10 object-cover object-center"
             priority
           />
-          <div className="relative md:absolute md:right-6 lg:right-12 md:top-12 lg:top-16 mx-auto md:mx-0 md:ml-0 max-w-screen-md md:max-w-md lg:max-w-lg px-4 sm:px-6 md:pr-4 lg:pr-8 py-10 text-center md:text-right text-green-800">
-            <h2 className="my-heading sm:text-3xl mb-3 fs-3 text-end text-black fx-clip-reveal">
+          <div className="relative md:absolute md:right-6 lg:right-12 md:top-1/3 md:-translate-y-1/2 md:-translate-x-1/2 mx-auto md:mx-0 md:ml-0 max-w-screen-md md:max-w-md lg:max-w-lg px-4 sm:px-6 md:pr-4 lg:pr-8 py-10 text-center md:text-right ">
+            <div className="my-heading text-2xl md:text-4xl lg:text-5xl mb-3 text-start text-red-800 fx-clip-reveal">
               วิสัยทัศน์
               <span
                 aria-hidden
                 className="block fx-underline fx-underline-in mt-2 w-24 ml-auto"
               />
-            </h2>
+            </div>
 
             <p
-              className="mx-auto text-base sm:text-lg leading-relaxed break-words shadow-white-end custom-Charcoal-gray fx-subtle-in-up"
+              className="mx-auto text-base sm:text-lg leading-relaxed break-words shadow-white-end custom-Charcoal-gray fx-subtle-in-up text-start"
               style={{ animationDelay: "120ms" }}
             >
               เป็นผู้นำด้านธุรกิจการพิมพ์และบรรจุภัณฑ์กระดาษ

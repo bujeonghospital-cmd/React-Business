@@ -367,18 +367,19 @@ export default function Page() {
         <Video mounted={mounted} />
 
         <main className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 pb-16">
-          <div className="mt-2 sm:mt-6">
+          <div className="mt-0">
             <h2 className="sr-only">เปลี่ยนหมวด</h2>
             <nav
               aria-label="แถบหมวด"
-              className="sticky top-0 z-30 -mx-3 px-3 sm:static sm:mx-0 sm:px-0 bg-white/80 supports-[backdrop-filter]:bg-white/60 backdrop-blur border-b border-emerald-100"
+              className="sticky top-0 z-30 -mx-3 px-3 sm:static sm:mx-0 sm:px-0 bg-white/80 supports-[backdrop-filter]:bg-white/60 backdrop-blur border-b border-red-100"
               style={{
                 animation: mounted
                   ? "fadeInDown 0.6s ease-out 0.3s backwards"
                   : "none",
-              }}>
+              }}
+            >
               <div className="inline-flex min-w-full sm:min-w-0 items-center gap-1 sm:gap-2 whitespace-nowrap py-2">
-                <div className="inline-flex rounded-xl bg-emerald-50 p-1 ring-1 ring-emerald-200 w-full max-w-full overflow-x-auto">
+                <div className="inline-flex rounded-xl bg-red-50 p-1 ring-1 ring-red-200 w-full max-w-full overflow-x-auto">
                   {TABS.map((t, index) => {
                     const isActive = t.id === active;
                     return (
@@ -390,16 +391,17 @@ export default function Page() {
                         className={[
                           "tab-button px-3 py-2 text-sm rounded-lg transition flex-1 sm:flex-none",
                           isActive
-                            ? "active bg-white text-emerald-700 shadow-sm ring-1 ring-emerald-300"
-                            : "text-gray-600 hover:text-emerald-700 hover:bg-white/50",
+                            ? "active bg-white text-red-700 shadow-sm ring-1 ring-red-300"
+                            : "text-gray-600 hover:text-red-700 hover:bg-white/50",
                         ].join(" ")}
                         style={{
                           animationDelay: `${0.4 + index * 0.1}s`,
-                        }}>
+                        }}
+                      >
                         <span className="relative">
                           {t.label}
                           {isActive && (
-                            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full animate-scaleIn" />
+                            <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-gradient-to-r from-red-400 to-red-600 rounded-full animate-scaleIn" />
                           )}
                         </span>
                       </button>
@@ -411,22 +413,25 @@ export default function Page() {
           </div>
 
           <section
-            className={`mt-3 sm:mt-6 rounded-2xl border border-emerald-300/60 bg-white/70 p-2 sm:p-6 section-container ${
+            className={`mt-0 rounded-2xl border border-red-300/60 bg-white/70 p-2 sm:p-6 section-container ${
               isChanging ? "changing" : ""
-            }`}>
+            }`}
+          >
             <ul
               role="list"
               aria-live="polite"
-              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6">
+              className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4 md:gap-6"
+            >
               {visibleMembers.map((m, index) => (
                 <li
                   key={m.id}
-                  className="member-card group overflow-hidden rounded-2xl bg-white ring-1 ring-gray-200 transition-all duration-300 hover:shadow-xl hover:ring-2 hover:ring-emerald-300/50 hover:-translate-y-1 stagger-animation"
+                  className="member-card group overflow-hidden rounded-2xl bg-white ring-1 ring-gray-200 transition-all duration-300 hover:shadow-xl hover:ring-2 hover:ring-red-300/50 hover:-translate-y-1 stagger-animation"
                   style={
                     {
                       "--index": index,
                     } as React.CSSProperties
-                  }>
+                  }
+                >
                   <div className="relative bg-white overflow-hidden">
                     <div className="relative w-full pt-[125%] bg-white">
                       {m.image ? (
@@ -446,7 +451,7 @@ export default function Page() {
                         </div>
                       )}
                       {/* Hover Overlay Effect */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </div>
 
@@ -457,7 +462,7 @@ export default function Page() {
                       {m.name}
                     </p>
                     {m.role && (
-                      <p className="mt-0.5 text-[10px] sm:text-xs text-gray-600 relative z-10 transition-all duration-300 group-hover:text-emerald-700">
+                      <p className="mt-0.5 text-[10px] sm:text-xs text-gray-600 relative z-10 transition-all duration-300 group-hover:text-red-700">
                         {m.role}
                       </p>
                     )}
@@ -475,63 +480,63 @@ export default function Page() {
 
 function Video({ mounted }: { mounted: boolean }) {
   return (
-    <section className="relative w-full overflow-hidden">
-      <div className="relative w-full">
-        {/* ความสูงภาพพื้นหลัง */}
-        <div className="relative h-[40vh] sm:h-[50vh] lg:h-[60vh] xl:h-[640px]">
-          <div className="Video-image-parallax absolute inset-0">
-            <Image
-              src={Video_BG_URL}
-              alt="background"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-          </div>
-
-          {/* Animated gradient overlay */}
-          <div className="Video-bg-overlay absolute inset-0 bg-gradient-to-r from-white/85 via-white/60 to-transparent backdrop-blur-[1px]" />
-
-          {/* Animated pattern overlay */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: `radial-gradient(circle at 20% 50%, #10b981 0%, transparent 50%)`,
-              animation: mounted ? "pulse 4s ease-in-out infinite" : "none",
-            }}
+    <section className="relative w-full overflow-hidden py-0">
+      {/* ความสูงภาพพื้นหลัง */}
+      <div className="relative w-full overflow-hidden h-[100svh]">
+        <div className="Video-image-parallax absolute inset-0">
+          <Image
+            src={Video_BG_URL}
+            alt="background"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
           />
+        </div>
 
-          {/* วางคอนเทนต์ยึดมุมซ้ายบน */}
-          <div className="absolute inset-0 flex items-start justify-start">
-            <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
-              {/* ระยะห่างจากด้านบน */}
-              <div
-                className={`pt-8 sm:pt-12 lg:pt-20 xl:pt-24 Video-content ${
-                  mounted ? "mounted" : ""
-                }`}>
-                <h1 className="my-heading sm:text-[24px] md:text-[28px] font-extrabold leading-[1.2] tracking-tight text-emerald-700 relative inline-block">
-                  <span className="relative z-10">{Video_TITLE}</span>
-                  {/* Underline animation */}
-                  <span
-                    className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full"
-                    style={{
-                      width: mounted ? "100%" : "0",
-                      transition: "width 1s ease-out 0.5s",
-                    }}
-                  />
-                </h1>
+        {/* Animated gradient overlay */}
+        <div className="Video-bg-overlay absolute inset-0 bg-gradient-to-r from-white/85 via-white/60 to-transparent backdrop-blur-[1px]" />
 
-                <p
-                  className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-gray-700"
+        {/* Animated pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `radial-gradient(circle at 20% 50%, #10b981 0%, transparent 50%)`,
+            animation: mounted ? "pulse 4s ease-in-out infinite" : "none",
+          }}
+        />
+
+        {/* วางคอนเทนต์ยึดมุมซ้ายบน */}
+        <div className="absolute inset-0 flex items-start justify-start py-5">
+          <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
+            {/* ระยะห่างจากด้านบน */}
+            <div
+              className={`pt-8 sm:pt-12 lg:pt-20 xl:pt-24 Video-content ${
+                mounted ? "mounted" : ""
+              }`}
+            >
+              <h1 className="my-heading sm:text-[24px] md:text-[28px] font-extrabold leading-[1.2] tracking-tight text-red-700 relative inline-block">
+                <span className="relative z-10">{Video_TITLE}</span>
+                {/* Underline animation */}
+                <span
+                  className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-red-400 to-red-600 rounded-full"
                   style={{
-                    opacity: mounted ? 1 : 0,
-                    transform: mounted ? "translateY(0)" : "translateY(20px)",
-                    transition: "all 0.8s ease-out 0.8s",
-                  }}>
-                  {Video_DESC}
-                </p>
-              </div>
+                    width: mounted ? "100%" : "0",
+                    transition: "width 1s ease-out 0.5s",
+                  }}
+                />
+              </h1>
+
+              <p
+                className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-gray-700"
+                style={{
+                  opacity: mounted ? 1 : 0,
+                  transform: mounted ? "translateY(0)" : "translateY(20px)",
+                  transition: "all 0.8s ease-out 0.8s",
+                }}
+              >
+                {Video_DESC}
+              </p>
             </div>
           </div>
         </div>

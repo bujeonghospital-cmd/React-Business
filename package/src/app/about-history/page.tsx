@@ -268,7 +268,7 @@ function TimelineSection({
       <div className="container mx-auto px-4">
         {/* หัวข้อ */}
         <Reveal y={10}>
-          <h4 className="relative -top-[70px] text-center text-2xl md:text-3xl font-bold text-green-800 mb-8">
+          <h4 className="my-heading md:text-2xl mb-3 md:mb-4 text-center">
             พัฒนาการที่สำคัญ
           </h4>
         </Reveal>
@@ -286,13 +286,15 @@ function TimelineSection({
               (grouped[yr] || []).map((ev, idx) => (
                 <li
                   key={`${yr}-${idx}`}
-                  className="relative flex items-start pt-2 pb-4">
+                  className="relative flex items-start pt-2 pb-4"
+                >
                   {/* จุด + เส้นเชื่อม */}
                   <Reveal
                     as="span"
                     y={6}
                     delay={idx * 60}
-                    className="block flex-shrink-0">
+                    className="block flex-shrink-0"
+                  >
                     <span
                       aria-hidden
                       className="absolute -translate-x-1/2 w-4 h-4 rounded-full bg-red-600 ring-4 ring-white shadow-lg pointer-events-none"
@@ -319,7 +321,8 @@ function TimelineSection({
         {/* ========== เดสก์ท็อป ========== */}
         <div
           className="relative hidden md:block mt-6 md:mt-8"
-          style={{ height: totalHeight }}>
+          style={{ height: totalHeight }}
+        >
           {/* เส้นกลาง: เอาไว้นอก Reveal เพื่อให้คมชัด/ไม่เบลอ */}
           <div
             aria-hidden
@@ -335,7 +338,8 @@ function TimelineSection({
                   y={8}
                   delay={pIndex * 70}
                   className="absolute left-1/2 -translate-x-1/2 z-10"
-                  style={{ top: dotTop }}>
+                  style={{ top: dotTop }}
+                >
                   <span
                     aria-hidden
                     className="block -translate-y-1/2 rounded-full bg-red-600 ring-4 ring-white shadow"
@@ -351,7 +355,8 @@ function TimelineSection({
                     y={18}
                     delay={pIndex * 70 + i * 70}
                     className="absolute right-[calc(50%+28px)] z-20"
-                    style={{ top: leftTops[i], width: "44%", maxWidth: 420 }}>
+                    style={{ top: leftTops[i], width: "44%", maxWidth: 420 }}
+                  >
                     <div className="relative -translate-y-1/2">
                       <div className="absolute right-[-28px] top-1/2 -translate-y-1/2 w-8 h-px bg-slate-300" />
                       <TimelineCard {...ev} align="left" />
@@ -367,7 +372,8 @@ function TimelineSection({
                     y={18}
                     delay={pIndex * 70 + i * 70}
                     className="absolute left-[calc(50%+28px)] z-20"
-                    style={{ top: rightTops[i], width: "44%", maxWidth: 420 }}>
+                    style={{ top: rightTops[i], width: "44%", maxWidth: 420 }}
+                  >
                     <div className="relative -translate-y-1/2">
                       <div className="absolute left-[-28px] top-1/2 -translate-y-1/2 w-8 h-px bg-slate-300" />
                       <TimelineCard {...ev} align="right" />
@@ -401,7 +407,8 @@ function TimelineCard({
       style={{
         // ensure mobile cards stretch and have consistent spacing
         boxSizing: "border-box",
-      }}>
+      }}
+    >
       <div className="text-[24px] font-semibold tracking-wider custom-red">
         {year}
       </div>

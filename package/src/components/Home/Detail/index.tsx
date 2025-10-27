@@ -159,9 +159,9 @@ export default function Dedicated() {
 
         <div className="mx-auto w-full max-w-[1400px] px-4">
           {/* หัวข้อ: ช้าลงและนุ่ม */}
-          <h2 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
+          <h4 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
             สินค้าและบริการของเรา
-          </h2>
+          </h4>
 
           <div className="mt-6 md:mt-8" />
 

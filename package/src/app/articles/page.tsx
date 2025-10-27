@@ -127,7 +127,7 @@ export default function NewsEventsPage() {
           className="flex items-center justify-between mb-8"
         >
           <div className="bg-orange-500 text-white px-6 py-2 font-bold text-xl">
-            ข่าวสาร
+            บทความ
           </div>
           <Link
             href="/news-events/news"
@@ -167,86 +167,6 @@ export default function NewsEventsPage() {
                     <Image
                       src={item.image}
                       alt={`รูปภาพข่าวสาร ${item.id}`}
-                      layout="fill"
-                      objectFit="cover"
-                    />
-                  )}
-                </div>
-              </div>
-              <div className="p-4">
-                <h3 className="font-bold text-lg mb-2 text-red-600 line-clamp-2">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-gray-600 mb-2">{item.date}</p>
-                <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                  {item.description}
-                </p>
-                <button className="border border-gray-300 px-4 py-1 text-sm hover:bg-gray-50 transition-colors">
-                  อ่านทั้งหมด
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-
-      {/* Articles Section - บทความ */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
-      >
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex items-center justify-between mb-8"
-        >
-          <div className="bg-orange-500 text-white px-6 py-2 font-bold text-xl">
-            บทความ
-          </div>
-          <Link
-            href="/news-events/articles"
-            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
-          >
-            อ่านทั้งหมด
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
-        </motion.div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {articleItems.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              whileHover={{ scale: 1.03 }}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow"
-            >
-              <div className="relative w-full h-48 bg-gray-200">
-                {/* พื้นที่สำหรับรูปภาพ */}
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  {item.image && (
-                    <Image
-                      src={item.image}
-                      alt={`รูปภาพบทความ ${item.id}`}
                       layout="fill"
                       objectFit="cover"
                     />

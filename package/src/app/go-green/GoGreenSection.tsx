@@ -137,7 +137,7 @@ export default function GoGreenSection({
               <h4
                 className="font-extrabold leading-tight text-black text-center text-balance"
                 style={{
-                  fontSize: "clamp(1.125rem, 2.8vw, 2.625rem)", // ~18px → ~42px
+                  fontSize: "clamp(1.125rem, 2.8vw, 2.1rem)", // ~18px → ~42px
                   textShadow: "0 1px 6px rgba(0,0,0,0.25)",
                 }}
               >
