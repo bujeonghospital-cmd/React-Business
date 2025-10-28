@@ -22,6 +22,26 @@ interface ApiResponse {
   error?: string;
 }
 
+// Types for SETSMART API data
+interface SetSmartPriceData {
+  symbol: string;
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  value: number;
+  priorClose: number;
+  change: number;
+  percentChange: number;
+}
+
+interface SetSmartApiResponse {
+  data?: SetSmartPriceData[];
+  error?: string;
+}
+
 // Add styles for animations
 if (typeof window !== "undefined") {
   const style = document.createElement("style");
@@ -97,44 +117,64 @@ const useScrollAnimation = (threshold = 0.1) => {
   return { ref, isVisible };
 };
 
-// Stock Market Widget Component
+// Stock Market Widget Component with SETSMART API
 const StockMarketWidget: React.FC<{ symbol?: string }> = ({
   symbol = "TPP",
 }) => {
-  const [stockData, setStockData] = useState<StockData | null>(null);
+  const [stockData, setStockData] = useState<SetSmartPriceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
   const { ref, isVisible } = useScrollAnimation();
 
+  // Initialize dates (last 7 days to today)
   useEffect(() => {
+    const today = new Date();
+    const lastWeek = new Date(today);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+
+    setEndDate(formatDate(today));
+    setStartDate(formatDate(lastWeek));
+  }, []);
+
+  const formatDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  useEffect(() => {
+    if (!startDate || !endDate) return;
+
     const fetchStockData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://marketplace.set.or.th/api/public/realtime-data/stock",
-          {
-            headers: {
-              Accept: "application/json",
-            },
-          }
-        );
+        const url = `/api/stock?symbol=${symbol}&startDate=${startDate}&endDate=${endDate}`;
+
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+        });
 
         if (!response.ok) {
-          throw new Error(`API Error: ${response.status}`);
+          const errorText = await response.text();
+          console.error("API Error:", response.status, errorText);
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
 
-        const data: ApiResponse = await response.json();
+        const data: SetSmartApiResponse = await response.json();
 
-        // Find the specific stock symbol
-        if (data.data && Array.isArray(data.data)) {
-          const stock = data.data.find(
-            (s) => s.symbol.toUpperCase() === symbol.toUpperCase()
-          );
-          if (stock) {
-            setStockData(stock);
-          } else {
-            setError(`ไม่พบข้อมูลหุ้น ${symbol}`);
-          }
+        // Get the most recent data (last item in array)
+        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+          const latestData = data.data[data.data.length - 1];
+          setStockData(latestData);
+          setError(null);
+        } else {
+          setError(`ไม่พบข้อมูลหุ้น ${symbol} ในช่วงวันที่ที่เลือก`);
         }
       } catch (err) {
         setError(
@@ -149,7 +189,7 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
     // Refresh every 5 minutes
     const interval = setInterval(fetchStockData, 300000);
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, [symbol, startDate, endDate]);
 
   if (loading) {
     return (
@@ -178,6 +218,34 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
             </p>
           </div>
         </div>
+
+        {/* Date Range Selector */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-600 mb-1">
+                วันที่เริ่มต้น
+              </label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-600 mb-1">
+                วันที่สิ้นสุด
+              </label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -197,14 +265,17 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
             {stockData.symbol}
           </h3>
           <p className="text-sm text-gray-500">
-            {stockData.marketStatus === "OPEN"
-              ? "🟢 เปิดซื้อขาย"
-              : "🔴 ปิดตลาด"}
+            📅{" "}
+            {new Date(stockData.date).toLocaleDateString("th-TH", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold text-gray-800">
-            {stockData.last.toFixed(2)}
+            {stockData.close.toFixed(2)}
           </div>
           <div
             className={`flex items-center justify-end gap-1 text-lg font-semibold ${
@@ -223,7 +294,47 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
         </div>
       </div>
 
+      {/* Date Range Selector */}
+      <div className="mb-4 pb-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1">
+            <label className="block text-xs text-gray-600 mb-1">
+              วันที่เริ่มต้น
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs text-gray-600 mb-1">
+              วันที่สิ้นสุด
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-200">
+        <div>
+          <p className="text-xs text-gray-500 mb-1">เปิด</p>
+          <p className="text-lg font-semibold text-gray-800">
+            {stockData.open.toFixed(2)}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500 mb-1">ปิด</p>
+          <p className="text-lg font-semibold text-gray-800">
+            {stockData.close.toFixed(2)}
+          </p>
+        </div>
         <div>
           <p className="text-xs text-gray-500 mb-1">สูงสุด</p>
           <p className="text-lg font-semibold text-gray-800">
@@ -252,7 +363,10 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
 
       <div className="mt-4 pt-4 border-t border-gray-200">
         <p className="text-xs text-gray-400">
-          ราคาปิดก่อนหน้า: {stockData.prior.toFixed(2)} บาท
+          ราคาปิดก่อนหน้า: {stockData.priorClose.toFixed(2)} บาท
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          ข้อมูลจาก SETSMART API • ปรับราคาแล้ว
         </p>
       </div>
     </div>
@@ -610,9 +724,9 @@ const FinancialTable: React.FC = () => {
   );
 };
 
-// Market Overview Component - Top stocks from SET
+// Market Overview Component - Using SETSMART API for multiple stocks
 const MarketOverview: React.FC = () => {
-  const [marketData, setMarketData] = useState<StockData[]>([]);
+  const [marketData, setMarketData] = useState<SetSmartPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const { ref, isVisible } = useScrollAnimation();
 
@@ -620,29 +734,66 @@ const MarketOverview: React.FC = () => {
     const fetchMarketData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://marketplace.set.or.th/api/public/realtime-data/stock",
-          {
-            headers: {
-              Accept: "application/json",
-            },
-          }
+        const apiKey = "b206a5c3-1a6c-4871-b1a3-9fbfa0bbc1be";
+
+        // Popular Thai stocks to display
+        const symbols = [
+          "PTT",
+          "KBANK",
+          "SCB",
+          "AOT",
+          "CPALL",
+          "TRUE",
+          "ADVANC",
+          "INTUCH",
+          "BBL",
+          "SCC",
+        ];
+
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(lastWeek.getDate() - 7);
+
+        const formatDate = (date: Date): string => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, "0");
+          const day = String(date.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
+        const startDate = formatDate(lastWeek);
+        const endDate = formatDate(today);
+
+        // Fetch data for all symbols
+        const promises = symbols.map((symbol) =>
+          fetch(
+            `/api/stock?symbol=${symbol}&startDate=${startDate}&endDate=${endDate}`,
+            {
+              headers: {
+                Accept: "application/json",
+              },
+            }
+          ).then((res) => res.json())
         );
 
-        if (!response.ok) {
-          throw new Error(`API Error: ${response.status}`);
-        }
+        const results = await Promise.all(promises);
 
-        const data: ApiResponse = await response.json();
+        // Get the latest data for each stock
+        const stocksData: SetSmartPriceData[] = [];
+        results.forEach((result: SetSmartApiResponse) => {
+          if (
+            result.data &&
+            Array.isArray(result.data) &&
+            result.data.length > 0
+          ) {
+            stocksData.push(result.data[result.data.length - 1]);
+          }
+        });
 
-        if (data.data && Array.isArray(data.data)) {
-          // Get top 10 stocks by value
-          const topStocks = data.data
-            .filter((stock) => stock.value > 0)
-            .sort((a, b) => b.value - a.value)
-            .slice(0, 10);
-          setMarketData(topStocks);
-        }
+        // Sort by value (descending)
+        stocksData.sort((a, b) => b.value - a.value);
+
+        setMarketData(stocksData);
       } catch (err) {
         console.error("Market data fetch error:", err);
       } finally {
@@ -723,7 +874,7 @@ const MarketOverview: React.FC = () => {
                     </span>
                   </td>
                   <td className="text-right py-3 px-2 font-medium">
-                    {stock.last.toFixed(2)}
+                    {stock.close.toFixed(2)}
                   </td>
                   <td
                     className={`text-right py-3 px-2 font-semibold ${
@@ -753,7 +904,7 @@ const MarketOverview: React.FC = () => {
 
       <div className="mt-4 pt-4 border-t border-gray-200">
         <p className="text-xs text-gray-400 text-center">
-          ข้อมูลจาก SET Market Data API • สำหรับการอ้างอิงเท่านั้น
+          ข้อมูลจาก SETSMART API • สำหรับการอ้างอิงเท่านั้น
         </p>
       </div>
     </div>
@@ -826,7 +977,7 @@ const DownloadSection: React.FC<{ title: string; items: DownloadItem[] }> = ({
 // Main Page Component
 export default function InvestorFinancials() {
   const [isHeroVisible, setIsHeroVisible] = useState(false);
-  const [stockSymbol, setStockSymbol] = useState("TVO");
+  const [stockSymbol, setStockSymbol] = useState("TPP");
 
   useEffect(() => {
     setIsHeroVisible(true);

@@ -104,20 +104,24 @@ export default function GoGreenSection({
       className="relative w-full bg-neutral-100 py-0 my-0 overflow-hidden"
     >
       <div className="min-h-[60svh] md:min-h-[calc(100svh-112px)]">
-        <div className="grid h-full grid-cols-1 md:grid-cols-2">
+        <div className="grid h-full grid-cols-1 md:grid-cols-2 gap-0">
           {/* Image column (order responsive) */}
-          <div
-            className={`relative w-full h-full min-h-[300px] sm:min-h-[420px] overflow-hidden ${imageColOrder}`}
+          <motion.div
+            variants={imageZoomIn}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: false, amount: 0.2, margin: "-10% 0% -10% 0%" }}
+            className={`relative w-full h-full min-h-[300px] sm:min-h-[420px] md:min-h-full ${imageColOrder}`}
           >
             <img
               src={imageSrc}
               alt={imageAlt}
-              className="w-full h-full object-cover"
+              className="w-full h-full min-h-[300px] sm:min-h-[420px] md:min-h-full object-cover"
               style={{ display: "block", objectFit: "cover" }}
             />
             {/* soft gradient to enhance readability on mobile when stacked */}
             <div className="md:hidden absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-          </div>
+          </motion.div>
 
           {/* Text + feature cards column (order responsive) */}
           <motion.div

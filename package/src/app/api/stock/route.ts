@@ -3,103 +3,49 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+const SETSMART_API_KEY = "b206a5c3-1a6c-4871-b1a3-9fbfa0bbc1be";
+
 /**
  * GET /api/stock
- * Proxy endpoint for SET Market Data API
+ * Proxy endpoint for SETSMART API
  * This helps avoid CORS issues when calling the API directly from the browser
  */
 export async function GET(request: Request) {
   try {
-    // Get optional symbol parameter from query string
     const { searchParams } = new URL(request.url);
     const symbol = searchParams.get("symbol");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
-    // SET API configuration
-    const API_KEY =
-      process.env.SET_API_KEY || "461b3d65-d964-4d93-97a0-79b670d3867f";
-    const API_URL =
-      process.env.SET_API_URL ||
-      "https://marketplace.set.or.th/api/public/realtime-data/stock";
-
-    console.log("🔄 Attempting to fetch SET API...");
-
-    // Try different authentication methods
-    const authMethods: Array<{
-      name: string;
-      headers: Record<string, string>;
-    }> = [
-      // Method 1: Bearer token
-      {
-        name: "Bearer Token",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-        },
-      },
-      // Method 2: x-api-key
-      {
-        name: "X-API-Key",
-        headers: {
-          Accept: "application/json",
-          "x-api-key": API_KEY,
-        },
-      },
-      // Method 3: Both
-      {
-        name: "Both Headers",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${API_KEY}`,
-          "x-api-key": API_KEY,
-        },
-      },
-    ];
-
-    let lastError = null;
-
-    // Try each authentication method
-    for (const method of authMethods) {
-      try {
-        console.log(`   Trying ${method.name}...`);
-        const response = await fetch(API_URL, {
-          headers: method.headers,
-          next: { revalidate: 300 },
-        });
-
-        if (response.ok) {
-          console.log(`✅ Success with ${method.name}`);
-          const data = await response.json();
-
-          // If specific symbol requested, filter the data
-          if (symbol && data.data && Array.isArray(data.data)) {
-            const stockData = data.data.find(
-              (stock: any) =>
-                stock.symbol.toUpperCase() === symbol.toUpperCase()
-            );
-
-            if (stockData) {
-              return NextResponse.json({ data: [stockData] });
-            } else {
-              return NextResponse.json(
-                { error: `Stock symbol ${symbol} not found` },
-                { status: 404 }
-              );
-            }
-          }
-
-          // Return all data if no symbol specified
-          return NextResponse.json(data);
-        }
-
-        lastError = `${response.status} ${response.statusText}`;
-      } catch (err) {
-        lastError = err instanceof Error ? err.message : "Unknown error";
-      }
+    if (!symbol || !startDate || !endDate) {
+      return NextResponse.json(
+        { error: "Missing required parameters: symbol, startDate, endDate" },
+        { status: 400 }
+      );
     }
 
-    // All methods failed
-    console.error("❌ All authentication methods failed:", lastError);
-    throw new Error(`SET API authentication failed: ${lastError}`);
+    const apiUrl = `https://www.setsmart.com/api/listed-company-api/eod-price-by-symbol?symbol=${symbol}&startDate=${startDate}&endDate=${endDate}&adjustedPriceFlag=y`;
+
+    console.log(`🔄 Fetching SETSMART data for ${symbol}...`);
+
+    const response = await fetch(apiUrl, {
+      headers: {
+        Accept: "application/json",
+        "api-key": SETSMART_API_KEY,
+      },
+      next: { revalidate: 300 }, // Cache for 5 minutes
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ SETSMART API Error: ${response.status}`, errorText);
+      throw new Error(`SETSMART API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`✅ Successfully fetched data for ${symbol}`);
+
+    return NextResponse.json(data);
   } catch (error) {
     console.error("❌ Stock API Error:", error);
 
@@ -107,7 +53,6 @@ export async function GET(request: Request) {
       {
         error: "Failed to fetch stock data",
         message: error instanceof Error ? error.message : "Unknown error",
-        fallback: "Using mock data on client side",
       },
       { status: 500 }
     );

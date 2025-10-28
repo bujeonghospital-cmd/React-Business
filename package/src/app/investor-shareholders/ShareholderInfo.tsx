@@ -225,7 +225,7 @@ const DIVIDEND_HISTORY = [
 const Video_TITLE = "ข้อมูลผู้ถือหุ้น";
 const Video_DESC =
   "ทีพีพี ให้ความสำคัญและเคารพสิทธิของผู้ถือหุ้นทุกกลุ่ม โดยมีนโยบายกำกับดูแลให้ผู้ถือหุ้นทุกกลุ่มได้รับการปฏิบัติและปกป้องสิทธิขั้นพื้นฐาน และผลประโยชน์อย่างเท่าเทียมและเป็นธรรม";
-const Video_BG_URL = "/images/joinus/bg-board.jpg";
+const Video_BG_URL = "/images/Shareholders/Shareholders_1.png";
 
 // Color palette for pie chart (red theme)
 const COLOR_PALETTE = [
@@ -673,8 +673,8 @@ export default function ShareholderInfo() {
 // Hero Section Component
 function HeroSection({ mounted }: { mounted: boolean }) {
   return (
-    <section className="relative w-full overflow-hidden">
-      <div className="relative w-full">
+    <section className="relative w-full overflow-hidden py-5">
+      <div className="relative w-full py-5">
         <div className="relative h-[40vh] sm:h-[50vh] lg:h-[60vh] xl:h-[640px]">
           <div className="absolute inset-0">
             <Image

@@ -8,7 +8,7 @@ import { useMemo, useState, useEffect } from "react";
 const Video_TITLE = "คณะกรรมการ / ผู้บริหาร";
 const Video_DESC =
   "คณะกรรมการและผู้บริหาร กำหนดวิสัยทัศน์และกลยุทธ์เชิงธุรกิจ เพื่อเสริมสร้างความแข็งแกร่งและความยั่งยืนขององค์กร";
-const Video_BG_URL = "/images/joinus/bg-board.jpg";
+const Video_BG_URL = "/images/joinus/bg-board-1.png";
 
 // หมวดในแถบแท็บ
 const TABS = [
@@ -259,9 +259,9 @@ export default function Page() {
           .animate-shimmer {
             background: linear-gradient(
               90deg,
-              transparent 0%,
-              rgba(255, 255, 255, 0.3) 50%,
-              transparent 100%
+              rgba(237, 66, 9, 1) 0%,
+              rgba(184, 28, 46, 1) 50%,
+              rgba(227, 20, 20, 1) 100%
             );
             background-size: 200% 100%;
             animation: shimmer 2s linear infinite;
@@ -482,7 +482,7 @@ function Video({ mounted }: { mounted: boolean }) {
   return (
     <section className="relative w-full overflow-hidden py-0">
       {/* ความสูงภาพพื้นหลัง */}
-      <div className="relative w-full overflow-hidden h-[100svh]">
+      <div className="relative w-full overflow-hidden h-[55svh]">
         <div className="Video-image-parallax absolute inset-0">
           <Image
             src={Video_BG_URL}
@@ -501,7 +501,7 @@ function Video({ mounted }: { mounted: boolean }) {
         <div
           className="absolute inset-0 opacity-10"
           style={{
-            backgroundImage: `radial-gradient(circle at 20% 50%, #10b981 0%, transparent 50%)`,
+            backgroundImage: `linear-gradient(90deg,rgba(237, 66, 9, 0.69) 0%, rgba(184, 28, 46, 0.61) 50%, rgba(227, 20, 20, 0.64) 100%);`,
             animation: mounted ? "pulse 4s ease-in-out infinite" : "none",
           }}
         />
