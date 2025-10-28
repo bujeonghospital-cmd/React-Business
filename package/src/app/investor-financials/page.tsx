@@ -736,19 +736,8 @@ const MarketOverview: React.FC = () => {
         setLoading(true);
         const apiKey = "b206a5c3-1a6c-4871-b1a3-9fbfa0bbc1be";
 
-        // Popular Thai stocks to display
-        const symbols = [
-          "PTT",
-          "KBANK",
-          "SCB",
-          "AOT",
-          "CPALL",
-          "TRUE",
-          "ADVANC",
-          "INTUCH",
-          "BBL",
-          "SCC",
-        ];
+        // Popular Thai stocks to display (reduced to 7 to avoid rate limit)
+        const symbols = ["TPP", "KBANK", "SCB", "AOT", "CPALL"];
 
         const today = new Date();
         const lastWeek = new Date(today);
