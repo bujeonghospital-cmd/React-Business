@@ -60,6 +60,8 @@ export default function InvestorFinancialsPage() {
         className="relative w-full overflow-hidden h-[55svh]"
         style={{
           backgroundImage: "url(/images/governance/governance_1.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         <div className="absolute inset-0 flex items-start justify-start py-5">

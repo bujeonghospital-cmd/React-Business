@@ -1603,6 +1603,8 @@ export default function InvestorFinancials() {
         className="relative w-full overflow-hidden h-[55svh]"
         style={{
           backgroundImage: "url(/images/financials/financials_1.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
         {/* Linear gradient overlay */}
