@@ -2,6 +2,7 @@
 import ScaledCanvas from "../../components/ScaledCanvas";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   Menu,
   X,
@@ -19,18 +20,18 @@ import {
 const slides = [
   {
     id: 1,
-    src: "/images/pakku-packaging/packaging__1.png",
-    alt: "Video – Pakku Packaging 1",
+    src: "/images/pakku-packaging/banner/pakku_banner_1.png",
+    alt: "Banner – Pakku Packaging 1",
   },
   {
     id: 2,
-    src: "/images/pakku-packaging/packaging__2.png",
-    alt: "Video – Pakku Packaging 2",
+    src: "/images/pakku-packaging/banner/pakku_banner_2.png",
+    alt: "Banner – Pakku Packaging 2",
   },
   {
     id: 3,
-    src: "/images/pakku-packaging/packaging__3.png",
-    alt: "Video – Pakku Packaging 3",
+    src: "/images/pakku-packaging/banner/pakku_banner_4.png",
+    alt: "Banner – Pakku Packaging 3",
   },
 ];
 
@@ -38,7 +39,7 @@ const sidebar = [
   {
     title: "HOT ITEM",
     icon: <Flame className="h-4 w-4" />,
-    items: ["ถาดกระดาษ รุ่นปังโบ"],
+    items: ["ถาดใส่อาหาร Size L 650 ml"],
   },
   {
     title: "สินค้าใหม่",
@@ -57,12 +58,28 @@ const sidebar = [
     title: "แบ่งตามประเภท",
     icon: <Boxes className="h-4 w-4" />,
     items: [
-      "แก้วกระดาษ",
-      "ถ้วยร้อน/เย็น",
-      "ช้อนส้อมไม้",
-      "กล่องพัสดุ",
-      "กล่องหูหิ้ว",
-      "สินค้าแคมเปญ",
+      // ถาดและกล่องอาหาร
+      "FOOD TRAY",
+      "SNACK BOX",
+      "CUP NOODLES",
+
+      // กล่องเบเกอรี่และเค้ก
+      "BAKERY BOX",
+      "กล่องเค้กสามเหลี่ยม",
+      "กล่องเค้กลิ้นชัก",
+      "กล่องเค้กหูหิ้ว",
+
+      // อุปกรณ์เสริมสำหรับเครื่องดื่ม
+      "CUP SLEEVE",
+      "ถาดใส่แก้วกาแฟ",
+
+      // กระดาษและวัสดุบรรจุภัณฑ์
+      "กระดาษลูกฟูก E-B",
+      "กระดาษเอนกประสงค์",
+      "ซองเครป",
+
+      // กล่องเอนกประสงค์
+      "กล่องเอนกประสงค์",
     ],
   },
 ];
@@ -85,14 +102,139 @@ const features = [
   },
 ];
 
-const products = Array.from({ length: 9 }).map((_, i) => ({
-  id: i + 1,
-  sku: `FIC${800000 + i}`,
-  name: `ชามกระดาษ 8oz ลายบลู #${i + 1}`,
-  priceText: `ราคาเริ่ม ${540 + i * 10} บาท/แพ็ค`,
-  img: "/images/pakku-packaging/dev_291.png",
-}));
-
+// const products = Array.from({ length: 9 }).map((_, i) => ({
+//   id: String(i + 1),
+//   sku: `FIC${800000 + i}`,
+//   name: `ชามกระดาษ 8oz ลายบลู #${i + 1}`,
+//   priceText: `ราคาเริ่ม ${540 + i * 10} บาท/แพ็ค`,
+//   img: "/images/pakku-packaging/dev_291.png",
+// }));
+const products = [
+  {
+    id: "1",
+    sku: "FOOD TRAY",
+    name: `ถาดใส่อาหาร `,
+    size: `Size L 650 ml`,
+    Detail: `ขนาด 9.5x19x4 cm`,
+    priceText: `ราคาเริ่ม 150 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/1.png",
+  },
+  {
+    id: "2",
+    sku: "FOOD TRAY",
+    name: `ถาดใส่อาหาร`,
+    size: `Size S 180 ml`,
+    Detail: `ขนาด 11x11x4 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/2.png",
+  },
+  {
+    id: "3",
+    sku: "SNACK BOX",
+    name: `Snack Box`,
+    size: `Size M `,
+    Detail: `ขนาด 13x13x6 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/3.png",
+  },
+  {
+    id: "4",
+    sku: "BAKERY BOX",
+    name: `Bakery Box`,
+    size: `Size S `,
+    Detail: `ขนาด 14x14x4 cm`,
+    priceText: `ราคาเริ่ม 100 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/13.png",
+  },
+  {
+    id: "5",
+    sku: "CUP SLEEVE",
+    name: `สายคาดแก้ว`,
+    size: `Size L 16-22 oz`,
+    priceText: `ราคาเริ่ม 80 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/14.png",
+  },
+  {
+    id: "6",
+    sku: "CUP NOODLES",
+    name: `ถ้วยอาหาร`,
+    Detail: `ขนาด 9x10.5x3 cm`,
+    priceText: `ราคาเริ่ม 80 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/12.png",
+  },
+  {
+    id: "7",
+    sku: "กล่องเค้กสามเหลี่ยม",
+    name: `กล่องเค้กสามเหลี่ยม`,
+    Detail: `ขนาด 9x13.8x9 cm`,
+    priceText: `ราคาเริ่ม 120 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/8.png",
+  },
+  {
+    id: "8",
+    sku: "กล่องเค้กลิ้นชัก",
+    name: `กล่องเค้กลิ้นชัก`,
+    Detail: `ขนาด 8.7x17x6 cm`,
+    priceText: `ราคาเริ่ม 100 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/5.png",
+  },
+  {
+    id: "9",
+    sku: "กระดาษลูกฟูก E-B",
+    name: `กระดาษลูกฟูก E-B`,
+    Detail: `ขนาด 38x40 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/15.png",
+  },
+  {
+    id: "10",
+    sku: "กล่องเอนกประสงค์",
+    name: `กล่องเอนกประสงค์`,
+    Detail: `ขนาด 10x7.2x6.5 cm`,
+    priceText: `ราคาเริ่ม 250 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/6.png",
+  },
+  {
+    id: "11",
+    sku: "กระดาษเอนกประสงค์",
+    name: `กระดาษเอนกประสงค์`,
+    Detail: `ขนาด 40x45 cm`,
+    priceText: `ราคาเริ่ม 300 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/10.png",
+  },
+  {
+    id: "12",
+    sku: "ซองเครป",
+    name: `ซองเครป`,
+    Detail: `ขนาด 14.5x20 cm`,
+    priceText: `ราคาเริ่ม 150 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/7.png",
+  },
+  {
+    id: "13",
+    sku: "กล่องเค้กหูหิ้ว",
+    name: `กล่องเค้กหูหิ้ว`,
+    Detail: `ขนาด 9.5x14.2x14 cm`,
+    priceText: `ราคาเริ่ม 180 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/4.png",
+  },
+  {
+    id: "14",
+    sku: "ถาดใส่แก้วกาแฟ",
+    name: `ถาดใส่แก้วกาแฟ`,
+    Detail: `ขนาด 9.3x19.5x3.2 cm`,
+    priceText: `ราคาเริ่ม 220 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/11.png",
+  },
+  {
+    id: "15",
+    sku: "กล่องเค้กสามเหลี่ยม",
+    name: `กล่องเค้กสามเหลี่ยม`,
+    Detail: `ขนาด 10x10x10 cm`,
+    priceText: `ราคาเริ่ม 200 บาท/แพ็ค`,
+    img: "/images/pakku-packaging/9.png",
+  },
+];
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-lg font-semibold tracking-tight text-slate-800 flex items-center gap-2">
@@ -105,10 +247,14 @@ function SidebarSection({
   title,
   icon,
   items,
+  selectedCategory,
+  onSelectCategory,
 }: {
   title: string;
   icon?: React.ReactNode;
   items: string[];
+  selectedCategory: string | null;
+  onSelectCategory: (category: string | null) => void;
 }) {
   const [open, setOpen] = useState(true);
   return (
@@ -133,13 +279,31 @@ function SidebarSection({
         <ul className="mt-1 space-y-2 text-[15px] leading-6 text-slate-700">
           {items.map((it, idx) => (
             <li key={idx}>
-              <a
-                href="#"
-                className="group flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-slate-50"
+              <button
+                onClick={() =>
+                  onSelectCategory(selectedCategory === it ? null : it)
+                }
+                className={`group flex items-start gap-2 rounded-md px-2 py-1.5 hover:bg-slate-50 w-full text-left transition-colors ${
+                  selectedCategory === it ? "bg-emerald-50" : ""
+                }`}
               >
-                <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-slate-400 group-hover:bg-emerald-500" />
-                <span className="group-hover:text-emerald-600">{it}</span>
-              </a>
+                <span
+                  className={`mt-1 inline-block h-1.5 w-1.5 rounded-full transition-colors ${
+                    selectedCategory === it
+                      ? "bg-emerald-500"
+                      : "bg-slate-400 group-hover:bg-emerald-500"
+                  }`}
+                />
+                <span
+                  className={`transition-colors ${
+                    selectedCategory === it
+                      ? "text-emerald-600 font-medium"
+                      : "group-hover:text-emerald-600"
+                  }`}
+                >
+                  {it}
+                </span>
+              </button>
             </li>
           ))}
         </ul>
@@ -173,8 +337,8 @@ function FeatureTile({ t }: { t: (typeof features)[number] }) {
 
 function ProductCard({ p }: { p: (typeof products)[number] }) {
   return (
-    <a
-      href="#"
+    <Link
+      href={`/products-pakku-packaging/${p.id}`}
       className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:shadow-md"
     >
       <div className="aspect-square w-full overflow-hidden bg-white">
@@ -189,27 +353,31 @@ function ProductCard({ p }: { p: (typeof products)[number] }) {
         <div className="mt-1 line-clamp-2 text-[15px] font-medium text-slate-800">
           {p.name}
         </div>
+        <div> {p.size}</div>
+        <div> {p.Detail}</div>
         <div className="mt-2 text-sm text-emerald-700">{p.priceText}</div>
       </div>
-    </a>
+    </Link>
   );
 }
 
-function Breadcrumb() {
+function Breadcrumb({ selectedCategory }: { selectedCategory: string | null }) {
   return (
     <nav
       className="flex items-center gap-2 text-sm text-slate-500"
       aria-label="breadcrumb"
     >
       <a className="hover:text-emerald-700" href="#">
-        หน้าแรก
+        หน้าแรก (
       </a>
       <span className="text-slate-400">/</span>
       <a className="hover:text-emerald-700" href="#">
         สินค้าทั่วไป
       </a>
       <span className="text-slate-400">/</span>
-      <span className="text-slate-700">สินค้าใหม่</span>
+      <span className="text-slate-700 font-medium">
+        {selectedCategory || "ทั้งหมด"}
+      </span>
     </nav>
   );
 }
@@ -217,6 +385,7 @@ function Breadcrumb() {
 export default function PakkuCatalogPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [index, setIndex] = useState(0);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     const id = setInterval(
@@ -226,10 +395,16 @@ export default function PakkuCatalogPage() {
     return () => clearInterval(id);
   }, []);
 
+  // กรองสินค้าตามหมวดหมู่ที่เลือก
+  const filteredProducts = useMemo(() => {
+    if (!selectedCategory) return products;
+    return products.filter((p) => p.sku === selectedCategory);
+  }, [selectedCategory]);
+
   return (
     <ScaledCanvas>
-      <div className="min-h-screen bg-neutral-50 text-slate-900">
-        <section className="relative isolate w-screen left-1/2 -ml-[50vw]">
+      <div className="min-h-screen bg-neutral-50 text-slate-900 py-5">
+        <section className="relative w-full overflow-hidden h-[100svh] py-5">
           <div className="relative h-[min(72vh,750px)]">
             {slides.map((s, i) => (
               <img
@@ -262,8 +437,18 @@ export default function PakkuCatalogPage() {
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 md:grid-cols-[280px_1fr]">
           <aside className="hidden md:block">
             <div className="sticky top-[88px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                แถบหมวดสินค้า
+              <div className="mb-3 flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  แถบหมวดสินค้า
+                </div>
+                {selectedCategory && (
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    ล้างตัวกรอง
+                  </button>
+                )}
               </div>
               <div className="space-y-3">
                 {sidebar.map((sec) => (
@@ -272,6 +457,8 @@ export default function PakkuCatalogPage() {
                     title={sec.title}
                     icon={sec.icon}
                     items={sec.items}
+                    selectedCategory={selectedCategory}
+                    onSelectCategory={setSelectedCategory}
                   />
                 ))}
               </div>
@@ -286,16 +473,47 @@ export default function PakkuCatalogPage() {
             </div>
 
             <div className="mt-8 flex items-center justify-between gap-4">
-              <Breadcrumb />
+              <Breadcrumb selectedCategory={selectedCategory} />
               <div className="hidden text-sm text-slate-500 md:block">
-                แสดง 9 รายการ
+                แสดง {filteredProducts.length} รายการ
+                {selectedCategory && (
+                  <span className="ml-2 text-emerald-600">
+                    (กรองโดย: {selectedCategory})
+                  </span>
+                )}
               </div>
             </div>
 
+            {selectedCategory && (
+              <div className="mt-4 flex items-center gap-2 flex-wrap">
+                <span className="text-sm text-slate-600">กรองตาม:</span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-sm text-emerald-700">
+                  {selectedCategory}
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="hover:bg-emerald-200 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              </div>
+            )}
+
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
-              {products.map((p) => (
-                <ProductCard key={p.id} p={p} />
-              ))}
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((p) => <ProductCard key={p.id} p={p} />)
+              ) : (
+                <div className="col-span-full text-center py-12">
+                  <Package className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-500">ไม่พบสินค้าในหมวดหมู่นี้</p>
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="mt-4 text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    แสดงสินค้าทั้งหมด
+                  </button>
+                </div>
+              )}
             </div>
           </main>
         </div>
@@ -320,6 +538,16 @@ export default function PakkuCatalogPage() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
+              {selectedCategory && (
+                <div className="px-4 pb-2">
+                  <button
+                    onClick={() => setSelectedCategory(null)}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    ล้างตัวกรอง
+                  </button>
+                </div>
+              )}
               <div className="px-4 pb-6">
                 <div className="space-y-3">
                   {sidebar.map((sec) => (
@@ -328,6 +556,11 @@ export default function PakkuCatalogPage() {
                       title={sec.title}
                       icon={sec.icon}
                       items={sec.items}
+                      selectedCategory={selectedCategory}
+                      onSelectCategory={(category) => {
+                        setSelectedCategory(category);
+                        setSidebarOpen(false);
+                      }}
                     />
                   ))}
                 </div>

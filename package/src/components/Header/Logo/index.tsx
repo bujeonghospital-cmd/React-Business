@@ -7,14 +7,16 @@ type LogoProps = {
 };
 
 export default function Logo({ className = "", style }: LogoProps) {
-  return <ScaledCanvas>(
+  return (
+    <ScaledCanvas>
+      (
       <div className={`flex items-center ${className}`} style={style}>
         <Link href="/" className="inline-block shrink-0" aria-label="Go home">
           <picture>
             {/* Desktop: >=lg (1024px) ใช้โลโก้แนวนอน */}
             <source
               media="(min-width: 1024px)"
-              srcSet="/images/logo/LOGO-TPP-SIDE_8.png"
+              srcSet="/images/logo/LOGO-TPP-SIDE_9.png"
             />
 
             {/* Tablet: >=md (768px) ใช้โลโก้แนวตั้ง */}
@@ -47,5 +49,7 @@ export default function Logo({ className = "", style }: LogoProps) {
           </picture>
         </Link>
       </div>
-    )</ScaledCanvas>;
+      )
+    </ScaledCanvas>
+  );
 }

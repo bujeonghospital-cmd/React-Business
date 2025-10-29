@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import CardItem from "./CardItem";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import Link from "next/link";
 
 const DEFAULT_CARDS_PER_PAGE = 4;
 const CARD_WIDTH_CLAMP = "clamp(280px, 88vw, 340px)"; // มือถือเต็มจอ, จอใหญ่ไม่เกิน 340px
@@ -174,7 +175,8 @@ const TabPage = () => {
             setDirection("right");
             setSlideIndex(0);
             setActiveIndex(0);
-          }}>
+          }}
+        >
           ข่าวสารและกิจกรรม
         </button>
         <button
@@ -185,7 +187,8 @@ const TabPage = () => {
             setActiveTab("article");
             setSlideIndex(0);
             setActiveIndex(0);
-          }}>
+          }}
+        >
           บทความ
         </button>
       </div>
@@ -201,7 +204,8 @@ const TabPage = () => {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onTouchStart={() => setPaused(true)}
-        onTouchEnd={() => setPaused(false)}>
+        onTouchEnd={() => setPaused(false)}
+      >
         {/* Left Arrow - Desktop Only */}
         <button
           className="
@@ -224,7 +228,8 @@ const TabPage = () => {
             setActiveIndex(0);
           }}
           disabled={slideIndex === 0}
-          aria-label="ก่อนหน้า">
+          aria-label="ก่อนหน้า"
+        >
           <FaChevronLeft
             size={16}
             className="md:!hidden transition-transform group-hover:-translate-x-0.5"
@@ -261,7 +266,8 @@ const TabPage = () => {
                   }}
                   onClick={() => setActiveIndex(idx)}
                   onMouseEnter={() => setHoverIndex(idx)}
-                  onMouseLeave={() => setHoverIndex(null)}>
+                  onMouseLeave={() => setHoverIndex(null)}
+                >
                   <CardItem
                     {...item}
                     active={isActive}
@@ -295,7 +301,8 @@ const TabPage = () => {
             setActiveIndex(0);
           }}
           disabled={slideIndex === maxIndex}
-          aria-label="ถัดไป">
+          aria-label="ถัดไป"
+        >
           <FaChevronRight
             size={16}
             className="md:!hidden transition-transform group-hover:translate-x-0.5"
@@ -324,7 +331,8 @@ const TabPage = () => {
                 setSlideIndex(i);
                 setActiveIndex(0);
               }}
-              className={`dot-nav p-2 ${slideIndex === i ? "active" : ""}`}>
+              className={`dot-nav p-2 ${slideIndex === i ? "active" : ""}`}
+            >
               <span
                 className={
                   slideIndex === i
@@ -339,7 +347,9 @@ const TabPage = () => {
 
       {/* CTA */}
       <div className="flex justify-center mt-6">
-        <button className="ir-btn ir-btn-glow">ดูทั้งหมด</button>
+        <Link href="/tpp-news">
+          <button className="ir-btn ir-btn-glow">ดูทั้งหมด</button>
+        </Link>
       </div>
       <br />
     </div>

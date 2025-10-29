@@ -1,6 +1,5 @@
 "use client";
-import React from "react";
-import Image from "next/image";
+import React, { useState } from "react";
 
 interface CardItemProps {
   image: string;
@@ -9,6 +8,7 @@ interface CardItemProps {
   active?: boolean;
   hovered?: boolean;
   direction?: "left" | "right";
+  id?: number;
 }
 
 const CardItem: React.FC<CardItemProps> = ({
@@ -18,16 +18,25 @@ const CardItem: React.FC<CardItemProps> = ({
   active,
   hovered,
   direction = "right",
+  id,
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   const cardClasses = `
-    news-card bg-white rounded-xl p-4 md:p-5 flex flex-col shadow-lg 
-    ${active ? "active" : ""}
+    news-card bg-white rounded-xl p-4 md:p-5 flex flex-col shadow-lg cursor-pointer
+    transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl
+    ${active ? "active ring-2 ring-red-300" : ""}
     ${
       hovered
         ? "border-2 border-red-300 shadow-red-50"
         : "border border-gray-200 hover:border-gray-300"
     }
   `.trim();
+
+  const handleCardClick = () => {
+    // Navigate to detailed news page or TPP news page
+    window.location.href = "/tpp-news";
+  };
 
   return (
     <div
@@ -36,37 +45,57 @@ const CardItem: React.FC<CardItemProps> = ({
         minHeight: "clamp(400px, 45vh, 460px)",
         maxWidth: 380,
         width: "100%",
-      }}>
+      }}
+      onClick={handleCardClick}
+    >
       {/* Image */}
       <div
-        className="w-full mb-3 md:mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 relative transition-transform duration-300 hover:scale-[1.02]"
-        style={{ aspectRatio: "4/3" }}>
-        <Image
-          src={image}
-          alt={title}
-          fill
-          sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
-          className="object-cover transition-transform duration-300 hover:scale-105"
-        />
+        className="w-full mb-3 md:mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 relative"
+        style={{ aspectRatio: "4/3", position: "relative", minHeight: "200px" }}
+      >
+        {!imageError ? (
+          <img
+            src={image}
+            alt={title}
+            className="w-full h-full object-cover"
+            style={{ objectFit: "cover" }}
+            onError={() => {
+              console.error(`Failed to load image: ${image}`);
+              setImageError(true);
+            }}
+            onLoad={() => console.log(`Successfully loaded image: ${image}`)}
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full bg-gray-200">
+            <div className="text-center p-4">
+              <p className="text-gray-500 text-sm mb-2">ไม่พบรูปภาพ</p>
+              <p className="text-gray-400 text-xs break-all">{image}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Date & Title */}
       <span className="text-xs md:text-sm text-gray-500 mb-2 font-medium">
         {date}
       </span>
-      <div className="font-bold text-base leading-snug text-gray-900 group-hover:text-gray-800 mb-4 line-clamp-3">
+      <div className="font-bold text-base leading-snug text-gray-900 hover:text-red-600 mb-4 line-clamp-3 transition-colors duration-300">
         {title}
       </div>
 
       {/* Arrow Button */}
       <div className="flex-grow" />
-      <button
-        className="self-end mt-3 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 
-                   rounded-full px-4 py-2 md:px-5 md:py-2.5 text-base font-medium text-gray-800 
-                   shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center
-                   min-w-[44px] min-h-[44px] hover:translate-x-1 active:scale-95">
-        <i className="bi bi-arrow-right text-base" />
-      </button>
+      <div className="self-end mt-3">
+        <div
+          className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 
+                       rounded-full px-4 py-2 md:px-5 md:py-2.5 text-base font-medium text-white 
+                       shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center
+                       min-w-[44px] min-h-[44px] hover:translate-x-1 active:scale-95"
+        >
+          <span className="mr-2 text-sm">อ่านต่อ</span>
+          <i className="bi bi-arrow-right text-base" />
+        </div>
+      </div>
     </div>
   );
 };

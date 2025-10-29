@@ -37,7 +37,8 @@ export default function Video({ setIsLoading }: VideoProps) {
       <section
         id="main-banner"
         className="Video-video mt-5"
-        aria-label="Company Video video">
+        aria-label="Company Video video"
+      >
         <video
           ref={videoRef}
           className="bg-media"
@@ -46,23 +47,24 @@ export default function Video({ setIsLoading }: VideoProps) {
           loop
           playsInline
           preload="metadata"
-          poster="/images/video/fixed-banner-poster.jpg"
+          // poster="/images/video/fixed-banner-poster.jpg"
           onLoadedData={() => setReady(true)}
           onPlay={() => setReady(true)}
           onError={() => setReady(true)}
           aria-hidden="true"
           tabIndex={-1}
-          disablePictureInPicture>
-          <source src="/images/video/tpp-thanakon.webm" type="video/webm" />
+          disablePictureInPicture
+        >
+          {/* <source src="/images/video/tpp-thanakon.webm" type="video/webm" /> */}
           <source src="/images/video/tpp-thanakon.mp4" type="video/mp4" />
         </video>
 
-        <img
+        {/* <img
           className="bg-fallback"
           src="/images/video/fixed-banner-poster.jpg"
           alt=""
-        />
-        <div className="relative z-[1] w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24 text-white"></div>
+        /> */}
+        {/* <div className="relative z-[1] w-full max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24 text-white"></div> */}
       </section>
     </ScaledCanvas>
   );

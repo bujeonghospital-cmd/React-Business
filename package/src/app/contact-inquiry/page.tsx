@@ -194,29 +194,6 @@ const ContactInquiryPage = () => {
           <motion.div variants={fadeInUp} className="space-y-8">
             {/* Location Tabs */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-              <div className="flex border-b border-gray-200">
-                <button
-                  onClick={() => setActiveTab("headquarters")}
-                  className={`flex-1 py-4 px-6 font-semibold transition-all duration-300 ${
-                    activeTab === "headquarters"
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {COMPANY_INFO.headquarters.title}
-                </button>
-                <button
-                  onClick={() => setActiveTab("factory")}
-                  className={`flex-1 py-4 px-6 font-semibold transition-all duration-300 ${
-                    activeTab === "factory"
-                      ? "bg-gradient-to-r from-red-600 to-red-700 text-white"
-                      : "bg-gray-50 text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {COMPANY_INFO.factory.title}
-                </button>
-              </div>
-
               <div className="p-6 space-y-6">
                 {/* Company Name */}
                 <div>

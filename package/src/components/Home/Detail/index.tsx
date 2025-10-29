@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useRef } from "react";
+import Link from "next/link";
 import ScaledCanvas from "../../ScaledCanvas";
 import "animate.css";
 
@@ -9,21 +10,25 @@ const cards = [
     staticImg: "/images/InvestorRelations/Products-screen-1-img.png",
     animatedImg: "/images/InvestorRelations/Products-screen-1.gif",
     title: "การพัฒนาและการออกแบบ",
+    href: "our-services",
   },
   {
     staticImg: "/images/InvestorRelations/Products-screen-2-img.png",
     animatedImg: "/images/InvestorRelations/Products-screen-2.gif",
     title: "เตรียมพิมพ์",
+    href: "our-services",
   },
   {
     staticImg: "/images/InvestorRelations/Products-screen-3-img.png",
     animatedImg: "/images/InvestorRelations/Products-screen-3.gif",
     title: "การพิมพ์",
+    href: "our-services",
   },
   {
     staticImg: "/images/InvestorRelations/Products-screen-4-img.png",
     animatedImg: "/images/InvestorRelations/Products-screen-4.gif",
     title: "หลังพิมพ์",
+    href: "our-services",
   },
 ];
 
@@ -118,7 +123,6 @@ export default function Dedicated() {
           }
         });
       },
-      // เริ่มก่อนถึง viewport เล็กน้อย ให้แอนิเมชันจบพอดีกับจังหวะเลื่อน
       { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
     );
 
@@ -155,9 +159,9 @@ export default function Dedicated() {
 
         <div className="mx-auto w-full max-w-[1400px] px-4">
           {/* หัวข้อ: ช้าลงและนุ่ม */}
-          <h2 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
+          <h4 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
             สินค้าและบริการของเรา
-          </h2>
+          </h4>
 
           <div className="mt-6 md:mt-8" />
 
@@ -201,6 +205,14 @@ export default function Dedicated() {
                   role="img"
                   aria-label={item.title}
                 />
+
+                <Link
+                  href={item.href}
+                  className="absolute inset-0 z-40"
+                  aria-label={`ไปยัง ${item.title}`}
+                >
+                  <span className="sr-only">{item.title}</span>
+                </Link>
 
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent z-20 opacity-0"

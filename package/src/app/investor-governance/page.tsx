@@ -56,28 +56,51 @@ export default function InvestorFinancialsPage() {
 
   return (
     <div className="min-h-screen bg-white mt-5">
-      {/* Hero Section */}
-      <section className="relative h-[400px] bg-gradient-to-r from-blue-50 to-blue-100 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center z-10 px-4 animate-fade-in-up">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4 animate-slide-down">
-              การกำกับดูแลกิจการ
-            </h1>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto animate-slide-up delay-200">
-              บริษัท ไทยบรรจุภัณฑ์และการพิมพ์ จำกัด (มหาชน)
-              ยึดมั่นในหลักกำกับดูแลกิจการที่ดีและจรรยาบรรณธุรกิจเป็นกรอบในการจัดการและตัดสินใจของคณะกรรมการและผู้บริหาร
-              บริษัทมุ่งมั่นให้การดำเนินงานเป็นไปอย่างมีประสิทธิภาพ โปร่งใส
-              และเป็นธรรม โดยการคุ้มครองสิทธิผู้ถือหุ้น
-              เปิดเผยข้อมูลอย่างครบถ้วน รับผิดชอบต่อผู้มีส่วนได้เสียทุกกลุ่ม
-              และบริหารความเสี่ยงควบคู่กับระบบควบคุมภายในที่เข้มแข็ง
-              เพื่อสร้างคุณค่าและความยั่งยืนให้แก่องค์กร
-            </p>
+      <section
+        className="relative w-full overflow-hidden h-[55svh]"
+        style={{
+          backgroundImage: "url(/images/governance/governance_1.png)",
+        }}
+      >
+        <div className="absolute inset-0 flex items-start justify-start py-5">
+          <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
+            {/* ระยะห่างจากด้านบน */}
+            <div className="pt-8 sm:pt-12 lg:pt-20 xl:pt-24 animate-fade-in-up">
+              <h2 className="my-heading sm:text-[24px] md:text-[28px] lg:text-5xl font-extrabold leading-[1.2] tracking-tight text-black relative inline-block mb-6">
+                <span className="relative z-10">การกำกับดูแลกิจการ</span>
+                {/* Underline animation */}
+                <span
+                  className="absolute -bottom-2 left-0 h-1 bg-gradient-to-r from-orange-400 to-red-600 rounded-full"
+                  style={{
+                    width: "100%",
+                    transition: "width 1s ease-out 0.5s",
+                  }}
+                />
+              </h2>
+
+              <p
+                className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-black"
+                style={{
+                  opacity: 1,
+                  transform: "translateY(0)",
+                  transition: "all 0.8s ease-out 0.8s",
+                }}
+              >
+                บริษัท ไทยบรรจุภัณฑ์และการพิมพ์ จำกัด (มหาชน)
+                ยึดมั่นในหลักกำกับดูแลกิจการที่ดีและจรรยาบรรณธุรกิจเป็นกรอบในการจัดการและตัดสินใจของคณะกรรมการและผู้บริหาร
+                บริษัทมุ่งมั่นให้การดำเนินงานเป็นไปอย่างมีประสิทธิภาพ โปร่งใส
+                และเป็นธรรม โดยการคุ้มครองสิทธิผู้ถือหุ้น
+                เปิดเผยข้อมูลอย่างครบถ้วน รับผิดชอบต่อผู้มีส่วนได้เสียทุกกลุ่ม
+                และบริหารความเสี่ยงควบคู่กับระบบควบคุมภายในที่เข้มแข็ง
+                เพื่อสร้างคุณค่าและความยั่งยืนให้แก่องค์กร
+              </p>
+            </div>
           </div>
         </div>
         {/* Animated Background Elements */}
-        <div className="absolute inset-0 bg-black opacity-5"></div>
-        <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-float"></div>
-        <div className="absolute bottom-10 right-10 w-40 h-40 bg-green-200 rounded-full opacity-20 animate-float-delayed"></div>
+        {/* <div className="absolute inset-0 bg-black opacity-5"></div> */}
+        {/* <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-float"></div>
+        <div className="absolute bottom-10 right-10 w-40 h-40 bg-green-200 rounded-full opacity-20 animate-float-delayed"></div> */}
       </section>
 
       <Container>
@@ -104,10 +127,8 @@ export default function InvestorFinancialsPage() {
               </p>
             </div>
 
-            {/* Certifications/Logos Section - Placeholder for logos */}
             <div className="bg-white p-8 rounded-lg shadow-md mb-12 animate-fade-in-up delay-200">
               <div className="flex flex-wrap items-center justify-center gap-8">
-                {/* Placeholder for logos - waiting for user to add images */}
                 <div className="text-center animate-scale-in delay-300 hover:scale-110 transition-transform duration-300">
                   <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center mb-2 hover:bg-gray-300 transition-colors">
                     {/* <span className="text-gray-500 text-sm">CAC Logo</span> */}

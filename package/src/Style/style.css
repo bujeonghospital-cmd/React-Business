@@ -555,14 +555,16 @@ nav > .dropdown > span.btn:active {
   display: inline-block;
 }
 
+.ir-btn-glow {
+  min-width: 150px;
+  border: 2px solid transparent;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
 .ir-btn-glow:hover {
-  border: 1px solid #fff;
-  box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.5),
-    0 0 20px rgba(255, 255, 255, 0.2);
-  outline-color: rgba(255, 255, 255, 0);
-  outline-offset: 15px;
-  text-shadow: 1px 1px 2px #427388;
-  background: #d22e29;
+  transform: scale(1.02);
+  border: 2px solid currentColor;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 }
 
 /* ----------------------------------------------------------------------------------------- */
@@ -943,7 +945,7 @@ body {
 /* จอใหญ่มาก: ขยายได้อีกนิด (ถ้าต้องการ) */
 @media (min-width: 1536px) {
   .tpp-section-title {
-    font-size: clamp(26px, 2vw, 40px);
+    font-size: clamp(24px, 2vw, 32px);
   }
 }
 /* ------------------------------------------------------------- */
@@ -1840,3 +1842,5 @@ img {
     transform: none;
   }
 }
+
+/* ------------------------------------------------------ */

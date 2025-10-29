@@ -225,7 +225,7 @@ const DIVIDEND_HISTORY = [
 const Video_TITLE = "ข้อมูลผู้ถือหุ้น";
 const Video_DESC =
   "ทีพีพี ให้ความสำคัญและเคารพสิทธิของผู้ถือหุ้นทุกกลุ่ม โดยมีนโยบายกำกับดูแลให้ผู้ถือหุ้นทุกกลุ่มได้รับการปฏิบัติและปกป้องสิทธิขั้นพื้นฐาน และผลประโยชน์อย่างเท่าเทียมและเป็นธรรม";
-const Video_BG_URL = "/images/joinus/bg-board.jpg";
+const Video_BG_URL = "/images/Shareholders/Shareholders_1.png";
 
 // Color palette for pie chart (red theme)
 const COLOR_PALETTE = [
@@ -463,7 +463,7 @@ export default function ShareholderInfo() {
           <div className="bg-white rounded-2xl border-2 border-red-300 p-6 sm:p-8 shadow-lg">
             <div className="flex flex-col items-center justify-center space-y-6">
               {/* Company Logo */}
-              <div className="w-24 h-24 sm:w-32 sm:h-32 relative bg-red-700 rounded-full flex items-center justify-center shadow-xl">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 relative flex items-center justify-center shadow-xl">
                 <div className="text-white text-center">
                   <img
                     src="/images/logo/logo.png"
@@ -530,10 +530,10 @@ export default function ShareholderInfo() {
                 <PieChart data={MAJOR_SHAREHOLDERS} />
               </div>
 
-              {/* Legend/Table for Top 5 */}
+              {/* Legend/Table for All Shareholders */}
               <div className="flex-1 w-full max-w-md">
-                <div className="space-y-2">
-                  {MAJOR_SHAREHOLDERS.slice(0, 5).map((sh, index) => (
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                  {MAJOR_SHAREHOLDERS.map((sh, index) => (
                     <div
                       key={index}
                       className="flex items-center justify-between gap-4 p-3 hover:bg-red-50 rounded-lg transition-colors border-l-4"
@@ -673,9 +673,9 @@ export default function ShareholderInfo() {
 // Hero Section Component
 function HeroSection({ mounted }: { mounted: boolean }) {
   return (
-    <section className="relative w-full overflow-hidden">
-      <div className="relative w-full">
-        <div className="relative h-[40vh] sm:h-[50vh] lg:h-[60vh] xl:h-[640px]">
+    <section className="relative w-full overflow-hidden py-5">
+      <div className="relative w-full py-5">
+        <div className="relative w-full overflow-hidden h-[55svh]">
           <div className="absolute inset-0">
             <Image
               src={Video_BG_URL}
@@ -754,9 +754,9 @@ function PieChart({ data }: PieChartProps) {
   const outerRadius = 180;
   const innerRadius = 100;
 
-  // Calculate cumulative percentages for pie slices (only top 5)
+  // Calculate cumulative percentages for pie slices (all shareholders)
   let cumulativePercentage = 0;
-  const slices = data.slice(0, 5).map((item, index) => {
+  const slices = data.map((item, index) => {
     const percentage = parseFloat(item.percentage);
     const startAngle = (cumulativePercentage / 100) * 360;
     cumulativePercentage += percentage;
@@ -953,10 +953,10 @@ function PieChart({ data }: PieChartProps) {
           ) : (
             <>
               <div className="text-3xl sm:text-4xl font-bold text-red-800">
-                TOP {data.slice(0, 5).length}
+                {data.length}
               </div>
               <div className="text-sm text-gray-600 mt-1">ผู้ถือหุ้น</div>
-              <div className="text-xs text-gray-500">รายใหญ่</div>
+              <div className="text-xs text-gray-500">ทั้งหมด</div>
             </>
           )}
         </div>

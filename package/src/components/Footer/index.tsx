@@ -58,22 +58,34 @@ const Footer = () => {
             <h6 className="text-white fw-bold">เกี่ยวกับเรา</h6>
             <ul className="list-unstyled">
               <li>
-                <Link href="#" className="text-white text-decoration-none">
+                <Link
+                  href="about-history"
+                  className="text-white text-decoration-none"
+                >
                   เกี่ยวกับเรา
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-white text-decoration-none">
+                <Link
+                  href="contact-inquiry"
+                  className="text-white text-decoration-none"
+                >
                   ติดต่อเรา
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-white text-decoration-none">
+                <Link
+                  href="careers"
+                  className="text-white text-decoration-none"
+                >
                   ร่วมงานกับเรา
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-white text-decoration-none">
+                <Link
+                  href="investor-financials"
+                  className="text-white text-decoration-none"
+                >
                   นักลงทุนสัมพันธ์
                 </Link>
               </li>
@@ -85,12 +97,18 @@ const Footer = () => {
             <h6 className="text-white fw-bold">สินค้าและบริการ</h6>
             <ul className="list-unstyled">
               <li>
-                <Link href="#" className="text-white text-decoration-none">
+                <Link
+                  href="our-services"
+                  className="text-white text-decoration-none"
+                >
                   บริการของเรา
                 </Link>
               </li>
               <li>
-                <Link href="#" className="text-white text-decoration-none">
+                <Link
+                  href="products-pakku-packaging"
+                  className="text-white text-decoration-none"
+                >
                   Pakku Packaging
                 </Link>
               </li>
@@ -114,25 +132,40 @@ const Footer = () => {
           <ul className="list-inline mb-0">
             <li className="list-inline-item">
               <Link
-                href="#"
-                className="text-secondary text-decoration-underline">
+                href="/PDPA"
+                className="text-secondary text-decoration-underline"
+              >
                 ข้อกำหนดและเงื่อนไข
               </Link>
             </li>
             <li className="list-inline-item">|</li>
             <li className="list-inline-item">
               <Link
-                href="#"
-                className="text-secondary text-decoration-underline">
+                href="/downloads/pdpa/3-นโยบายคุ้มครองข้อมูลส่วนบุคคล-ของบริษัท-ไทยบรรจุภัณฑ์และการพิมพ์-จำกัด-มหาชน.pdf"
+                className="text-secondary text-decoration-underline"
+                target="_blank"
+              >
                 การคุ้มครองข้อมูลส่วนบุคคล
               </Link>
             </li>
             <li className="list-inline-item">|</li>
             <li className="list-inline-item">
               <Link
-                href="#"
-                className="text-secondary text-decoration-underline">
+                href="/downloads/pdpa/2-นโยบายคุกกี้-Cookies-Policy-ของ-บริษัท-ไทยบรรจุภัณฑ์และการพิมพ์-จำกัด-มหาชน.pdf"
+                className="text-secondary text-decoration-underline"
+                target="_blank"
+              >
                 นโยบายการใช้คุกกี้
+              </Link>
+            </li>
+            <li className="list-inline-item">|</li>
+            <li className="list-inline-item">
+              <Link
+                href="/downloads/pdpa/คำประกาศ-เกี่ยวกับความเป็นส่วนตัวในการใช้กล้องวงจรปิด-CCTV-Rev.01.pdf"
+                className="text-secondary text-decoration-underline"
+                target="_blank"
+              >
+                นโยบายกล้องวงจรปิด CCTV
               </Link>
             </li>
           </ul>
