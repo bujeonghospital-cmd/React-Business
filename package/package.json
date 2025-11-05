@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "check-env": "node scripts/check-env-local.js",
+    "predeploy": "npm run check-env"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.0.1",
