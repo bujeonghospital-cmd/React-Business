@@ -1,0 +1,1052 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+
+// ปิด root layout
+if (typeof document !== "undefined") {
+  const style = document.createElement("style");
+  style.textContent = `
+    header, footer, nav.navbar, .layout-grid > :not(main) {
+      display: none !important;
+    }
+    body {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    main, .layout-grid {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+interface Action {
+  action_type: string;
+  value: string;
+}
+
+interface AdInsight {
+  ad_id: string;
+  ad_name: string;
+  adset_id: string;
+  adset_name: string;
+  campaign_id: string;
+  campaign_name: string;
+  spend: string;
+  impressions: string;
+  clicks: string;
+  ctr: string;
+  cpc: string;
+  cpm: string;
+  actions?: Action[];
+  date_start: string;
+  date_stop: string;
+  reach?: string;
+  frequency?: string;
+  cost_per_action_type?: { action_type: string; value: string }[];
+}
+
+interface ApiResponse {
+  success: boolean;
+  data: AdInsight[];
+  error?: string;
+  details?: any;
+}
+
+type ViewMode = "campaigns" | "adsets" | "ads";
+type StatusFilter = "all" | "active" | "paused" | "archived";
+
+export default function FacebookAdsManagerPage() {
+  const [insights, setInsights] = useState<AdInsight[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("ads");
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [dateRange, setDateRange] = useState("today");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [customDateStart, setCustomDateStart] = useState("");
+  const [customDateEnd, setCustomDateEnd] = useState("");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [dateRange, viewMode, customDateStart, customDateEnd]);
+
+  // Auto-refresh ทุก 1 นาที
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      fetchInsights();
+    }, 60000); // 60000ms = 1 นาที
+
+    return () => clearInterval(refreshInterval);
+  }, [dateRange, viewMode, customDateStart, customDateEnd]);
+
+  // Countdown timer
+  useEffect(() => {
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, []);
+
+  // ปิด date picker เมื่อคลิกข้างนอก modal
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // ตรวจสอบว่าคลิกที่ overlay (พื้นที่มืด) เท่านั้น ไม่ใช่ใน modal
+      if (showDatePicker && target.classList.contains("modal-overlay")) {
+        setShowDatePicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDatePicker]);
+
+  const fetchInsights = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // ใช้ API ใหม่ที่รองรับ campaign, adset, ad level
+      // รองรับ time_range และ action_breakdowns
+      const levelParam =
+        viewMode === "campaigns"
+          ? "campaign"
+          : viewMode === "adsets"
+          ? "adset"
+          : "ad";
+
+      // สร้าง URL parameters
+      let url = `/api/facebook-ads-campaigns?level=${levelParam}`;
+
+      // ใช้ filtering เพื่อให้ API ส่งมาแค่ action_type ที่ต้องการ (onsite_conversion.messaging_conversation_started_7d)
+      const filtering = JSON.stringify([
+        {
+          field: "action_type",
+          operator: "IN",
+          value: ["onsite_conversion.messaging_first_reply"],
+        },
+      ]);
+      url += `&filtering=${encodeURIComponent(filtering)}`;
+      url += `&action_breakdowns=action_type`;
+
+      // ถ้าเลือก custom date ให้ใช้ time_range แทน date_preset
+      if (dateRange === "custom" && customDateStart && customDateEnd) {
+        const timeRange = JSON.stringify({
+          since: customDateStart,
+          until: customDateEnd,
+        });
+        url += `&time_range=${encodeURIComponent(timeRange)}`;
+      } else {
+        url += `&date_preset=${dateRange}`;
+      }
+
+      const response = await fetch(url);
+
+      const result: ApiResponse = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
+      }
+
+      // รวมข้อมูลที่ซ้ำกัน (กรณีที่ API ส่งข้อมูลเดียวกันมาหลายแถวเพราะ action_breakdowns)
+      const uniqueData = new Map<string, AdInsight>();
+
+      result.data.forEach((item) => {
+        const key = item.ad_id || item.adset_id || item.campaign_id;
+
+        if (uniqueData.has(key)) {
+          // ถ้ามีข้อมูลนี้อยู่แล้ว ให้รวม actions เข้าด้วยกัน
+          const existing = uniqueData.get(key)!;
+
+          // รวม actions โดยบวกค่าเข้าด้วยกัน
+          if (item.actions) {
+            if (!existing.actions) {
+              existing.actions = [];
+            }
+            item.actions.forEach((action) => {
+              const existingAction = existing.actions!.find(
+                (a) => a.action_type === action.action_type
+              );
+              if (!existingAction) {
+                existing.actions!.push(action);
+              } else {
+                // บวกรวมค่าถ้ามี action_type เดียวกัน
+                const existingValue = parseInt(existingAction.value || "0");
+                const newValue = parseInt(action.value || "0");
+                existingAction.value = (existingValue + newValue).toString();
+              }
+            });
+          }
+        } else {
+          // ถ้ายังไม่มี ให้เพิ่มเข้าไป
+          uniqueData.set(key, { ...item });
+        }
+      });
+
+      setInsights(Array.from(uniqueData.values()));
+      setLastUpdated(new Date());
+      setCountdown(60); // รีเซ็ต countdown เมื่ออัพเดทข้อมูลสำเร็จ
+    } catch (err) {
+      console.error("Error fetching insights:", err);
+      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatNumber = (value: string | number) => {
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num)
+      ? "—"
+      : num.toLocaleString("th-TH", { maximumFractionDigits: 2 });
+  };
+
+  const formatCurrency = (value: string | number) => {
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num)
+      ? "—"
+      : `฿${num.toLocaleString("th-TH", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+  };
+
+  const formatPercentage = (value: string | number) => {
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    return isNaN(num)
+      ? "—"
+      : `${num.toLocaleString("th-TH", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}%`;
+  };
+
+  const getResultsByActionType = (
+    actions: Action[] | undefined,
+    actionType: string
+  ) => {
+    if (!actions) return 0;
+    const action = actions.find((a) => a.action_type === actionType);
+    return action ? parseInt(action.value || "0") : 0;
+  };
+
+  const getAverageCTR = () => {
+    const totalCTR = insights.reduce(
+      (sum, ad) => sum + parseFloat(ad.ctr || "0"),
+      0
+    );
+    return insights.length > 0 ? totalCTR / insights.length : 0;
+  };
+
+  const getAverageCPC = () => {
+    const totalCPC = insights.reduce(
+      (sum, ad) => sum + parseFloat(ad.cpc || "0"),
+      0
+    );
+    return insights.length > 0 ? totalCPC / insights.length : 0;
+  };
+
+  const getAverageCPM = () => {
+    const totalCPM = insights.reduce(
+      (sum, ad) => sum + parseFloat(ad.cpm || "0"),
+      0
+    );
+    return insights.length > 0 ? totalCPM / insights.length : 0;
+  };
+
+  const filteredInsights = insights.filter((ad) => {
+    // กรองตาม search query ถ้ามี
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      return (
+        ad.ad_name.toLowerCase().includes(query) ||
+        ad.campaign_name.toLowerCase().includes(query) ||
+        ad.ad_id.includes(query)
+      );
+    }
+    return true;
+  });
+
+  const getTotalSpend = () => {
+    return filteredInsights.reduce(
+      (sum, ad) => sum + parseFloat(ad.spend || "0"),
+      0
+    );
+  };
+
+  const getTotalImpressions = () => {
+    return filteredInsights.reduce(
+      (sum, ad) => sum + parseInt(ad.impressions || "0"),
+      0
+    );
+  };
+
+  const getTotalClicks = () => {
+    return filteredInsights.reduce(
+      (sum, ad) => sum + parseInt(ad.clicks || "0"),
+      0
+    );
+  };
+
+  const getTotalResults = () => {
+    let total = 0;
+    filteredInsights.forEach((ad) => {
+      if (ad.actions) {
+        // ดึงค่า onsite_conversion.messaging_conversation_started_7d (ผู้ติดต่อใหม่)
+        const messagingAction = ad.actions.find(
+          (action) =>
+            action.action_type === "onsite_conversion.messaging_first_reply"
+        );
+        if (messagingAction) {
+          const value = parseInt(messagingAction.value || "0");
+          total += value;
+        }
+      }
+    });
+    return total;
+  };
+
+  const toggleRowSelection = (id: string) => {
+    const newSelection = new Set(selectedRows);
+    if (newSelection.has(id)) {
+      newSelection.delete(id);
+    } else {
+      newSelection.add(id);
+    }
+    setSelectedRows(newSelection);
+  };
+
+  const toggleAllRows = () => {
+    if (selectedRows.size === insights.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(insights.map((ad) => ad.ad_id)));
+    }
+  };
+
+  const handleDateRangeChange = (value: string) => {
+    setDateRange(value);
+    if (value === "custom") {
+      // ตั้งค่าวันที่เริ่มต้นเป็นวันนี้ก่อนเปิด date picker
+      const today = new Date().toISOString().split("T")[0];
+      if (!customDateStart) setCustomDateStart(today);
+      if (!customDateEnd) setCustomDateEnd(today);
+      setShowDatePicker(true);
+    } else {
+      setShowDatePicker(false);
+    }
+  };
+
+  const applyCustomDateRange = () => {
+    if (customDateStart && customDateEnd) {
+      // ปิด date picker ก่อน
+      setShowDatePicker(false);
+      // ตั้งค่า dateRange ทีหลังเพื่อให้ useEffect ทำงาน
+      setTimeout(() => {
+        setDateRange("custom");
+      }, 0);
+    }
+  };
+
+  const getDateRangeLabel = () => {
+    if (dateRange === "custom" && customDateStart && customDateEnd) {
+      return `${customDateStart} ถึง ${customDateEnd}`;
+    }
+    const labels: Record<string, string> = {
+      today: "วันนี้",
+      yesterday: "เมื่อวาน",
+      last_7d: "7 วันที่แล้ว",
+      last_30d: "30 วันที่แล้ว",
+      this_month: "เดือนนี้",
+      last_month: "เดือนที่แล้ว",
+    };
+    return labels[dateRange] || "เลือกช่วงเวลา";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">กำลังโหลดข้อมูล...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+          <div className="text-red-500 text-5xl mb-4 text-center">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">
+            เกิดข้อผิดพลาด
+          </h2>
+          <p className="text-gray-600 mb-6 text-center">{error}</p>
+          <button
+            onClick={fetchInsights}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
+          >
+            ลองอีกครั้ง
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Calendar Date Picker */}
+      {showDatePicker && (
+        <div
+          className="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            // ปิด modal เมื่อคลิกที่ overlay เท่านั้น
+            if (e.target === e.currentTarget) {
+              setShowDatePicker(false);
+            }
+          }}
+        >
+          <div
+            className="date-picker-container bg-white rounded-2xl shadow-2xl p-8 max-w-3xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <svg
+                  className="w-7 h-7 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                เลือกช่วงวันที่
+              </h3>
+              <button
+                onClick={() => setShowDatePicker(false)}
+                className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition-all text-2xl w-10 h-10 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              {/* Start Date Calendar */}
+              <div>
+                <label className="block text-base font-bold text-gray-700 mb-4">
+                  📅 จากวันที่
+                </label>
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl border-2 border-blue-300 shadow-md">
+                  <input
+                    type="date"
+                    value={
+                      customDateStart || new Date().toISOString().split("T")[0]
+                    }
+                    onChange={(e) => setCustomDateStart(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl text-lg font-medium focus:outline-none focus:ring-4 focus:ring-blue-300 focus:border-blue-500 cursor-pointer bg-white hover:border-blue-400 transition-all"
+                    style={{ colorScheme: "light" }}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* End Date Calendar */}
+              <div>
+                <label className="block text-base font-bold text-gray-700 mb-4">
+                  📅 ถึงวันที่
+                </label>
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border-2 border-orange-300 shadow-md">
+                  <input
+                    type="date"
+                    value={
+                      customDateEnd || new Date().toISOString().split("T")[0]
+                    }
+                    onChange={(e) => setCustomDateEnd(e.target.value)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full px-5 py-4 border-2 border-gray-300 rounded-xl text-lg font-medium focus:outline-none focus:ring-4 focus:ring-orange-300 focus:border-orange-500 cursor-pointer bg-white hover:border-orange-400 transition-all"
+                    style={{ colorScheme: "light" }}
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-4 justify-end">
+              <button
+                onClick={() => setShowDatePicker(false)}
+                className="px-10 py-4 text-base border-2 border-gray-300 rounded-xl hover:bg-gray-100 transition-colors font-semibold text-gray-700 shadow-md hover:shadow-lg"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={applyCustomDateRange}
+                className="px-10 py-4 text-base bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                ✓ ตกลง
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Mode Tabs */}
+      <div className="bg-white border-b border-gray-200 px-6">
+        <div className="flex items-center justify-between">
+          <div className="flex space-x-1">
+            <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                viewMode === "campaigns"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300"
+              }`}
+              onClick={() => setViewMode("campaigns")}
+            >
+              แคมเปญ
+            </button>
+            <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                viewMode === "adsets"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300"
+              }`}
+              onClick={() => setViewMode("adsets")}
+            >
+              ชุดโฆษณา
+            </button>
+            <button
+              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                viewMode === "ads"
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300"
+              }`}
+              onClick={() => setViewMode("ads")}
+            >
+              โฆษณา
+            </button>
+          </div>
+          <div className="flex items-center space-x-3 text-sm">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded transition-colors"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+                <span className="font-medium">{getDateRangeLabel()}</span>
+              </button>
+            </div>
+            <div className="h-4 w-px bg-gray-300"></div>
+            <span className="text-gray-600">
+              ผลลัพธ์จาก {filteredInsights.length} รายการ
+            </span>
+            <div className="h-4 w-px bg-gray-300"></div>
+            <div className="flex items-center space-x-2 text-xs">
+              <div className="flex items-center space-x-1">
+                <div className="relative">
+                  <svg
+                    className={`w-4 h-4 text-green-500 ${
+                      countdown <= 10 ? "animate-pulse" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  {countdown <= 5 && (
+                    <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                  )}
+                </div>
+                <span className="text-gray-600">
+                  อัพเดทใน{" "}
+                  <span className="font-semibold text-green-600">
+                    {countdown}
+                  </span>{" "}
+                  วินาที
+                </span>
+              </div>
+              {lastUpdated && (
+                <>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-gray-500">
+                    อัพเดทล่าสุด:{" "}
+                    {lastUpdated.toLocaleTimeString("th-TH", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
+                  </span>
+                </>
+              )}
+              <button
+                onClick={() => fetchInsights()}
+                className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
+                title="รีเฟรชข้อมูลทันที"
+              >
+                <svg
+                  className="w-4 h-4 text-blue-600 hover:text-blue-700"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Summary Cards */}
+      {filteredInsights.length > 0 && (
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-600 font-medium">
+                  ข้อมูลเรียลไทม์
+                </span>
+              </div>
+              {lastUpdated && (
+                <>
+                  <span className="text-gray-300">•</span>
+                  <span className="text-xs text-gray-500">
+                    อัพเดทอัตโนมัติทุก 1 นาที
+                  </span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center space-x-2 text-xs text-gray-500">
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>อัพเดทครั้งถัดไปใน {countdown} วินาที</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-6 max-w-2xl">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200 shadow-sm relative overflow-hidden">
+              {countdown <= 5 && (
+                <div className="absolute top-0 right-0 w-20 h-20 bg-blue-200 rounded-full filter blur-xl opacity-50 animate-pulse"></div>
+              )}
+              <div className="text-sm text-blue-600 font-semibold mb-2 relative">
+                ผู้ติดต่อผ่านการส่งข้อความรายใหม่
+              </div>
+              <div className="text-3xl font-bold text-blue-900 relative">
+                {formatNumber(getTotalResults())}
+              </div>
+              <div className="text-xs text-blue-500 mt-1 relative">
+                messaging_conversation_started_7d
+              </div>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg border border-orange-200 shadow-sm relative overflow-hidden">
+              {countdown <= 5 && (
+                <div className="absolute top-0 right-0 w-20 h-20 bg-orange-200 rounded-full filter blur-xl opacity-50 animate-pulse"></div>
+              )}
+              <div className="text-sm text-orange-600 font-semibold mb-2 relative">
+                จำนวนเงินที่ใช้จ่ายไป
+              </div>
+              <div className="text-3xl font-bold text-orange-900 relative">
+                {formatCurrency(getTotalSpend())}
+              </div>
+              <div className="text-xs text-orange-500 mt-1 relative">
+                Total Spend
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Action Bar */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <button
+              disabled={selectedRows.size === 0}
+              className={`px-4 py-2 rounded transition-colors text-sm font-medium ${
+                selectedRows.size > 0
+                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-50 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              แก้ไข
+            </button>
+            <button
+              disabled={selectedRows.size === 0}
+              className={`px-4 py-2 rounded transition-colors text-sm ${
+                selectedRows.size > 0
+                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-50 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              สร้างซ้ำ
+            </button>
+            <button
+              disabled={selectedRows.size === 0}
+              className={`px-4 py-2 rounded transition-colors text-sm ${
+                selectedRows.size > 0
+                  ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  : "bg-gray-50 text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              การทดสอบ A/B
+            </button>
+            <button className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm">
+              ส่งออก
+            </button>
+            <select
+              disabled={selectedRows.size === 0}
+              className={`px-4 py-2 border border-gray-300 rounded transition-colors text-sm ${
+                selectedRows.size > 0
+                  ? "hover:bg-gray-50"
+                  : "text-gray-400 cursor-not-allowed"
+              }`}
+            >
+              <option>เพิ่มเติม ▼</option>
+              <option>ลบ</option>
+              <option>เก็บถาวร</option>
+              <option>แชร์</option>
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm flex items-center space-x-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+                />
+              </svg>
+              <span>คอลัมน์: กำหนดเอง</span>
+            </button>
+            <button className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm flex items-center space-x-1">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span>แผนภูมิ</span>
+            </button>
+            <button className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white mx-6 my-4 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left w-10">
+                  <input
+                    type="checkbox"
+                    checked={
+                      selectedRows.size === filteredInsights.length &&
+                      filteredInsights.length > 0
+                    }
+                    onChange={toggleAllRows}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                </th>
+                <th className="px-4 py-3 text-left min-w-[200px]">
+                  <button className="flex items-center space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider">
+                    <span>สถานะการแสดงโฆษณา</span>
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-left min-w-[280px]">
+                  <button className="flex items-center space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider">
+                    <span>
+                      {viewMode === "campaigns"
+                        ? "แคมเปญ"
+                        : viewMode === "adsets"
+                        ? "ชุดโฆษณา"
+                        : "โฆษณา"}
+                    </span>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
+                    </svg>
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-right min-w-[200px]">
+                  <button className="flex items-center justify-end space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider w-full">
+                    <span>ผู้ติดต่อผ่านข้อความรายใหม่</span>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
+                    </svg>
+                  </button>
+                </th>
+                <th className="px-4 py-3 text-right min-w-[180px]">
+                  <button className="flex items-center justify-end space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider w-full">
+                    <span>จำนวนเงินที่ใช้จ่ายไป</span>
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
+                    </svg>
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredInsights.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <svg
+                        className="w-16 h-16 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      <div className="text-gray-600 font-medium text-lg">
+                        ไม่พบข้อมูล
+                      </div>
+                      <div className="text-gray-500 text-sm">
+                        {searchQuery
+                          ? `ไม่พบผลลัพธ์สำหรับ "${searchQuery}"`
+                          : "ไม่มีข้อมูลโฆษณาในช่วงเวลานี้"}
+                      </div>
+                      {searchQuery && (
+                        <button
+                          onClick={() => setSearchQuery("")}
+                          className="mt-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        >
+                          ล้างการค้นหา
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredInsights.map((ad, index) => {
+                  const messagingAction = ad.actions?.find(
+                    (action) =>
+                      action.action_type ===
+                      "onsite_conversion.messaging_first_reply"
+                  );
+                  const messagingCount = messagingAction
+                    ? parseInt(messagingAction.value || "0")
+                    : 0;
+
+                  return (
+                    <motion.tr
+                      key={ad.ad_id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: index * 0.02 }}
+                      className={`hover:bg-blue-50 transition-colors ${
+                        selectedRows.has(ad.ad_id) ? "bg-blue-50" : ""
+                      }`}
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.has(ad.ad_id)}
+                          onChange={() => toggleRowSelection(ad.ad_id)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">
+                            เปิดใช้งาน
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center text-white font-semibold text-xs shadow-sm">
+                              {ad.campaign_name.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="font-medium text-blue-600 hover:underline cursor-pointer text-sm">
+                                {ad.campaign_name}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="font-semibold text-gray-900 text-lg">
+                          {formatNumber(messagingCount)}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          messaging_conversation_started_7d
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="font-semibold text-gray-900 text-lg">
+                          {formatCurrency(ad.spend)}
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })
+              )}
+            </tbody>
+
+            {/* Summary Row */}
+            <tfoot className="bg-gradient-to-r from-blue-50 to-orange-50 border-t-2 border-gray-300">
+              <tr className="font-semibold text-sm">
+                <td className="px-4 py-4" colSpan={3}>
+                  <div className="flex items-center space-x-3">
+                    <span className="text-gray-800 font-bold text-base">
+                      📊 สรุปรวมทั้งหมด
+                    </span>
+                    <span className="text-gray-600 text-sm">
+                      ({filteredInsights.length} รายการ)
+                    </span>
+                  </div>
+                </td>
+                <td className="px-4 py-4 text-right">
+                  <div className="font-bold text-blue-700 text-xl">
+                    {formatNumber(getTotalResults())}
+                  </div>
+                  <div className="text-xs text-blue-600 mt-1">รวมผู้ติดต่อ</div>
+                </td>
+                <td className="px-4 py-4 text-right">
+                  <div className="font-bold text-orange-700 text-xl">
+                    {formatCurrency(getTotalSpend())}
+                  </div>
+                  <div className="text-xs text-orange-600 mt-1">
+                    รวมค่าใช้จ่าย
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
