@@ -89,7 +89,9 @@ export async function GET(request: NextRequest) {
     console.log("✅ All Facebook credentials available. Connecting to API...");
 
     try {
-      const bizSdk = require("facebook-nodejs-business-sdk");
+      // Dynamic import to avoid require()
+      // @ts-expect-error - no types available for facebook-nodejs-business-sdk
+      const bizSdk = await import("facebook-nodejs-business-sdk");
       const AdAccount = bizSdk.AdAccount;
       const Campaign = bizSdk.Campaign;
 

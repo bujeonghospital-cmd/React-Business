@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 
 // ปิด root layout
@@ -73,50 +73,7 @@ export default function FacebookAdsManagerPage() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState(60);
 
-  useEffect(() => {
-    fetchInsights();
-  }, [dateRange, viewMode, customDateStart, customDateEnd]);
-
-  // Auto-refresh ทุก 1 นาที
-  useEffect(() => {
-    const refreshInterval = setInterval(() => {
-      fetchInsights();
-    }, 60000); // 60000ms = 1 นาที
-
-    return () => clearInterval(refreshInterval);
-  }, [dateRange, viewMode, customDateStart, customDateEnd]);
-
-  // Countdown timer
-  useEffect(() => {
-    const countdownInterval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          return 60;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(countdownInterval);
-  }, []);
-
-  // ปิด date picker เมื่อคลิกข้างนอก modal
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      // ตรวจสอบว่าคลิกที่ overlay (พื้นที่มืด) เท่านั้น ไม่ใช่ใน modal
-      if (showDatePicker && target.classList.contains("modal-overlay")) {
-        setShowDatePicker(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showDatePicker]);
-
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -207,7 +164,50 @@ export default function FacebookAdsManagerPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [dateRange, viewMode, customDateStart, customDateEnd]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
+
+  // Auto-refresh ทุก 1 นาที
+  useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      fetchInsights();
+    }, 60000); // 60000ms = 1 นาที
+
+    return () => clearInterval(refreshInterval);
+  }, [fetchInsights]);
+
+  // Countdown timer
+  useEffect(() => {
+    const countdownInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          return 60;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, []);
+
+  // ปิด date picker เมื่อคลิกข้างนอก modal
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // ตรวจสอบว่าคลิกที่ overlay (พื้นที่มืด) เท่านั้น ไม่ใช่ใน modal
+      if (showDatePicker && target.classList.contains("modal-overlay")) {
+        setShowDatePicker(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   const formatNumber = (value: string | number) => {
     const num = typeof value === "string" ? parseFloat(value) : value;

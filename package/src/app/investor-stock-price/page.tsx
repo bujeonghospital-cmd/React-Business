@@ -142,7 +142,7 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const { ref, isVisible } = useScrollAnimation();
 
-  const fetchStockData = async () => {
+  const fetchStockData = React.useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(
@@ -178,14 +178,14 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [symbol]);
 
   useEffect(() => {
     fetchStockData();
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchStockData, 30000);
     return () => clearInterval(interval);
-  }, [symbol]);
+  }, [fetchStockData]);
 
   if (loading && !stockData) {
     return (
@@ -274,9 +274,7 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
           className="p-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           title="รีเฟรชข้อมูล"
         >
-          <RefreshCw
-            className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
-          />
+          <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
 
@@ -518,7 +516,9 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
                 <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded-lg p-3 z-10 whitespace-nowrap shadow-xl">
                   <div className="font-semibold mb-1">{item.date}</div>
                   <div>ราคา: {item.price.toFixed(2)}</div>
-                  <div className="text-green-400">สูง: {item.high.toFixed(2)}</div>
+                  <div className="text-green-400">
+                    สูง: {item.high.toFixed(2)}
+                  </div>
                   <div className="text-red-400">ต่ำ: {item.low.toFixed(2)}</div>
                   <div className="text-blue-400">
                     ปริมาณ: {(item.volume / 1000000).toFixed(2)}M
@@ -550,7 +550,9 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
         {/* X-axis labels */}
         <div className="ml-12 mt-2 flex justify-between text-xs text-gray-500">
           <span>{historicalData[0]?.date}</span>
-          <span>{historicalData[Math.floor(historicalData.length / 2)]?.date}</span>
+          <span>
+            {historicalData[Math.floor(historicalData.length / 2)]?.date}
+          </span>
           <span>{historicalData[historicalData.length - 1]?.date}</span>
         </div>
       </div>

@@ -102,7 +102,8 @@ export async function GET(request: NextRequest) {
     );
 
     try {
-      const { GoogleAdsApi } = require("google-ads-api");
+      // Dynamic import to avoid require()
+      const { GoogleAdsApi } = await import("google-ads-api");
 
       const client = new GoogleAdsApi({
         client_id: credentials.clientId!,
