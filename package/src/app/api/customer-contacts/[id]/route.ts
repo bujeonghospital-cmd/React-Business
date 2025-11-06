@@ -31,10 +31,10 @@ const contacts: ContactRecord[] = [
 // GET - Retrieve single contact by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const contact = contacts.find((c) => c.id === id);
 
     if (!contact) {
@@ -66,10 +66,10 @@ export async function GET(
 // PUT - Update contact by ID
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     const contactIndex = contacts.findIndex((c) => c.id === id);
@@ -141,10 +141,10 @@ export async function PUT(
 // DELETE - Delete contact by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const contactIndex = contacts.findIndex((c) => c.id === id);
 
     if (contactIndex === -1) {
