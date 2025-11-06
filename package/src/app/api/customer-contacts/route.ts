@@ -14,7 +14,7 @@ interface ContactRecord {
 }
 
 // In-memory storage (ในการใช้งานจริง ควรใช้ Database)
-let contacts: ContactRecord[] = [
+const contacts: ContactRecord[] = [
   {
     id: "1",
     name: "คุณสมชาย ใจดี",

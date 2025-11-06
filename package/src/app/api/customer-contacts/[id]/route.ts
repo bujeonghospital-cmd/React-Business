@@ -14,7 +14,7 @@ interface ContactRecord {
 }
 
 // In-memory storage (ต้องเหมือนกับ route.ts หลัก)
-let contacts: ContactRecord[] = [
+const contacts: ContactRecord[] = [
   {
     id: "1",
     name: "คุณสมชาย ใจดี",
