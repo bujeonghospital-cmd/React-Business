@@ -76,6 +76,8 @@ export default function FacebookAdsManagerPage() {
   const [googleSheetsLoading, setGoogleSheetsLoading] = useState(false);
   const [googleAdsData, setGoogleAdsData] = useState<number>(0);
   const [googleAdsLoading, setGoogleAdsLoading] = useState(false);
+  const [dailyData, setDailyData] = useState<any[]>([]);
+  const [dailyDataLoading, setDailyDataLoading] = useState(false);
 
   const fetchInsights = useCallback(async () => {
     try {
@@ -208,6 +210,88 @@ export default function FacebookAdsManagerPage() {
     }
   }, [dateRange, customDateStart, customDateEnd]);
 
+  const fetchDailyData = useCallback(async () => {
+    try {
+      setDailyDataLoading(true);
+
+      // กำหนดช่วงเวลา 30 วันย้อนหลัง
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+
+      const since = startDate.toISOString().split("T")[0];
+      const until = endDate.toISOString().split("T")[0];
+
+      // ดึงข้อมูล Facebook Ads แบบรายวัน
+      const timeRange = JSON.stringify({ since, until });
+      const fbUrl = `/api/facebook-ads-campaigns?level=campaign&time_range=${encodeURIComponent(
+        timeRange
+      )}&time_increment=1&action_breakdowns=action_type`;
+
+      const fbResponse = await fetch(fbUrl);
+      const fbResult: ApiResponse = await fbResponse.json();
+
+      if (!fbResponse.ok || !fbResult.success) {
+        throw new Error(
+          fbResult.error || "ไม่สามารถดึงข้อมูล Facebook Ads ได้"
+        );
+      }
+
+      // จัดกลุ่มข้อมูลตามวันที่
+      const dataByDate = new Map<string, any>();
+
+      fbResult.data.forEach((item) => {
+        const date = item.date_start;
+
+        if (!dataByDate.has(date)) {
+          dataByDate.set(date, {
+            date,
+            spend: 0,
+            clicks: 0,
+            impressions: 0,
+            messagingFirstReply: 0,
+            messagingConnection: 0,
+            googleSheets: 0,
+            googleAds: 0,
+          });
+        }
+
+        const dayData = dataByDate.get(date)!;
+        dayData.spend += parseFloat(item.spend || "0");
+        dayData.clicks += parseInt(item.clicks || "0");
+        dayData.impressions += parseInt(item.impressions || "0");
+
+        if (item.actions) {
+          item.actions.forEach((action) => {
+            if (
+              action.action_type === "onsite_conversion.messaging_first_reply"
+            ) {
+              dayData.messagingFirstReply += parseInt(action.value || "0");
+            }
+            if (
+              action.action_type ===
+              "onsite_conversion.total_messaging_connection"
+            ) {
+              dayData.messagingConnection += parseInt(action.value || "0");
+            }
+          });
+        }
+      });
+
+      // แปลงเป็น array และเรียงตามวันที่
+      const dailyArray = Array.from(dataByDate.values()).sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      );
+
+      setDailyData(dailyArray);
+    } catch (err) {
+      console.error("Error fetching daily data:", err);
+      setDailyData([]);
+    } finally {
+      setDailyDataLoading(false);
+    }
+  }, []);
+
   const fetchGoogleAdsData = useCallback(async () => {
     try {
       setGoogleAdsLoading(true);
@@ -302,7 +386,13 @@ export default function FacebookAdsManagerPage() {
     fetchInsights();
     fetchGoogleSheetsData();
     fetchGoogleAdsData();
-  }, [fetchInsights, fetchGoogleSheetsData, fetchGoogleAdsData]);
+    fetchDailyData();
+  }, [
+    fetchInsights,
+    fetchGoogleSheetsData,
+    fetchGoogleAdsData,
+    fetchDailyData,
+  ]);
 
   // Auto-refresh ทุก 1 นาที
   useEffect(() => {
@@ -310,10 +400,16 @@ export default function FacebookAdsManagerPage() {
       fetchInsights();
       fetchGoogleSheetsData();
       fetchGoogleAdsData();
+      fetchDailyData();
     }, 60000); // 60000ms = 1 นาที
 
     return () => clearInterval(refreshInterval);
-  }, [fetchInsights, fetchGoogleSheetsData, fetchGoogleAdsData]);
+  }, [
+    fetchInsights,
+    fetchGoogleSheetsData,
+    fetchGoogleAdsData,
+    fetchDailyData,
+  ]);
 
   // Countdown timer
   useEffect(() => {
@@ -1142,272 +1238,222 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
         </div>
       </div>
 
-      {/* Table */}
+      {/* Daily Data Table - ตารางข้อมูลรายวัน */}
       <div className="bg-white mx-6 my-4 rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-4">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            📊 ข้อมูลรายวัน (30 วันย้อนหลัง)
+          </h2>
+          <p className="text-indigo-100 text-sm mt-1">
+            สรุปผลการทำโฆษณาแต่ละวัน
+          </p>
+        </div>
+
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left w-10">
-                  <input
-                    type="checkbox"
-                    checked={
-                      selectedRows.size === filteredInsights.length &&
-                      filteredInsights.length > 0
-                    }
-                    onChange={toggleAllRows}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
-                <th className="px-4 py-3 text-left min-w-[200px]">
-                  <button className="flex items-center space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider">
-                    <span>สถานะการแสดงโฆษณา</span>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-left min-w-[280px]">
-                  <button className="flex items-center space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider">
-                    <span>
-                      {viewMode === "campaigns"
-                        ? "แคมเปญ"
-                        : viewMode === "adsets"
-                        ? "ชุดโฆษณา"
-                        : "โฆษณา"}
-                    </span>
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                      />
-                    </svg>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-right min-w-[200px]">
-                  <button className="flex items-center justify-end space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider w-full">
-                    <span>ผู้ติดต่อผ่านข้อความรายใหม่</span>
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                      />
-                    </svg>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-right min-w-[220px]">
-                  <button className="flex items-center justify-end space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider w-full">
-                    <span>การส่งข้อความเพื่อเริ่มการสนทนา</span>
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                      />
-                    </svg>
-                  </button>
-                </th>
-                <th className="px-4 py-3 text-right min-w-[180px]">
-                  <button className="flex items-center justify-end space-x-1 font-semibold text-xs text-gray-700 hover:text-gray-900 uppercase tracking-wider w-full">
-                    <span>จำนวนเงินที่ใช้จ่ายไป</span>
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-                      />
-                    </svg>
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredInsights.length === 0 ? (
+          {dailyDataLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600 mb-2"></div>
+                <p className="text-gray-600 text-sm">
+                  กำลังโหลดข้อมูลรายวัน...
+                </p>
+              </div>
+            </div>
+          ) : dailyData.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <svg
+                className="w-12 h-12 mx-auto mb-3 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                />
+              </svg>
+              <p>ไม่มีข้อมูลรายวัน</p>
+            </div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b-2 border-indigo-200">
                 <tr>
-                  <td colSpan={6} className="px-4 py-16 text-center">
-                    <div className="flex flex-col items-center justify-center space-y-3">
+                  <th className="px-4 py-3 text-left text-xs font-bold text-indigo-700 uppercase tracking-wider">
+                    วัน/เดือน/ปี
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold text-orange-700 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-2">
                       <svg
-                        className="w-16 h-16 text-gray-300"
-                        fill="none"
-                        stroke="currentColor"
+                        className="w-4 h-4"
                         viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      จำนวนเงินที่ใช้จ่ายไป
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold text-blue-700 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      ผู้ติดต่อผ่านการส่งข้อความรายใหม่
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold text-purple-700 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                      การส่งข้อความเพื่อเริ่มการสนทนา
+                    </div>
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold text-green-700 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
                       >
                         <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          d="M11.318 12.545H7.91v-1.091h3.41v1.09zm0 2.182H7.91v-1.091h3.41v1.09zm0 2.182H7.91v-1.091h3.41v1.09zm6.819-4.364H14.728v-1.091h3.41v1.09zm0 2.182H14.728v-1.091h3.41v1.09zm0 2.182H14.728v-1.091h3.41v1.09zm0-10.909v2.182h-3.41V6h-3.818v2.182H7.91V6H2v16.364h20V6h-3.863zM20.727 21.09H3.273V10.364h17.454V21.09zm0-12.545H3.273V7.636h17.454v.91z"
+                          fill="#0F9D58"
                         />
                       </svg>
-                      <div className="text-gray-600 font-medium text-lg">
-                        ไม่พบข้อมูล
-                      </div>
-                      <div className="text-gray-500 text-sm">
-                        {searchQuery
-                          ? `ไม่พบผลลัพธ์สำหรับ "${searchQuery}"`
-                          : "ไม่มีข้อมูลโฆษณาในช่วงเวลานี้"}
-                      </div>
-                      {searchQuery && (
-                        <button
-                          onClick={() => setSearchQuery("")}
-                          className="mt-2 px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        >
-                          ล้างการค้นหา
-                        </button>
-                      )}
+                      ได้ชื่อได้เบอร์ (Google Sheets)
                     </div>
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-bold text-yellow-700 uppercase tracking-wider">
+                    <div className="flex items-center justify-end gap-2">
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                          fill="#4285F4"
+                        />
+                        <path
+                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                          fill="#34A853"
+                        />
+                        <path
+                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                          fill="#FBBC05"
+                        />
+                        <path
+                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                          fill="#EA4335"
+                        />
+                      </svg>
+                      ข้อมูลการคลิกของ Google Ads
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {dailyData.map((day, index) => (
+                  <tr
+                    key={day.date}
+                    className={`hover:bg-indigo-50 transition-colors ${
+                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
+                    }`}
+                  >
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                        <span className="font-medium text-gray-900">
+                          {new Date(day.date).toLocaleDateString("th-TH", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-orange-600">
+                      {formatCurrency(day.spend)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-blue-600">
+                      {formatNumber(day.messagingFirstReply)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-purple-600">
+                      {formatNumber(day.messagingConnection)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-green-600">
+                      {formatNumber(day.googleSheets)}
+                    </td>
+                    <td className="px-4 py-3 text-right font-semibold text-yellow-600">
+                      {formatNumber(day.googleAds)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gradient-to-r from-indigo-100 to-purple-100 border-t-2 border-indigo-300">
+                <tr>
+                  <td className="px-4 py-4 font-bold text-indigo-900 text-base">
+                    รวมทั้งหมด
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-orange-700 text-base">
+                    {formatCurrency(
+                      dailyData.reduce((sum, day) => sum + day.spend, 0)
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-blue-700 text-base">
+                    {formatNumber(
+                      dailyData.reduce(
+                        (sum, day) => sum + day.messagingFirstReply,
+                        0
+                      )
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-purple-700 text-base">
+                    {formatNumber(
+                      dailyData.reduce(
+                        (sum, day) => sum + day.messagingConnection,
+                        0
+                      )
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-green-700 text-base">
+                    {formatNumber(
+                      dailyData.reduce((sum, day) => sum + day.googleSheets, 0)
+                    )}
+                  </td>
+                  <td className="px-4 py-4 text-right font-bold text-yellow-700 text-base">
+                    {formatNumber(
+                      dailyData.reduce((sum, day) => sum + day.googleAds, 0)
+                    )}
                   </td>
                 </tr>
-              ) : (
-                filteredInsights.map((ad, index) => {
-                  const messagingFirstReply = ad.actions?.find(
-                    (action) =>
-                      action.action_type ===
-                      "onsite_conversion.messaging_first_reply"
-                  );
-                  const messagingFirstReplyCount = messagingFirstReply
-                    ? parseInt(messagingFirstReply.value || "0")
-                    : 0;
-
-                  const messagingConnection = ad.actions?.find(
-                    (action) =>
-                      action.action_type ===
-                      "onsite_conversion.total_messaging_connection"
-                  );
-                  const messagingConnectionCount = messagingConnection
-                    ? parseInt(messagingConnection.value || "0")
-                    : 0;
-
-                  return (
-                    <motion.tr
-                      key={ad.ad_id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.02 }}
-                      className={`hover:bg-blue-50 transition-colors ${
-                        selectedRows.has(ad.ad_id) ? "bg-blue-50" : ""
-                      }`}
-                    >
-                      <td className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedRows.has(ad.ad_id)}
-                          onChange={() => toggleRowSelection(ad.ad_id)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="text-sm text-gray-600">
-                            เปิดใช้งาน
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded flex items-center justify-center text-white font-semibold text-xs shadow-sm">
-                              {ad.campaign_name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="font-medium text-blue-600 hover:underline cursor-pointer text-sm">
-                                {ad.campaign_name}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="font-semibold text-gray-900 text-lg">
-                          {formatNumber(messagingFirstReplyCount)}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          messaging_first_reply
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="font-semibold text-gray-900 text-lg">
-                          {formatNumber(messagingConnectionCount)}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          total_messaging_connection
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="font-semibold text-gray-900 text-lg">
-                          {formatCurrency(ad.spend)}
-                        </div>
-                      </td>
-                    </motion.tr>
-                  );
-                })
-              )}
-            </tbody>
-
-            {/* Summary Row */}
-            <tfoot className="bg-gradient-to-r from-blue-50 to-orange-50 border-t-2 border-gray-300">
-              <tr className="font-semibold text-sm">
-                <td className="px-4 py-4" colSpan={3}>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-gray-800 font-bold text-base">
-                      📊 สรุปรวมทั้งหมด
-                    </span>
-                    <span className="text-gray-600 text-sm">
-                      ({filteredInsights.length} รายการ)
-                    </span>
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-right">
-                  <div className="font-bold text-blue-700 text-xl">
-                    {formatNumber(getTotalResults())}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    รวมผู้ติดต่อรายใหม่
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-right">
-                  <div className="font-bold text-purple-700 text-xl">
-                    {formatNumber(getTotalMessagingConnection())}
-                  </div>
-                  <div className="text-xs text-purple-600 mt-1">
-                    รวมการสนทนา
-                  </div>
-                </td>
-                <td className="px-4 py-4 text-right">
-                  <div className="font-bold text-orange-700 text-xl">
-                    {formatCurrency(getTotalSpend())}
-                  </div>
-                  <div className="text-xs text-orange-600 mt-1">
-                    รวมค่าใช้จ่าย
-                  </div>
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+              </tfoot>
+            </table>
+          )}
         </div>
       </div>
     </div>
