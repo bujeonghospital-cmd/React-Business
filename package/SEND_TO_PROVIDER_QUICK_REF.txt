@@ -1,0 +1,178 @@
+======================================================================
+QUICK REFERENCE - สำหรับส่งให้ผู้ให้บริการ Yalecom
+======================================================================
+
+สวัสดีครับ/ค่ะ
+
+เรากำลังพัฒนาระบบ Customer Contact Dashboard ที่ต้องการเชื่อมต่อกับ
+ระบบของ Yalecom กรุณาให้ข้อมูลดังนี้:
+
+
+═══════════════════════════════════════════════════════════════════
+📋 CHECKLIST - ข้อมูลที่ต้องการ
+═══════════════════════════════════════════════════════════════════
+
+☐ 1. Webhook Configuration
+   - ตั้งค่า Webhook URL: https://tpp-thanakon.store/api/webhooks/yalecom-call
+   - Events: call_started, call_ringing, call_answered, call_ended
+   - JSON payload format (ตามเอกสารแนบ)
+
+☐ 2. Robocall API Access
+   - API Endpoint URL
+   - Authentication method (API Key / OAuth)
+   - Request/Response format
+
+☐ 3. Queue Status API
+   - API Endpoint URL (ถ้ายังไม่มีก็ไม่เป็นไร)
+   - Authentication method
+
+☐ 4. API Credentials
+   - API Key / Secret
+   - Webhook Secret (สำหรับ verify signature)
+
+☐ 5. Documentation
+   - API Documentation URL
+   - Postman Collection / OpenAPI Spec
+
+
+═══════════════════════════════════════════════════════════════════
+🔧 1. WEBHOOK SETUP (สำคัญที่สุด!)
+═══════════════════════════════════════════════════════════════════
+
+Webhook URL:
+  https://tpp-thanakon.store/api/webhooks/yalecom-call
+
+Method: POST
+Content-Type: application/json
+
+Events ที่ต้องการ:
+  ✓ call_started
+  ✓ call_ringing  ← สำคัญที่สุด! (สำหรับแสดงสถานะ "รอสาย")
+  ✓ call_answered
+  ✓ call_ended
+
+JSON Format ที่ต้องการ:
+{
+  "call_id": "call-123",
+  "caller_number": "0812345678",
+  "callee_number": "900",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "timestamp": "2025-11-07T10:00:00.000Z",
+  "direction": "inbound",
+  "event_type": "call_ringing"
+}
+
+
+═══════════════════════════════════════════════════════════════════
+🤖 2. ROBOCALL API (สำหรับโทรออกอัตโนมัติ)
+═══════════════════════════════════════════════════════════════════
+
+กรุณาแจ้ง:
+1. API Endpoint: _____________________
+2. API Key: _____________________
+3. Request format:
+   POST /api/robocall
+   {
+     "phone_number": "0812345678",
+     "agent_id": "101",
+     ...
+   }
+4. Response format: _____________________
+
+
+═══════════════════════════════════════════════════════════════════
+📊 3. QUEUE STATUS API (ถ้ามี)
+═══════════════════════════════════════════════════════════════════
+
+กรุณาแจ้ง:
+1. API Endpoint: _____________________
+2. Parameters: queue_extension หรือ queue_uuid?
+3. Response format (รายชื่อ agents และสถานะ)
+
+
+═══════════════════════════════════════════════════════════════════
+🔐 4. AUTHENTICATION
+═══════════════════════════════════════════════════════════════════
+
+API Key: _____________________
+API Secret: _____________________
+Webhook Secret: _____________________
+
+Authorization Header:
+  Authorization: Bearer YOUR_API_KEY
+  (หรือ format อื่น?)
+
+
+═══════════════════════════════════════════════════════════════════
+📱 5. PHONE NUMBER FORMAT
+═══════════════════════════════════════════════════════════════════
+
+กรุณาแจ้งว่ารูปแบบเบอร์โทรที่ใช้คือ:
+☐ 0812345678 (10 หลัก)
+☐ +66812345678 (มี country code)
+☐ อื่นๆ: _____________________
+
+
+═══════════════════════════════════════════════════════════════════
+🧪 6. TESTING
+═══════════════════════════════════════════════════════════════════
+
+Sandbox/Testing Environment:
+  URL: _____________________
+  Test API Key: _____________________
+
+กรุณาส่ง test webhook มาที่:
+  https://tpp-thanakon.store/api/webhooks/yalecom-call
+  (หรือ ngrok URL ถ้าต้องการทดสอบ local: https://xxxx.ngrok-free.app/api/webhooks/yalecom-call)
+
+
+═══════════════════════════════════════════════════════════════════
+📧 7. CONTACT INFORMATION
+═══════════════════════════════════════════════════════════════════
+
+ติดต่อกลับได้ที่:
+
+ชื่อ: _____________________
+Email: _____________________
+Phone: _____________________
+Line ID: _____________________
+
+
+═══════════════════════════════════════════════════════════════════
+📎 DOCUMENTS ATTACHED
+═══════════════════════════════════════════════════════════════════
+
+1. WEBHOOK_SETUP_FOR_PROVIDER.txt
+   - รายละเอียด webhook configuration แบบเต็ม
+
+2. ROBOCALL_API_REQUIREMENTS.txt
+   - รายละเอียด Robocall API ที่ต้องการ
+
+3. (Optional) Technical Specification Document
+   - เอกสารเพิ่มเติมถ้ามี
+
+
+═══════════════════════════════════════════════════════════════════
+🎯 SUMMARY
+═══════════════════════════════════════════════════════════════════
+
+เราต้องการ:
+
+1. ตั้งค่า Webhook สำหรับรับ call events (call_ringing, call_answered, etc.)
+2. API สำหรับโทรออก (Robocall API)
+3. API สำหรับเช็คสถานะ Queue (Queue Status API)
+4. Credentials สำหรับ authentication
+5. Documentation และตัวอย่างการใช้งาน
+
+
+═══════════════════════════════════════════════════════════════════
+
+กรุณาตอบกลับพร้อมข้อมูลตามรายการข้างต้น
+หรือนัดหมาย meeting เพื่อคุยรายละเอียดเพิ่มเติม
+
+ขอบคุณครับ/ค่ะ
+
+Date: November 7, 2025
+Project: Customer Contact Dashboard

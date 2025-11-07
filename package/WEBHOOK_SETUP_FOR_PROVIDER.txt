@@ -1,0 +1,287 @@
+======================================================================
+ข้อมูลสำหรับตั้งค่า Webhook กับ Yalecom
+Customer Contact Dashboard - Webhook Configuration
+======================================================================
+
+เรียน ทีมงาน Yalecom
+
+เราต้องการให้ท่านตั้งค่า Webhook สำหรับระบบ Customer Contact Dashboard
+กรุณาตั้งค่าดังนี้:
+
+======================================================================
+1. WEBHOOK URL (ที่ต้องส่งข้อมูลมา)
+======================================================================
+
+Production URL:
+https://tpp-thanakon.store/api/webhooks/yalecom-call
+
+
+======================================================================
+2. HTTP METHOD
+======================================================================
+
+POST
+
+
+======================================================================
+3. CONTENT TYPE
+======================================================================
+
+application/json
+
+
+======================================================================
+4. WEBHOOK EVENTS ที่ต้องการรับ
+======================================================================
+
+กรุณาส่ง webhook เมื่อเกิด events ต่อไปนี้:
+
+✓ call_started      - เมื่อเริ่มต้นการโทร
+✓ call_ringing      - เมื่อสายกำลังดัง (สำคัญ!)
+✓ call_answered     - เมื่อรับสายแล้ว
+✓ call_ended        - เมื่อวางสาย
+
+
+======================================================================
+5. JSON PAYLOAD ที่ต้องการให้ส่งมา
+======================================================================
+
+กรุณาส่งข้อมูลในรูปแบบ JSON ดังนี้:
+
+{
+  "call_id": "unique_call_id",
+  "caller_number": "0812345678",
+  "callee_number": "900",
+  "queue_name": "Sales Queue",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "call_status": "ringing",
+  "timestamp": "2025-11-07T10:00:00.000Z",
+  "direction": "inbound",
+  "event_type": "call_ringing"
+}
+
+
+======================================================================
+6. คำอธิบายแต่ละ Field
+======================================================================
+
+Field Name              Type      Required    Description
+-----------------------------------------------------------------------
+call_id                 string    Yes         รหัสการโทรที่ไม่ซ้ำกัน
+caller_number           string    Yes         เบอร์ผู้โทรเข้า (เบอร์ลูกค้า)
+callee_number           string    Yes         เบอร์ที่รับสาย (Queue Extension)
+queue_name              string    No          ชื่อ Queue
+queue_extension         string    Yes         เลข Extension ของ Queue (เช่น 900)
+agent_id                string    Yes         รหัส Agent ที่รับ/โทรสาย
+agent_name              string    Yes         ชื่อ Agent (Extension เช่น 101, 102)
+call_status             string    Yes         สถานะการโทร (ringing, answered, ended)
+timestamp               string    Yes         เวลาที่เกิด event (ISO 8601 format)
+direction               string    Yes         ทิศทางการโทร: "inbound" หรือ "outbound"
+event_type              string    Yes         ประเภท event (call_started, call_ringing, etc.)
+
+
+======================================================================
+7. ตัวอย่าง Payload สำหรับแต่ละ Event
+======================================================================
+
+--- Event: call_started (เริ่มต้นการโทร) ---
+{
+  "call_id": "call-001",
+  "caller_number": "0812345678",
+  "callee_number": "900",
+  "queue_name": "Sales Queue",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "call_status": "started",
+  "timestamp": "2025-11-07T10:00:00.000Z",
+  "direction": "inbound",
+  "event_type": "call_started"
+}
+
+
+--- Event: call_ringing (กำลังดังสาย - สำคัญที่สุด!) ---
+{
+  "call_id": "call-001",
+  "caller_number": "0812345678",
+  "callee_number": "900",
+  "queue_name": "Sales Queue",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "call_status": "ringing",
+  "timestamp": "2025-11-07T10:00:05.000Z",
+  "direction": "inbound",
+  "event_type": "call_ringing"
+}
+
+
+--- Event: call_answered (รับสายแล้ว) ---
+{
+  "call_id": "call-001",
+  "caller_number": "0812345678",
+  "callee_number": "900",
+  "queue_name": "Sales Queue",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "call_status": "answered",
+  "timestamp": "2025-11-07T10:00:10.000Z",
+  "direction": "inbound",
+  "event_type": "call_answered"
+}
+
+
+--- Event: call_ended (จบสาย) ---
+{
+  "call_id": "call-001",
+  "caller_number": "0812345678",
+  "callee_number": "900",
+  "queue_name": "Sales Queue",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "call_status": "ended",
+  "timestamp": "2025-11-07T10:05:00.000Z",
+  "direction": "inbound",
+  "event_type": "call_ended",
+  "call_duration": 290
+}
+
+
+--- Event: Outbound Call (โทรออก) ---
+{
+  "call_id": "call-002",
+  "caller_number": "101",
+  "callee_number": "0898765432",
+  "queue_name": "Sales Queue",
+  "queue_extension": "900",
+  "agent_id": "101",
+  "agent_name": "Agent 101",
+  "call_status": "started",
+  "timestamp": "2025-11-07T10:10:00.000Z",
+  "direction": "outbound",
+  "event_type": "call_started"
+}
+
+
+======================================================================
+8. HTTP HEADERS ที่ต้องการ
+======================================================================
+
+กรุณาส่ง HTTP Headers ดังนี้:
+
+Content-Type: application/json
+X-Webhook-Signature: <HMAC SHA256 signature>
+X-Webhook-Timestamp: <Unix timestamp>
+
+หมายเหตุ: X-Webhook-Signature ใช้สำหรับ verify ความถูกต้อง
+         คำนวณจาก: HMAC-SHA256(payload, webhook_secret)
+
+
+======================================================================
+9. WEBHOOK SECRET (สำหรับ Security)
+======================================================================
+
+กรุณาสร้าง Webhook Secret และแชร์กับเราเพื่อใช้ verify signatures
+
+ตัวอย่าง Secret: wh_sec_1234567890abcdef
+
+เราจะใช้ secret นี้เพื่อ verify ว่า webhook มาจาก Yalecom จริง
+
+
+======================================================================
+10. RESPONSE ที่เราจะส่งกลับ
+======================================================================
+
+เมื่อได้รับ webhook สำเร็จ เราจะ response:
+
+HTTP Status: 200 OK
+Body:
+{
+  "success": true,
+  "message": "Incoming call webhook processed",
+  "data": {
+    "id": "call-001",
+    "status": "received"
+  }
+}
+
+
+เมื่อเกิด error:
+
+HTTP Status: 400 หรือ 500
+Body:
+{
+  "success": false,
+  "error": "Error message"
+}
+
+
+======================================================================
+11. RETRY POLICY (กรณี Webhook ล้มเหลว)
+======================================================================
+
+กรุณาตั้งค่า retry policy ดังนี้:
+
+- กรณีได้รับ HTTP 5xx หรือ timeout: ให้ retry
+- Retry intervals: 1s, 5s, 30s, 2m, 5m
+- Maximum retries: 5 ครั้ง
+- Timeout: 10 วินาที
+
+
+======================================================================
+12. IP WHITELIST (ถ้ามี)
+======================================================================
+
+กรุณาแจ้ง IP Address ของ Yalecom Webhook Server เพื่อให้เรา
+เพิ่มเข้า whitelist (ถ้าจำเป็น)
+
+IP Addresses: _____________________ (กรุณาแจ้งมาให้เรา)
+
+
+======================================================================
+13. TESTING ENDPOINT
+======================================================================
+
+สำหรับทดสอบ webhook ก่อน production:
+
+Testing URL: https://tpp-thanakon.store/api/webhooks/yalecom-call
+
+กรุณาส่ง test webhook มาที่ URL นี้ก่อน เพื่อให้เราตรวจสอบว่า
+format ถูกต้องหรือไม่
+
+
+======================================================================
+14. CONTACT INFORMATION
+======================================================================
+
+ติดต่อกลับได้ที่:
+
+ชื่อ: _____________________
+Email: _____________________
+Phone: _____________________
+Line ID: _____________________
+
+
+======================================================================
+15. ADDITIONAL NOTES
+======================================================================
+
+- กรุณาส่ง webhook ทุกครั้งที่มี event เกิดขึ้น (real-time)
+- Payload ต้องเป็น valid JSON เท่านั้น
+- กรุณาใช้ ISO 8601 format สำหรับ timestamp
+- เบอร์โทรศัพท์ควรอยู่ในรูปแบบ 0XXXXXXXXX (10 หลัก)
+- ถ้ามี field เพิ่มเติมสามารถส่งมาได้ เราจะเก็บไว้
+
+
+======================================================================
+สิ้นสุดเอกสาร
+======================================================================
+
+กรุณาตั้งค่าตาม specification ข้างต้น และแจ้งกลับเมื่อพร้อมทดสอบ
+ขอบคุณครับ/ค่ะ
+
+Created: November 7, 2025

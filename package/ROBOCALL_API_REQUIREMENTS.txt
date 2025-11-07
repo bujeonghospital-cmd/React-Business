@@ -1,0 +1,322 @@
+======================================================================
+ข้อมูล Robocall API ที่ต้องการจาก Yalecom
+Customer Contact Dashboard - Robocall API Requirements
+======================================================================
+
+เรียน ทีมงาน Yalecom
+
+เราต้องการใช้ Robocall API สำหรับโทรออกอัตโนมัติ
+กรุณาแจ้งข้อมูลดังนี้:
+
+======================================================================
+1. API ENDPOINT
+======================================================================
+
+กรุณาแจ้ง API Endpoint สำหรับ Robocall:
+
+Base URL: https://api.yalecom.com (หรือ URL อื่น?)
+Endpoint: /v1/robocall (หรือ path อื่น?)
+
+Full URL: _____________________
+
+
+======================================================================
+2. AUTHENTICATION
+======================================================================
+
+เราจะ authenticate ด้วยวิธีใด?
+
+[ ] API Key in Header
+    Header Name: Authorization
+    Value: Bearer YOUR_API_KEY
+
+[ ] Basic Authentication
+    Username: _____________________
+    Password: _____________________
+
+[ ] OAuth 2.0
+    Client ID: _____________________
+    Client Secret: _____________________
+    Token URL: _____________________
+
+[ ] Other: _____________________
+
+
+======================================================================
+3. REQUEST FORMAT
+======================================================================
+
+HTTP Method: POST (หรือ GET?)
+Content-Type: application/json (หรือ application/x-www-form-urlencoded?)
+
+
+เราจะส่ง Request Body ในรูปแบบนี้:
+
+{
+  "phone_number": "0812345678",
+  "agent_id": "101",
+  "campaign_name": "Sales Campaign",
+  "message": "This is a test call",
+  "callback_url": "https://tpp-thanakon.store/api/webhooks/robocall-callback"
+}
+
+
+กรุณาแจ้งว่า field names ที่ Yalecom ใช้คืออะไร?
+
+ตัวอย่าง:
+- phone_number → กรุณาใช้ field name: _____________________
+- agent_id → กรุณาใช้ field name: _____________________
+- campaign_name → กรุณาใช้ field name: _____________________
+- message → กรุณาใช้ field name: _____________________
+
+
+======================================================================
+4. REQUEST PARAMETERS
+======================================================================
+
+กรุณาแจ้งว่า Robocall API รับ parameters อะไรบ้าง:
+
+Parameter Name          Type      Required    Description
+-----------------------------------------------------------------------
+phone_number           string     Yes         เบอร์ที่จะโทรออก
+agent_id               string     ?           รหัส Agent ที่โทร
+campaign_id            string     ?           รหัส Campaign
+message                string     ?           ข้อความที่จะพูด
+voice_file_url         string     ?           URL ของไฟล์เสียง
+callback_url           string     ?           URL สำหรับรับ callback
+priority               number     ?           ลำดับความสำคัญ (1-10)
+schedule_time          string     ?           เวลาที่จะโทร (ISO 8601)
+max_retry              number     ?           จำนวนครั้งที่ retry
+
+
+======================================================================
+5. RESPONSE FORMAT
+======================================================================
+
+เมื่อเรียก API สำเร็จ กรุณาแจ้งว่า Response จะเป็นอย่างไร?
+
+ตัวอย่างที่เราคาดหวัง:
+
+HTTP Status: 200 OK
+{
+  "success": true,
+  "call_id": "robocall-123456",
+  "status": "initiated",
+  "phone_number": "0812345678",
+  "timestamp": "2025-11-07T10:00:00.000Z",
+  "estimated_call_time": "2025-11-07T10:01:00.000Z"
+}
+
+
+Response จริงของ Yalecom:
+{
+  _____________________
+}
+
+
+======================================================================
+6. ERROR RESPONSES
+======================================================================
+
+กรุณาแจ้ง Error Codes และความหมาย:
+
+HTTP Status     Error Code      Description
+-----------------------------------------------------------------------
+400            INVALID_PHONE    เบอร์โทรไม่ถูกต้อง
+401            UNAUTHORIZED     Authentication ล้มเหลว
+403            FORBIDDEN        ไม่มีสิทธิ์ใช้งาน
+429            RATE_LIMIT       เรียก API เกิน rate limit
+500            SERVER_ERROR     เกิดข้อผิดพลาดที่ server
+
+
+ตัวอย่าง Error Response:
+{
+  "success": false,
+  "error": "INVALID_PHONE",
+  "message": "Phone number format is invalid",
+  "details": "Phone number must be 10 digits starting with 0"
+}
+
+
+======================================================================
+7. RATE LIMITS
+======================================================================
+
+กรุณาแจ้ง Rate Limits:
+
+- Requests per second: _____________________
+- Requests per minute: _____________________
+- Requests per hour: _____________________
+- Requests per day: _____________________
+
+- Concurrent calls limit: _____________________
+
+
+======================================================================
+8. CHECK CALL STATUS API
+======================================================================
+
+เรามี API สำหรับเช็คสถานะการโทรหรือไม่?
+
+GET /v1/robocall/{call_id}/status
+
+Response:
+{
+  "call_id": "robocall-123456",
+  "status": "in_progress",
+  "phone_number": "0812345678",
+  "start_time": "2025-11-07T10:00:00.000Z",
+  "answer_time": "2025-11-07T10:00:15.000Z",
+  "end_time": null,
+  "duration": 15,
+  "result": null
+}
+
+
+Status Values:
+- pending: รอดำเนินการ
+- dialing: กำลังโทร
+- ringing: กำลังดังสาย
+- answered: รับสายแล้ว
+- busy: ไลน์ไม่ว่าง
+- no_answer: ไม่รับสาย
+- failed: โทรไม่สำเร็จ
+- completed: จบสาย
+
+
+======================================================================
+9. CALLBACK WEBHOOK
+======================================================================
+
+เมื่อการโทรเสร็จสิ้น Yalecom จะส่ง callback webhook มาหรือไม่?
+
+Callback URL: https://tpp-thanakon.store/api/webhooks/robocall-callback
+
+Payload:
+{
+  "call_id": "robocall-123456",
+  "phone_number": "0812345678",
+  "status": "completed",
+  "result": "answered",
+  "start_time": "2025-11-07T10:00:00.000Z",
+  "answer_time": "2025-11-07T10:00:15.000Z",
+  "end_time": "2025-11-07T10:05:00.000Z",
+  "duration": 285,
+  "recording_url": "https://recordings.yalecom.com/call-123456.mp3"
+}
+
+
+======================================================================
+10. PHONE NUMBER FORMAT
+======================================================================
+
+กรุณาแจ้งรูปแบบเบอร์โทรที่ยอมรับ:
+
+[ ] 0812345678 (10 หลัก เริ่มต้นด้วย 0)
+[ ] +66812345678 (รวม country code)
+[ ] 66812345678 (ไม่มี +)
+[ ] 081-234-5678 (มี - คั่น)
+[ ] Other: _____________________
+
+
+======================================================================
+11. VOICE/MESSAGE OPTIONS
+======================================================================
+
+Robocall รองรับการส่งข้อความแบบใด?
+
+[ ] Text-to-Speech (TTS)
+    - รองรับภาษา: ไทย, อังกฤษ, อื่นๆ?
+    - Voice options: ชาย, หญิง?
+
+[ ] Pre-recorded Audio File
+    - รูปแบบไฟล์: MP3, WAV, อื่นๆ?
+    - Maximum file size: _____ MB
+    - Maximum duration: _____ seconds
+    - Upload URL: _____________________
+
+[ ] Both (TTS และ Audio File)
+
+
+======================================================================
+12. CAMPAIGN MANAGEMENT
+======================================================================
+
+มี API สำหรับจัดการ Campaign หรือไม่?
+
+- สร้าง Campaign: POST /v1/campaigns
+- ดู Campaign list: GET /v1/campaigns
+- เริ่ม Campaign: POST /v1/campaigns/{id}/start
+- หยุด Campaign: POST /v1/campaigns/{id}/stop
+
+
+======================================================================
+13. TESTING/SANDBOX
+======================================================================
+
+มี Sandbox/Testing environment หรือไม่?
+
+Sandbox URL: _____________________
+Test API Key: _____________________
+Test Phone Number: _____________________ (สำหรับทดสอบ)
+
+
+======================================================================
+14. PRICING INFORMATION
+======================================================================
+
+ค่าใช้จ่ายในการใช้ Robocall API:
+
+- ต่อสาย: _____ บาท
+- ต่อนาที: _____ บาท
+- แพ็กเกจรายเดือน: _____ บาท (_____ สาย/เดือน)
+
+
+======================================================================
+15. ADDITIONAL FEATURES
+======================================================================
+
+Features เพิ่มเติมที่เราอาจต้องการ:
+
+[ ] Call Recording
+[ ] Call Transfer to Agent
+[ ] IVR Integration
+[ ] DTMF Detection (กดเลข)
+[ ] Call Analytics/Reports
+[ ] Real-time Call Monitoring
+[ ] Blacklist Management
+
+
+======================================================================
+16. API DOCUMENTATION
+======================================================================
+
+กรุณาแจ้ง URL ของ API Documentation:
+
+Documentation URL: _____________________
+Postman Collection: _____________________
+OpenAPI/Swagger Spec: _____________________
+
+
+======================================================================
+17. SUPPORT CONTACT
+======================================================================
+
+กรุณาแจ้งช่องทางติดต่อ support:
+
+Technical Support Email: _____________________
+Phone: _____________________
+Line ID: _____________________
+Support Hours: _____________________
+
+
+======================================================================
+สิ้นสุดเอกสาร
+======================================================================
+
+กรุณาให้ข้อมูลตามรายการข้างต้น เพื่อให้เราสามารถ integrate
+Robocall API ได้อย่างสมบูรณ์
+
+ขอบคุณครับ/ค่ะ
+
+Created: November 7, 2025

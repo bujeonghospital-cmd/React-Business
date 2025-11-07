@@ -216,44 +216,50 @@ const CustomerContactDashboard = () => {
 
       setQueueData(data);
 
-      // แปลงข้อมูล agents เป็น ContactRecord
+      // แปลงข้อมูล agents เป็น ContactRecord ตามระบบใหม่
       const agentContactsData: ContactRecord[] = data.agents.map((agent) => {
         let status: ContactRecord["status"] = "waiting";
-        let customerPhone = "-"; // เบอร์ลูกค้าที่ติดต่อ
+        let customerPhone = "-";
 
-        // กำหนดสถานะตามการใช้งานจริงของ Agent
-        // ตรวจสอบสถานะจาก agent_queue_status ก่อน
+        // 1. โทรออก - Robocall API (กำลังดำเนินการ)
         if (
+          agent.agent_queue_status === "Outbound" ||
+          agent.agent_queue_status === "Dialing"
+        ) {
+          status = "outgoing"; // แท็กเป็น "โทรออก"
+          customerPhone = agent.agent_outbound_callee_number || "-";
+        }
+        // 2. รอสาย - Queue Status API (Ringing)
+        else if (agent.agent_queue_status === "Ringing") {
+          status = "waiting"; // แท็กเป็น "รอสาย"
+          customerPhone = agent.agent_queue_caller_number || "-";
+        }
+        // 3. SALE ติดต่อ - Queue Status API (InCall/Inbound)
+        else if (
           agent.agent_queue_status === "InCall" ||
           agent.agent_queue_status === "Busy" ||
-          agent.agent_queue_status === "Outbound"
+          agent.agent_queue_status === "Inbound"
         ) {
-          // Agent กำลังคุยสาย หรือกำลังโทรออก (SALE ติดต่อ)
-          status = "sale";
-          // เบอร์จากการโทรออกหรือรับสาย
+          status = "sale"; // แท็กเป็น "SALE ติดต่อ"
           customerPhone =
-            agent.agent_outbound_callee_number ||
             agent.agent_queue_caller_number ||
+            agent.agent_outbound_callee_number ||
             "-";
-        } else if (agent.agent_queue_caller_number) {
-          // Agent รับสายเข้าแต่ยังไม่ได้คุย
-          status = "received";
-          customerPhone = agent.agent_queue_caller_number;
-        } else if (agent.agent_queue_status === "Waiting") {
-          // Agent ว่าง รอรับสาย
+        }
+        // 4. รับสาย - จะมาจาก Webhook แทน (แสดงเป็น waiting ในตอนแรก)
+        else if (agent.agent_queue_status === "Waiting") {
           status = "waiting";
           customerPhone = "-";
         } else if (agent.agent_queue_status === "Offline") {
-          // Agent ออฟไลน์
           status = "waiting";
           customerPhone = "-";
         }
 
         return {
           id: agent.agent_id,
-          name: agent.agent_name, // เบอร์ extension ของบริษัท (101, 102, etc.)
+          name: agent.agent_name,
           company: data.queue_name,
-          phone: customerPhone, // เบอร์ลูกค้าที่กำลังติดต่ออยู่
+          phone: customerPhone,
           email: "",
           status: status,
           lastContact: new Date().toISOString(),

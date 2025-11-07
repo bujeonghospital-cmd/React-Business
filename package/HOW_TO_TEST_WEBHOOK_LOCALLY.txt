@@ -1,0 +1,251 @@
+======================================================================
+วิธีทดสอบ Webhook ใน Local Development
+======================================================================
+
+เนื่องจาก localhost ไม่สามารถรับ webhook จากภายนอกได้
+นี่คือวิธีการทดสอบ webhook ในเครื่อง local:
+
+
+═══════════════════════════════════════════════════════════════════
+วิธีที่ 1: ใช้ ngrok (แนะนำที่สุด! ⭐)
+═══════════════════════════════════════════════════════════════════
+
+1. ติดตั้ง ngrok:
+   - ดาวน์โหลด: https://ngrok.com/download
+   - หรือใช้: choco install ngrok (Windows)
+   - หรือใช้: brew install ngrok (Mac)
+
+2. Signup และ get authtoken (ฟรี):
+   - สมัครที่: https://dashboard.ngrok.com/signup
+   - Copy authtoken
+   - รัน: ngrok config add-authtoken YOUR_AUTHTOKEN
+
+3. รัน Next.js dev server:
+   npm run dev
+
+4. เปิด terminal ใหม่ และรัน ngrok:
+   ngrok http 3000
+
+5. จะได้ URL เช่น:
+   https://a1b2-c3d4-e5f6.ngrok-free.app
+
+6. Webhook URL ที่จะบอกให้ Yalecom:
+   https://a1b2-c3d4-e5f6.ngrok-free.app/api/webhooks/yalecom-call
+
+7. ดู logs ใน ngrok dashboard:
+   http://127.0.0.1:4040
+
+ข้อดี:
+✓ ฟรี
+✓ ดู request/response logs ได้
+✓ Replay requests ได้
+✓ Custom domain (แบบเสียเงิน)
+
+ข้อเสีย:
+✗ URL เปลี่ยนทุกครั้งที่รัน (แก้ไขได้ถ้าซื้อ plan)
+✗ ต้องรันทุกครั้งที่ทดสอบ
+
+
+═══════════════════════════════════════════════════════════════════
+วิธีที่ 2: ใช้ Cloudflare Tunnel (ฟรี!)
+═══════════════════════════════════════════════════════════════════
+
+1. ติดตั้ง cloudflared:
+   - Windows: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+   - หรือใช้: winget install --id Cloudflare.cloudflared
+
+2. รัน Next.js dev server:
+   npm run dev
+
+3. รัน cloudflare tunnel:
+   cloudflared tunnel --url http://localhost:3000
+
+4. จะได้ URL เช่น:
+   https://xxxx-yyyy-zzzz.trycloudflare.com
+
+5. Webhook URL:
+   https://xxxx-yyyy-zzzz.trycloudflare.com/api/webhooks/yalecom-call
+
+ข้อดี:
+✓ ฟรี 100%
+✓ ไม่ต้อง signup
+✓ ใช้งานง่าย
+
+ข้อเสีย:
+✗ URL เปลี่ยนทุกครั้ง
+✗ ไม่มี dashboard ดู logs
+
+
+═══════════════════════════════════════════════════════════════════
+วิธีที่ 3: Deploy ขึ้น Vercel Preview (แนะนำสำหรับทีม)
+═══════════════════════════════════════════════════════════════════
+
+1. Push code ขึ้น branch ใหม่:
+   git checkout -b test-webhook
+   git push origin test-webhook
+
+2. Vercel จะสร้าง preview URL อัตโนมัติ:
+   https://your-project-test-webhook.vercel.app
+
+3. Webhook URL:
+   https://your-project-test-webhook.vercel.app/api/webhooks/yalecom-call
+
+4. ตั้งค่า Environment Variables ใน Vercel:
+   - YALECOM_API_KEY
+   - YALECOM_WEBHOOK_SECRET
+   - ฯลฯ
+
+ข้อดี:
+✓ URL คงที่ (ไม่เปลี่ยน)
+✓ เหมาะสำหรับทีม
+✓ มี logs ใน Vercel dashboard
+✓ สภาพแวดล้อมเหมือน production
+
+ข้อเสีย:
+✗ ต้อง push code ทุกครั้งที่แก้
+
+
+═══════════════════════════════════════════════════════════════════
+วิธีที่ 4: ใช้ webhook.site เพื่อทดสอบ (ง่ายที่สุด!)
+═══════════════════════════════════════════════════════════════════
+
+ถ้าแค่อยากเห็น payload ที่ Yalecom ส่งมา:
+
+1. ไปที่: https://webhook.site
+
+2. จะได้ URL ทันที เช่น:
+   https://webhook.site/abc123def456
+
+3. บอก Yalecom ให้ส่ง webhook มาที่ URL นี้
+
+4. ดู request/response แบบ real-time ในหน้าเว็บ
+
+5. Copy payload ที่ได้ไปใช้ทดสอบใน local:
+   curl -X POST http://localhost:3000/api/webhooks/yalecom-call \
+     -H "Content-Type: application/json" \
+     -d '{ ... payload จาก webhook.site ... }'
+
+ข้อดี:
+✓ ไม่ต้องติดตั้งอะไร
+✓ เห็น payload จริงจาก Yalecom
+✓ ทดสอบได้ทันที
+
+ข้อเสีย:
+✗ ไม่ใช่ endpoint จริงของเรา
+✗ ต้อง copy-paste payload มาทดสอบเอง
+
+
+═══════════════════════════════════════════════════════════════════
+วิธีที่ 5: ใช้ localtunnel (ทางเลือก)
+═══════════════════════════════════════════════════════════════════
+
+1. ติดตั้ง:
+   npm install -g localtunnel
+
+2. รัน Next.js dev server:
+   npm run dev
+
+3. รัน localtunnel:
+   lt --port 3000
+
+4. จะได้ URL เช่น:
+   https://silly-goose-12.loca.lt
+
+5. Webhook URL:
+   https://silly-goose-12.loca.lt/api/webhooks/yalecom-call
+
+ข้อดี:
+✓ ฟรี
+✓ ติดตั้งผ่าน npm ง่าย
+
+ข้อเสีย:
+✗ URL เปลี่ยนทุกครั้ง
+✗ บางครั้งช้า
+
+
+═══════════════════════════════════════════════════════════════════
+⭐ คำแนะนำ (Best Practices)
+═══════════════════════════════════════════════════════════════════
+
+สำหรับการพัฒนา:
+1. ใช้ ngrok สำหรับทดสอบ local
+2. ใช้ webhook.site เพื่อดู payload จริงจาก Yalecom ก่อน
+
+สำหรับการทดสอบกับทีม:
+1. ใช้ Vercel preview deployment
+2. ตั้งค่า environment variables ให้ครบ
+
+สำหรับ Production:
+1. ใช้ Production URL: https://tpp-thanakon.store/api/webhooks/yalecom-call
+2. เปิด logging และ monitoring
+
+
+═══════════════════════════════════════════════════════════════════
+📝 ตัวอย่างการใช้งาน ngrok (Step by Step)
+═══════════════════════════════════════════════════════════════════
+
+Terminal 1 (รัน Next.js):
+```
+cd C:\Users\Pac-Man45\OneDrive\Documents\GitHub\React-Business\package
+npm run dev
+```
+
+Terminal 2 (รัน ngrok):
+```
+ngrok http 3000
+```
+
+Output จาก ngrok:
+```
+Session Status                online
+Account                       your-account@email.com
+Version                       3.x.x
+Region                        Asia Pacific (ap)
+Latency                       10ms
+Web Interface                 http://127.0.0.1:4040
+Forwarding                    https://abc123.ngrok-free.app -> http://localhost:3000
+```
+
+Webhook URL ที่จะใช้:
+https://abc123.ngrok-free.app/api/webhooks/yalecom-call
+
+ทดสอบ:
+```powershell
+$body = @{
+    call_id = "test-001"
+    caller_number = "0812345678"
+    direction = "inbound"
+    event_type = "call_ringing"
+} | ConvertTo-Json
+
+Invoke-RestMethod -Uri "https://abc123.ngrok-free.app/api/webhooks/yalecom-call" `
+  -Method Post `
+  -ContentType "application/json" `
+  -Body $body
+```
+
+ดู logs ใน ngrok dashboard:
+http://127.0.0.1:4040
+
+
+═══════════════════════════════════════════════════════════════════
+🔒 Security Note
+═══════════════════════════════════════════════════════════════════
+
+เมื่อใช้ ngrok หรือ tunnel อื่นๆ:
+- อย่าแชร์ URL กับคนอื่น
+- URL จะหมดอายุเมื่อปิด ngrok
+- ใช้ webhook signature verification เพื่อความปลอดภัย
+- อย่า commit ngrok URL ลง git
+
+
+═══════════════════════════════════════════════════════════════════
+สรุป
+═══════════════════════════════════════════════════════════════════
+
+✅ แนะนำ: ngrok (สำหรับ local testing)
+✅ แนะนำ: Vercel preview (สำหรับทีม)
+✅ แนะนำ: webhook.site (ดู payload จริง)
+✅ Production: https://tpp-thanakon.store/api/webhooks/yalecom-call
+
+Created: November 7, 2025
