@@ -214,7 +214,7 @@ export default function FacebookAdsManagerPage() {
     try {
       setDailyDataLoading(true);
 
-      // กำหนดช่วงเวลา 30 วันย้อนหลัง
+      // กำหนดช่วงเวลา 30 วันย้อนหลังแบบคงที่ (ไม่ขึ้นกับ dateRange ที่เลือก)
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
@@ -468,6 +468,7 @@ export default function FacebookAdsManagerPage() {
   // Auto-refresh ทุก 1 นาที
   useEffect(() => {
     const refreshInterval = setInterval(() => {
+      console.log("🔄 Auto-refreshing all data...");
       fetchInsights();
       fetchGoogleSheetsData();
       fetchGoogleAdsData();

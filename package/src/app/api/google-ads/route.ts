@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate") || today;
     const endDate = searchParams.get("endDate") || today;
     const daily = searchParams.get("daily") === "true"; // ถ้า daily=true จะให้ข้อมูลแยกรายวัน
+    const useMockData = searchParams.get("mock") === "true"; // เพิ่ม mock mode
 
     // ตรวจสอบว่ามี credentials อะไรบ้าง
     const credentials = {
@@ -99,6 +100,75 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // ถ้าเปิด Mock Mode ให้ return mock data
+    if (useMockData) {
+      console.log("🎭 Using Mock Data Mode...");
+
+      const mockCampaigns: GoogleAdsCampaign[] = [
+        {
+          id: "1",
+          name: "Campaign A - Brand Awareness",
+          status: "ENABLED",
+          clicks: 1250,
+          impressions: 45000,
+          averageCpc: 8.5,
+          cost: 10625.0, // 1250 * 8.50
+          ctr: 2.78,
+          conversions: 45,
+        },
+        {
+          id: "2",
+          name: "Campaign B - Product Launch",
+          status: "ENABLED",
+          clicks: 890,
+          impressions: 32000,
+          averageCpc: 12.3,
+          cost: 10947.0, // 890 * 12.30
+          ctr: 2.78,
+          conversions: 32,
+        },
+        {
+          id: "3",
+          name: "Campaign C - Retargeting",
+          status: "ENABLED",
+          clicks: 650,
+          impressions: 18500,
+          averageCpc: 6.75,
+          cost: 4387.5, // 650 * 6.75
+          ctr: 3.51,
+          conversions: 28,
+        },
+      ];
+
+      const summary = {
+        totalClicks: mockCampaigns.reduce((sum, c) => sum + c.clicks, 0),
+        totalImpressions: mockCampaigns.reduce(
+          (sum, c) => sum + c.impressions,
+          0
+        ),
+        averageCpc:
+          mockCampaigns.reduce((sum, c) => sum + c.averageCpc, 0) /
+          mockCampaigns.length,
+        totalCost: mockCampaigns.reduce((sum, c) => sum + c.cost, 0),
+        averageCtr:
+          mockCampaigns.reduce((sum, c) => sum + c.ctr, 0) /
+          mockCampaigns.length,
+      };
+
+      console.log("✅ Mock Data Generated:");
+      console.log(`  Total Cost: ฿${summary.totalCost.toFixed(2)}`);
+      console.log(`  Total Clicks: ${summary.totalClicks}`);
+      console.log(`  Average CPC: ฿${summary.averageCpc.toFixed(2)}`);
+
+      return NextResponse.json({
+        campaigns: mockCampaigns,
+        summary,
+        dateRange: { startDate, endDate },
+        _mock: true,
+        _note: "This is mock data. Remove ?mock=true to use real API data.",
+      });
+    }
+
     // ถ้ามี credentials ครบ ให้เชื่อมต่อ API จริง
     console.log(
       "✅ All credentials available. Connecting to Google Ads API..."
@@ -107,6 +177,9 @@ export async function GET(request: NextRequest) {
     try {
       // Dynamic import to avoid require()
       const { GoogleAdsApi } = await import("google-ads-api");
+
+      console.log("🔑 Initializing Google Ads API client...");
+      console.log("Customer ID:", credentials.customerId);
 
       const client = new GoogleAdsApi({
         client_id: credentials.clientId!,
@@ -117,6 +190,7 @@ export async function GET(request: NextRequest) {
       const customer = client.Customer({
         customer_id: credentials.customerId!.replace(/-/g, ""),
         refresh_token: credentials.refreshToken!,
+        login_customer_id: credentials.customerId!.replace(/-/g, ""), // เพิ่ม login_customer_id
       });
 
       console.log("🔍 Checking if account is a Manager Account...");
@@ -364,40 +438,142 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(response);
     } catch (apiError: any) {
       console.error("❌ Google Ads API Error:", apiError);
+      console.error("Error Stack:", apiError.stack);
+      console.error("Error Details:", JSON.stringify(apiError, null, 2));
 
       // แสดง error message ที่เป็นประโยชน์
       let errorMessage = "เกิดข้อผิดพลาดในการเชื่อมต่อ Google Ads API";
       let errorDetails = apiError.message || "Unknown error";
+      let errorCode = "";
+      let solution = "";
 
-      if (errorDetails.includes("PERMISSION_DENIED")) {
+      // ตรวจสอบ error type ต่างๆ
+      let firstError: any = null;
+      if (apiError.errors && Array.isArray(apiError.errors)) {
+        // Google Ads API มักจะส่ง error มาในรูปแบบ array
+        firstError = apiError.errors[0];
+        if (firstError) {
+          errorCode =
+            firstError.error_code?.authorization_error ||
+            firstError.error_code?.authentication_error ||
+            firstError.error_code?.request_error ||
+            (firstError.error_code?.quota_error !== undefined
+              ? String(firstError.error_code.quota_error)
+              : null) ||
+            "UNKNOWN";
+          errorDetails = firstError.message || errorDetails;
+
+          // ตรวจสอบ quota error พิเศษ
+          if (firstError.error_code?.quota_error) {
+            const quotaDetails = firstError.details?.quota_error_details;
+            if (quotaDetails) {
+              errorDetails += `\nRate Scope: ${quotaDetails.rate_scope}`;
+              errorDetails += `\nRate Name: ${quotaDetails.rate_name}`;
+            }
+          }
+        }
+      }
+
+      // จัดการ error แต่ละประเภท
+      if (errorDetails.includes("Too many requests") || errorCode === "2") {
+        errorMessage = "โดน Quota Limit - เรียก API บ่อยเกินไป";
+        const retrySeconds =
+          firstError?.details?.quota_error_details?.retry_after_seconds ||
+          errorDetails.match(/Retry in (\d+) seconds/)?.[1] ||
+          "ไม่ทราบ";
+        errorDetails = `Developer Token อยู่ในโหมด Test Access ซึ่งมี quota จำกัดมาก (15,000 operations/วัน)`;
+        solution = `
+🕐 ตอนนี้: รอ ${Math.ceil(Number(retrySeconds) / 3600)} ชั่วโมง แล้วลองใหม่
+
+📋 วิธีแก้ถาวร (เลือก 1 ใน 3):
+
+1️⃣ ขอ Developer Token แบบ "Basic Access" (แนะนำ)
+   • ไปที่: https://ads.google.com/aw/apicenter
+   • คลิก "Apply for Basic Access"
+   • ต้องมี API Budget อย่างน้อย $50/วัน
+   • รอการอนุมัติ 1-3 วัน
+   • ได้ quota: 15,000 ops/วัน → 100,000+ ops/วัน
+
+2️⃣ ใช้ Test Account (Manager Account)
+   • ไปที่: https://ads.google.com/
+   • สร้าง Test Account ใหม่
+   • ใช้ Customer ID ของ Test Account แทน
+   • Test Account จะมี quota สูงกว่า
+
+3️⃣ รอ Quota Reset ทุกวัน (00:00 UTC)
+   • Quota จะ reset ตอน 7:00 น. (เวลาไทย)
+   • วันนี้รอถึงพรุ่งนี้เช้า
+
+⚠️ หมายเหตุ: Developer Token ของคุณอยู่ในโหมด "Test/Explorer Access" ซึ่งมี limit น้อยมาก
+`;
+      } else if (
+        errorDetails.includes("PERMISSION_DENIED") ||
+        errorCode === "PERMISSION_DENIED"
+      ) {
         errorMessage = "Developer Token ยังไม่ได้รับอนุมัติ";
-        errorDetails =
-          "กรุณารอการอนุมัติ Developer Token จาก Google (1-3 วัน) หรือใช้ Test Account";
-      } else if (errorDetails.includes("AUTHENTICATION")) {
+        errorDetails = "กรุณารอการอนุมัติ Developer Token จาก Google (1-3 วัน)";
+        solution = "ใช้ Test Account หรือรอการอนุมัติ Token";
+      } else if (
+        errorDetails.includes("AUTHENTICATION_ERROR") ||
+        errorCode === "AUTHENTICATION_ERROR"
+      ) {
         errorMessage = "การยืนยันตัวตนล้มเหลว";
-        errorDetails =
-          "กรุณาตรวจสอบ Client ID, Client Secret และ Refresh Token";
-      } else if (errorDetails.includes("CUSTOMER_NOT_FOUND")) {
+        errorDetails = "Refresh Token อาจหมดอายุหรือไม่ถูกต้อง";
+        solution =
+          "รัน: node scripts/generate-google-ads-refresh-token.js เพื่อสร้าง Refresh Token ใหม่";
+      } else if (
+        errorDetails.includes("CUSTOMER_NOT_FOUND") ||
+        errorCode === "CUSTOMER_NOT_FOUND"
+      ) {
         errorMessage = "ไม่พบ Customer ID";
-        errorDetails = `Customer ID ${credentials.customerId} ไม่ถูกต้อง กรุณาตรวจสอบที่ Google Ads Dashboard`;
+        errorDetails = `Customer ID ${credentials.customerId} ไม่ถูกต้อง`;
+        solution = "ตรวจสอบ Customer ID ที่ Google Ads Dashboard (มุมขวาบน)";
       } else if (
         errorDetails.includes("manager account") ||
-        errorDetails.includes("Metrics cannot be requested")
+        errorDetails.includes("Metrics cannot be requested") ||
+        errorDetails.includes("MANAGER_CUSTOMER_CANNOT_BE_QUERIED")
       ) {
         errorMessage = "ใช้ Manager Account (MCC) ไม่ได้";
-        errorDetails =
-          "กรุณาใช้ Client Account ID แทน ลองเรียก API อีกครั้งเพื่อดูรายการ Client Accounts";
+        errorDetails = "Manager Account ไม่สามารถ query metrics โดยตรง";
+        solution = "กรุณาใช้ Client Account ID แทน";
+      } else if (errorDetails.includes("DEVELOPER_TOKEN_NOT_APPROVED")) {
+        errorMessage = "Developer Token ยังไม่ได้รับอนุมัติ";
+        errorDetails = "Token อยู่ในสถานะรออนุมัติ";
+        solution = "รอการอนุมัติจาก Google (1-3 วัน) หรือใช้ Test Account";
+      } else if (errorDetails.includes("INVALID_CUSTOMER_ID")) {
+        errorMessage = "Customer ID ไม่ถูกต้อง";
+        errorDetails = `รูปแบบ Customer ID (${credentials.customerId}) ไม่ถูกต้อง`;
+        solution = "Customer ID ควรเป็นตัวเลข 10 หลัก เช่น 1234567890";
+      } else if (
+        errorDetails.includes("TOKEN_EXPIRED") ||
+        errorDetails.includes("invalid_grant")
+      ) {
+        errorMessage = "Refresh Token หมดอายุ";
+        errorDetails = "Refresh Token หมดอายุหรือถูกยกเลิก";
+        solution =
+          "รัน: node scripts/generate-google-ads-refresh-token.js เพื่อสร้าง Token ใหม่";
       }
 
       return NextResponse.json(
         {
           error: errorMessage,
           details: errorDetails,
+          errorCode: errorCode,
+          solution: solution,
           credentials: {
             customerId: credentials.customerId,
             developerToken:
               credentials.developerToken?.substring(0, 10) + "...",
+            hasRefreshToken: !!credentials.refreshToken,
           },
+          fullError:
+            process.env.NODE_ENV === "development"
+              ? {
+                  message: apiError.message,
+                  stack: apiError.stack,
+                  errors: apiError.errors,
+                }
+              : undefined,
         },
         { status: 500 }
       );
