@@ -17,6 +17,13 @@ interface ContactRecord {
 // GET - Retrieve all contacts from Supabase
 export async function GET(request: NextRequest) {
   try {
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase is not configured" },
+        { status: 500 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status");
     const search = searchParams.get("search");
@@ -49,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform data to match frontend interface
-    const transformedData = data.map((contact) => ({
+    const transformedData = data.map((contact: any) => ({
       id: contact.id,
       name: contact.name,
       company: contact.company,
@@ -81,6 +88,13 @@ export async function GET(request: NextRequest) {
 // POST - Create new contact in Supabase
 export async function POST(request: NextRequest) {
   try {
+    if (!supabase) {
+      return NextResponse.json(
+        { success: false, error: "Supabase is not configured" },
+        { status: 500 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate required fields
