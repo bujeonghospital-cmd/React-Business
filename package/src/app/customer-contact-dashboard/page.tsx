@@ -1241,7 +1241,7 @@ const CustomerContactDashboard = () => {
                                 1,
                                 currentPage - Math.floor(maxVisiblePages / 2)
                               );
-                              let endPage = Math.min(
+                              const endPage = Math.min(
                                 totalPages,
                                 startPage + maxVisiblePages - 1
                               );
@@ -1372,7 +1372,7 @@ const CustomerContactDashboard = () => {
                     <AlertCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-semibold">ไม่พบข้อมูล</p>
                     <p className="text-sm mt-2">
-                      ไม่มีข้อมูลในชีท "สรุป call_AI"
+                      ไม่มีข้อมูลในชีท &quot;สรุป call_AI&quot;
                     </p>
                   </div>
                 )
