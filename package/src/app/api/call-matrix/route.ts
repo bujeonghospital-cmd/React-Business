@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
       .from("hourly_call_stats")
       .select(
         `
+        id,
         hour_slot,
         agent_id,
         outgoing_calls,
@@ -58,7 +59,6 @@ export async function GET(request: NextRequest) {
       "11-12",
       "12-13",
       "13-14",
-      "14-15",
       "15-16",
       "16-17",
       "17-18",
@@ -80,7 +80,9 @@ export async function GET(request: NextRequest) {
           incoming_calls: agentStats?.incoming_calls || 0,
           successful_calls: agentStats?.successful_calls || 0,
           total_duration_seconds: agentStats?.total_duration_seconds || 0,
-          agent_name: agents?.agent_name || "",
+          agent_name: Array.isArray(agents)
+            ? agents[0]?.agent_name
+            : agents?.agent_name || "",
         };
       });
 
@@ -192,7 +194,7 @@ export async function POST(request: NextRequest) {
           call_status,
           start_time,
           end_time,
-          duration_seconds,
+          duration_seconds: duration_seconds || 0,
           notes,
         },
       ])

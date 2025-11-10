@@ -172,6 +172,19 @@ const CustomerContactDashboard = () => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  const [callInputModal, setCallInputModal] = useState<{
+    isOpen: boolean;
+    agentId: string;
+    hourSlot: string;
+  }>({
+    isOpen: false,
+    agentId: "",
+    hourSlot: "",
+  });
+  const [callInputValues, setCallInputValues] = useState({
+    outgoing: "",
+    successful: "",
+  });
 
   // Calculate statistics
   const allContacts = agentContacts.length > 0 ? agentContacts : contacts;
@@ -679,6 +692,57 @@ const CustomerContactDashboard = () => {
       console.error("Error fetching Call Matrix data:", error);
     } finally {
       setCallMatrixLoading(false);
+    }
+  };
+
+  // Save call input to database
+  const handleSaveCallInput = async () => {
+    if (!callInputValues.outgoing && !callInputValues.successful) {
+      alert("กรุณากรอกจำนวนอย่างน้อย 1 ค่า");
+      return;
+    }
+
+    try {
+      // Extract hour range from hourSlot (e.g., "11-12" -> start at 11:00)
+      const [hourStart] = callInputModal.hourSlot.split("-");
+      const startTime = new Date(selectedDate);
+      startTime.setHours(parseInt(hourStart), 0, 0, 0);
+
+      // Save as individual call logs (we'll create multiple records based on count)
+      const outgoingCount = parseInt(callInputValues.outgoing) || 0;
+      const successfulCount = parseInt(callInputValues.successful) || 0;
+
+      // Create call log records
+      for (let i = 0; i < outgoingCount; i++) {
+        const callStart = new Date(startTime);
+        callStart.setMinutes(callStart.getMinutes() + i * 2); // Spread calls 2 minutes apart
+
+        const response = await fetch("/api/call-matrix", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            agent_id: callInputModal.agentId,
+            start_time: callStart.toISOString(),
+            call_type: "outgoing",
+            call_status: i < successfulCount ? "answered" : "no_answer",
+            duration_seconds: i < successfulCount ? 120 : 5,
+            customer_phone: "N/A",
+            customer_name: "Unknown",
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to save call");
+        }
+      }
+
+      alert("บันทึกข้อมูลสำเร็จ");
+      setCallInputModal({ isOpen: false, agentId: "", hourSlot: "" });
+      setCallInputValues({ outgoing: "", successful: "" });
+      await fetchCallMatrix(); // Refresh table
+    } catch (error) {
+      console.error("Error saving call input:", error);
+      alert("เกิดข้อผิดพลาด: " + (error as Error).message);
     }
   };
 
@@ -1523,13 +1587,27 @@ const CustomerContactDashboard = () => {
                           <>
                             <td
                               key={`${agentId}-out`}
-                              className="border border-gray-300 px-2 py-3 text-center bg-white font-semibold text-gray-700"
+                              onClick={() =>
+                                setCallInputModal({
+                                  isOpen: true,
+                                  agentId,
+                                  hourSlot,
+                                })
+                              }
+                              className="border border-gray-300 px-2 py-3 text-center bg-white font-semibold text-gray-700 cursor-pointer hover:bg-blue-50"
                             >
                               {outgoingCalls > 0 ? outgoingCalls : ""}
                             </td>
                             <td
                               key={`${agentId}-success`}
-                              className="border border-gray-300 px-2 py-3 text-center bg-white font-semibold text-green-600"
+                              onClick={() =>
+                                setCallInputModal({
+                                  isOpen: true,
+                                  agentId,
+                                  hourSlot,
+                                })
+                              }
+                              className="border border-gray-300 px-2 py-3 text-center bg-white font-semibold text-green-600 cursor-pointer hover:bg-green-50"
                             >
                               {successfulCalls > 0 ? successfulCalls : ""}
                             </td>
@@ -1572,6 +1650,112 @@ const CustomerContactDashboard = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Call Input Modal */}
+      <AnimatePresence>
+        {callInputModal.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+            onClick={() =>
+              setCallInputModal({ isOpen: false, agentId: "", hourSlot: "" })
+            }
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full"
+            >
+              <h3 className="text-2xl font-bold text-gray-800 mb-6">
+                บันทึกการโทร
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    เซลล์ ID:{" "}
+                    <span className="text-blue-600">
+                      {callInputModal.agentId}
+                    </span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    ช่วงเวลา:{" "}
+                    <span className="text-blue-600">
+                      {callInputModal.hourSlot}:00 น.
+                    </span>
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    จำนวนโทรออก
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={callInputValues.outgoing}
+                    onChange={(e) =>
+                      setCallInputValues({
+                        ...callInputValues,
+                        outgoing: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    จำนวนที่นับ (สำเร็จ)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={callInputValues.successful}
+                    onChange={(e) =>
+                      setCallInputValues({
+                        ...callInputValues,
+                        successful: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() =>
+                    setCallInputModal({
+                      isOpen: false,
+                      agentId: "",
+                      hourSlot: "",
+                    })
+                  }
+                  className="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleSaveCallInput}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                >
+                  บันทึก
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Contact Form Modal */}
       <CustomerContactForm
