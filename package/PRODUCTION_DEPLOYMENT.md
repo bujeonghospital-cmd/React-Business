@@ -115,7 +115,7 @@ vercel --prod
 
    ```bash
    git add .
-   git commit -m "feat: add Facebook Ads Manager"
+
    git push origin main
    ```
 

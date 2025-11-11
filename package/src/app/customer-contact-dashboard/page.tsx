@@ -167,8 +167,12 @@ const CustomerContactDashboard = () => {
   const itemsPerPage = 20;
 
   // Call Matrix States
-  const [callMatrixData, setCallMatrixData] = useState<any>(null);
-  const [callMatrixLoading, setCallMatrixLoading] = useState(false);
+  const [callMatrixYaleCounts, setCallMatrixYaleCounts] = useState<
+    Record<string, Record<string, number>>
+  >({});
+  const [callMatrixYaleTotals, setCallMatrixYaleTotals] = useState<
+    Record<string, number>
+  >({});
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -186,6 +190,61 @@ const CustomerContactDashboard = () => {
     successful: "",
   });
 
+  // Film Data States - จำนวนนับ (O) และจำนวนผ่า (P)
+  const [filmDataCounts, setFilmDataCounts] = useState<Record<string, number>>(
+    {}
+  );
+  const [filmDataSurgeryCounts, setFilmDataSurgeryCounts] = useState<
+    Record<string, number>
+  >({});
+
+  const callTableTimeSlots = [
+    { label: "11:00-12:00 น.", start: "11" },
+    { label: "13:00-14:00 น.", start: "13" },
+    { label: "14:00-15:00 น.", start: "14" },
+    { label: "15:00-16:00 น.", start: "15" },
+    { label: "16:00-17:00 น.", start: "16" },
+    { label: "17:00-18:00 น.", start: "17" },
+    { label: "18:00-19:00 น.", start: "18" },
+  ];
+
+  const agentDisplayList = [
+    { id: "101", label: "101-สา" },
+    { id: "102", label: "102-พัชชา" },
+    { id: "103", label: "103-ตั้งโอ๋" },
+    { id: "104", label: "104-Test" },
+    { id: "105", label: "105-จีน" },
+    { id: "106", label: "106-มุก" },
+    { id: "107", label: "107-เจ" },
+    { id: "108", label: "108-ว่าน" },
+  ];
+
+  const getCallTableValue = (
+    agentId: string,
+    hourSlot: string,
+    metric: "yale" | "outgoing" | "passed"
+  ) => {
+    if (metric === "yale") {
+      const slotData = callMatrixYaleCounts[hourSlot];
+      if (!slotData) {
+        return 0;
+      }
+      return slotData[agentId] ?? 0;
+    }
+
+    if (metric === "outgoing") {
+      // ใช้ข้อมูลจาก Film Data - จำนวนนับ (O)
+      return filmDataCounts[agentId] ?? 0;
+    }
+
+    if (metric === "passed") {
+      // ใช้ข้อมูลจาก Film Data - จำนวนผ่า (P)
+      return filmDataSurgeryCounts[agentId] ?? 0;
+    }
+
+    return 0;
+  };
+
   // Calculate statistics
   const allContacts = agentContacts.length > 0 ? agentContacts : contacts;
   const displayAgents = allAgents.length > 0 ? allAgents : allContacts; // ใช้สำหรับแสดงในส่วนล่าง
@@ -197,20 +256,27 @@ const CustomerContactDashboard = () => {
     total: allContacts.length,
   };
 
+  const totalYaleCalls = Object.values(callMatrixYaleTotals).reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
   // Auto-fetch on component mount and every 5 seconds
   useEffect(() => {
     fetchContacts();
     fetchGoogleSheetsData();
     fetchRobocallData();
     fetchLogCallAiData(); // เพิ่มการดึงข้อมูล Log_call_ai
-    fetchCallMatrix(); // เพิ่มการดึงข้อมูล Call Matrix
+    fetchCallMatrixYaleSummary();
+    fetchFilmData(); // เพิ่มการดึงข้อมูล Film data
 
     // Auto refresh every 5 seconds
     const interval = setInterval(() => {
       fetchYalecomQueueStatus(undefined, "900");
       fetchRobocallData();
       fetchLogCallAiData(); // รีเฟรชข้อมูล Log_call_ai ทุก 5 วินาที
-      fetchCallMatrix(); // รีเฟรชข้อมูล Call Matrix ทุก 5 วินาที
+      fetchCallMatrixYaleSummary();
+      fetchFilmData(); // รีเฟรชข้อมูล Film data ทุก 5 วินาที
     }, 5000);
 
     return () => clearInterval(interval);
@@ -674,24 +740,62 @@ const CustomerContactDashboard = () => {
     }
   };
 
-  // Fetch Call Matrix Data
-  const fetchCallMatrix = async () => {
+  // Fetch Yale call summary from Google Sheets
+  const fetchCallMatrixYaleSummary = async () => {
     try {
-      setCallMatrixLoading(true);
-
-      const response = await fetch(`/api/call-matrix?date=${selectedDate}`);
+      const response = await fetch(
+        `/api/google-sheets-call-ai-summary?date=${selectedDate}`
+      );
       const result = await response.json();
 
       if (result.success) {
-        setCallMatrixData(result);
-        console.log("✅ Call Matrix loaded:", result);
+        const slotMap: Record<string, Record<string, number>> = {};
+
+        if (Array.isArray(result.timeSlots)) {
+          result.timeSlots.forEach((slot: any) => {
+            if (!slot || typeof slot !== "object") {
+              return;
+            }
+
+            const hourKey = String(slot.hourStart ?? slot.key ?? "");
+            if (!hourKey) {
+              return;
+            }
+
+            slotMap[hourKey] = { ...(slot.agentCounts || {}) };
+          });
+        }
+
+        setCallMatrixYaleCounts(slotMap);
+        setCallMatrixYaleTotals(result.totals || {});
+        console.log("✅ Yale call summary loaded:", result);
       } else {
-        console.error("❌ Failed to fetch Call Matrix:", result.error);
+        console.error("❌ Failed to fetch Yale summary:", result.error);
       }
     } catch (error) {
-      console.error("Error fetching Call Matrix data:", error);
-    } finally {
-      setCallMatrixLoading(false);
+      console.error("Error fetching Yale summary:", error);
+    }
+  };
+
+  // Fetch Film Data - จำนวนนับ (O) และจำนวนผ่า (P)
+  const fetchFilmData = async () => {
+    try {
+      const response = await fetch(
+        `/api/google-sheets-film-data?date=${selectedDate}`
+      );
+      const result = await response.json();
+
+      if (result.success) {
+        setFilmDataCounts(result.agentCounts || {});
+        setFilmDataSurgeryCounts(result.surgeryCounts || {});
+        console.log("✅ Film data loaded:", result);
+        console.log("  - Consult counts:", result.agentCounts);
+        console.log("  - Surgery counts:", result.surgeryCounts);
+      } else {
+        console.error("❌ Failed to fetch Film data:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching Film data:", error);
     }
   };
 
@@ -712,34 +816,13 @@ const CustomerContactDashboard = () => {
       const outgoingCount = parseInt(callInputValues.outgoing) || 0;
       const successfulCount = parseInt(callInputValues.successful) || 0;
 
-      // Create call log records
-      for (let i = 0; i < outgoingCount; i++) {
-        const callStart = new Date(startTime);
-        callStart.setMinutes(callStart.getMinutes() + i * 2); // Spread calls 2 minutes apart
-
-        const response = await fetch("/api/call-matrix", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            agent_id: callInputModal.agentId,
-            start_time: callStart.toISOString(),
-            call_type: "outgoing",
-            call_status: i < successfulCount ? "answered" : "no_answer",
-            duration_seconds: i < successfulCount ? 120 : 5,
-            customer_phone: "N/A",
-            customer_name: "Unknown",
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to save call");
-        }
-      }
+      // บันทึกข้อมูลเข้า Google Sheets (ยังไม่ได้ implement)
+      // TODO: สร้าง API สำหรับบันทึกข้อมูลลง Google Sheets
 
       alert("บันทึกข้อมูลสำเร็จ");
       setCallInputModal({ isOpen: false, agentId: "", hourSlot: "" });
       setCallInputValues({ outgoing: "", successful: "" });
-      await fetchCallMatrix(); // Refresh table
+      await fetchCallMatrixYaleSummary(); // Refresh table
     } catch (error) {
       console.error("Error saving call input:", error);
       alert("เกิดข้อผิดพลาด: " + (error as Error).message);
@@ -750,6 +833,8 @@ const CustomerContactDashboard = () => {
   const handleRefresh = async () => {
     await fetchContacts();
     await fetchGoogleSheetsData();
+    await fetchCallMatrixYaleSummary();
+    await fetchFilmData();
   };
 
   // Open form for creating new contact
@@ -1099,6 +1184,182 @@ const CustomerContactDashboard = () => {
           )}
         </motion.div>
 
+        {/* Call Log Matrix */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65 }}
+          className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8"
+        >
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+              <Clock className="w-7 h-7" />
+              ตารางบันทึกการโทรตามช่วงเวลา
+            </h2>
+          </div>
+
+          <div className="px-6 py-4 bg-white border-b border-gray-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3 text-sm text-gray-600">
+              <Calendar className="w-4 h-4 text-indigo-600" />
+              <span>เลือกวันที่</span>
+              <span className="font-semibold text-gray-900">
+                {new Date(selectedDate).toLocaleDateString("th-TH", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="call-matrix-date"
+                className="text-sm font-semibold text-gray-700"
+              >
+                วันที่
+              </label>
+              <input
+                id="call-matrix-date"
+                type="date"
+                value={selectedDate}
+                max={new Date().toISOString().split("T")[0]}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (value) {
+                    setSelectedDate(value);
+                  }
+                }}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
+                    เวลา
+                  </th>
+                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
+                    จำนวนโทร(Yale)
+                  </th>
+                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
+                    จำนวนนับ (O)
+                  </th>
+                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
+                    จำนวนผ่า (P)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {callTableTimeSlots.map((slot) => (
+                  <React.Fragment key={slot.start}>
+                    <tr>
+                      <td className="border-2 border-gray-400 px-4 py-3 font-bold text-gray-700 bg-gray-100 text-center">
+                        {slot.label}
+                      </td>
+                      <td className="border-2 border-gray-400 px-4 py-3 bg-white" />
+                      <td className="border-2 border-gray-400 px-4 py-3 bg-white" />
+                      <td className="border-2 border-gray-400 px-4 py-3 bg-white" />
+                    </tr>
+                    {agentDisplayList.map((agent) => (
+                      <tr key={`${slot.start}-${agent.id}`}>
+                        <td className="border-2 border-gray-300 px-4 py-3 font-semibold text-gray-700 bg-gray-50">
+                          {agent.label}
+                        </td>
+                        <td
+                          onClick={() =>
+                            setCallInputModal({
+                              isOpen: true,
+                              agentId: agent.id,
+                              hourSlot: slot.start,
+                            })
+                          }
+                          className="border-2 border-gray-300 px-4 py-3 text-center bg-white font-semibold text-gray-700 cursor-pointer hover:bg-blue-50"
+                        >
+                          {(() => {
+                            const value = getCallTableValue(
+                              agent.id,
+                              slot.start,
+                              "yale"
+                            );
+                            return value > 0 ? value : "";
+                          })()}
+                        </td>
+                        <td
+                          onClick={() =>
+                            setCallInputModal({
+                              isOpen: true,
+                              agentId: agent.id,
+                              hourSlot: slot.start,
+                            })
+                          }
+                          className="border-2 border-gray-300 px-4 py-3 text-center bg-white font-semibold text-orange-600 cursor-pointer hover:bg-orange-50"
+                        >
+                          {(() => {
+                            const value = getCallTableValue(
+                              agent.id,
+                              slot.start,
+                              "outgoing"
+                            );
+                            return value > 0 ? value : "";
+                          })()}
+                        </td>
+                        <td
+                          onClick={() =>
+                            setCallInputModal({
+                              isOpen: true,
+                              agentId: agent.id,
+                              hourSlot: slot.start,
+                            })
+                          }
+                          className="border-2 border-gray-300 px-4 py-3 text-center bg-white font-semibold text-green-600 cursor-pointer hover:bg-green-50"
+                        >
+                          {(() => {
+                            const value = getCallTableValue(
+                              agent.id,
+                              slot.start,
+                              "passed"
+                            );
+                            return value > 0 ? value : "";
+                          })()}
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="bg-gray-50 px-6 py-4 border-t-2 border-gray-200">
+            <div className="flex flex-col gap-2 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <span>
+                  ช่วงเวลา <span className="font-bold text-gray-900">7</span>{" "}
+                  ช่วง
+                </span>
+                <span>•</span>
+                <span>
+                  เซลล์ <span className="font-bold text-gray-900">8</span> คน
+                  (101-108)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                <span className="text-xs">
+                  วันที่:{" "}
+                  {new Date(selectedDate).toLocaleDateString("th-TH", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Contact History Table - ตารางประวัติการติดต่อลูกค้า */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1419,235 +1680,6 @@ const CustomerContactDashboard = () => {
                 )
               );
             })()}
-        </motion.div>
-
-        {/* Call Schedule Table - ตารางบันทึกการโทรตามช่วงเวลา */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden mt-8"
-        >
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                <Clock className="w-7 h-7" />
-                ตารางบันทึกการโทรตามช่วงเวลา
-              </h2>
-              <div className="flex items-center gap-3">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-4 py-2 rounded-lg text-gray-700 font-semibold"
-                />
-                {callMatrixLoading && (
-                  <RefreshCw className="w-5 h-5 text-white animate-spin" />
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th
-                    rowSpan={2}
-                    className="border border-gray-300 px-4 py-3 text-center font-bold text-gray-700 min-w-[120px]"
-                  >
-                    เวลา
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    101
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    102
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    103
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    104
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    105
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    106
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    107
-                  </th>
-                  <th
-                    colSpan={2}
-                    className="border border-gray-300 px-2 py-2 text-center font-bold text-gray-700 min-w-[80px]"
-                  >
-                    108
-                  </th>
-                </tr>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนโทร
-                  </th>
-                  <th className="border border-gray-300 px-2 py-2 text-center font-normal text-sm text-gray-700">
-                    จำนวนนับ
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {callMatrixData?.tableData?.map((row: any, index: number) => {
-                  const hourSlot = row.hour_slot;
-                  const agentIds = [
-                    "101",
-                    "102",
-                    "103",
-                    "104",
-                    "105",
-                    "106",
-                    "107",
-                    "108",
-                  ];
-
-                  return (
-                    <tr key={index}>
-                      <td className="border border-gray-300 px-4 py-3 font-semibold text-gray-700 bg-gray-50 text-center">
-                        {hourSlot}:00 น.
-                      </td>
-                      {agentIds.map((agentId) => {
-                        const agentData = row[`agent_${agentId}`];
-                        const outgoingCalls = agentData?.outgoing_calls || 0;
-                        const successfulCalls =
-                          agentData?.successful_calls || 0;
-
-                        return (
-                          <>
-                            <td
-                              key={`${agentId}-out`}
-                              onClick={() =>
-                                setCallInputModal({
-                                  isOpen: true,
-                                  agentId,
-                                  hourSlot,
-                                })
-                              }
-                              className="border border-gray-300 px-2 py-3 text-center bg-white font-semibold text-gray-700 cursor-pointer hover:bg-blue-50"
-                            >
-                              {outgoingCalls > 0 ? outgoingCalls : ""}
-                            </td>
-                            <td
-                              key={`${agentId}-success`}
-                              onClick={() =>
-                                setCallInputModal({
-                                  isOpen: true,
-                                  agentId,
-                                  hourSlot,
-                                })
-                              }
-                              className="border border-gray-300 px-2 py-3 text-center bg-white font-semibold text-green-600 cursor-pointer hover:bg-green-50"
-                            >
-                              {successfulCalls > 0 ? successfulCalls : ""}
-                            </td>
-                          </>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Table Footer */}
-          <div className="bg-gray-50 px-6 py-4 border-t-2 border-gray-200">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-6 text-gray-600">
-                <span>
-                  ช่วงเวลา <span className="font-bold text-gray-900">7</span>{" "}
-                  ช่วง
-                </span>
-                <span>•</span>
-                <span>
-                  เซลล์ <span className="font-bold text-gray-900">8</span> คน
-                  (101-108)
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <Calendar className="w-4 h-4" />
-                <span className="text-xs">
-                  วันที่:{" "}
-                  {new Date(selectedDate).toLocaleDateString("th-TH", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </span>
-              </div>
-            </div>
-          </div>
         </motion.div>
       </div>
 
