@@ -118,6 +118,23 @@ const CustomerAllDataPage = () => {
       const result: ApiResponse = await response.json();
       if (!result.success) return;
       if (result.tables && result.tables.length > 0) {
+        const sanitizedTables = result.tables.map((table) => {
+          // Trim whitespace so columns with stray spaces still render and match filters
+          const sanitizedHeaders = table.headers.map((header) => header.trim());
+          const sanitizedData = table.data.map((row) => {
+            const sanitizedRow: Record<string, any> = {};
+            Object.entries(row).forEach(([key, value]) => {
+              sanitizedRow[key.trim()] = value;
+            });
+            return sanitizedRow;
+          });
+          return {
+            ...table,
+            headers: sanitizedHeaders,
+            data: sanitizedData,
+            rowCount: sanitizedData.length,
+          };
+        });
         // Define the desired column order for consistency between table and form
         const columnOrder = [
           "สถานะ",
@@ -150,7 +167,7 @@ const CustomerAllDataPage = () => {
 
         // First add headers in the desired order
         columnOrder.forEach((header) => {
-          result.tables.forEach((table) => {
+          sanitizedTables.forEach((table) => {
             if (table.headers.includes(header) && !allHeadersSet.has(header)) {
               allHeadersSet.add(header);
               allHeaders.push(header);
@@ -159,7 +176,7 @@ const CustomerAllDataPage = () => {
         });
 
         // Then add any remaining headers not in the columnOrder
-        result.tables.forEach((table) => {
+        sanitizedTables.forEach((table) => {
           table.headers.forEach((header) => {
             if (!allHeadersSet.has(header)) {
               allHeadersSet.add(header);
@@ -169,7 +186,7 @@ const CustomerAllDataPage = () => {
         });
 
         const filteredHeaders = allHeaders.filter((header) => {
-          return result.tables.some((table) => {
+          return sanitizedTables.some((table) => {
             return table.data.some(
               (row) =>
                 row[header] !== undefined &&
@@ -179,7 +196,7 @@ const CustomerAllDataPage = () => {
           });
         });
         const allData: Record<string, any>[] = [];
-        result.tables.forEach((table) => {
+        sanitizedTables.forEach((table) => {
           allData.push(...table.data);
         });
         // Keep all rows that have at least one value in any header

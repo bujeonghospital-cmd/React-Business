@@ -1271,7 +1271,7 @@ const CustomerContactDashboard = () => {
                 </tr>
                 <tr className="bg-white">
                   <th className="border border-gray-400 px-4 py-3 text-left font-semibold text-gray-700">
-                    จำนวนวันที่ได้นัด consult
+                    จำนวน วันที่ได้นัด consult
                   </th>
                   {agentDisplayList.map((agent) => {
                     const value = filmDataCounts[agent.id] ?? 0;
