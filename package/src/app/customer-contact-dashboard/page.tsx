@@ -199,13 +199,17 @@ const CustomerContactDashboard = () => {
   >({});
 
   const callTableTimeSlots = [
-    { label: "11:00-12:00 น.", start: "11" },
-    { label: "13:00-14:00 น.", start: "13" },
-    { label: "14:00-15:00 น.", start: "14" },
-    { label: "15:00-16:00 น.", start: "15" },
-    { label: "16:00-17:00 น.", start: "16" },
-    { label: "17:00-18:00 น.", start: "17" },
-    { label: "18:00-19:00 น.", start: "18" },
+    { label: "9:00-10:00", start: "9" },
+    { label: "10:00-11:00", start: "10" },
+    { label: "11:00-12:00", start: "11" },
+    { label: "12:00-13:00", start: "12" },
+    { label: "13:00-14:00", start: "13" },
+    { label: "14:00-15:00", start: "14" },
+    { label: "15:00-16:00", start: "15" },
+    { label: "16:00-17:00", start: "16" },
+    { label: "17:00-18:00", start: "17" },
+    { label: "18:00-19:00", start: "18" },
+    { label: "19:00-20:00", start: "19" },
   ];
 
   const agentDisplayList = [
@@ -1234,40 +1238,83 @@ const CustomerContactDashboard = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border border-gray-400 text-sm border-collapse">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
-                    เวลา
-                  </th>
-                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
-                    จำนวนโทร(Yale)
-                  </th>
-                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
-                    จำนวนนับ (O)
-                  </th>
-                  <th className="border-2 border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]">
-                    จำนวนผ่า (P)
-                  </th>
+                  <th className="border border-gray-400 px-4 py-3 text-center font-bold text-gray-700 min-w-[140px]" />
+                  {agentDisplayList.map((agent) => (
+                    <th
+                      key={`header-${agent.id}`}
+                      className="border border-gray-400 px-4 py-3 text-center font-bold text-gray-700"
+                    >
+                      {agent.label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {callTableTimeSlots.map((slot) => (
-                  <React.Fragment key={slot.start}>
-                    <tr>
-                      <td className="border-2 border-gray-400 px-4 py-3 font-bold text-gray-700 bg-gray-100 text-center">
-                        {slot.label}
+                <tr className="bg-white">
+                  <th className="border border-gray-400 px-4 py-3 text-left font-semibold text-gray-700">
+                    จำนวนวันที่ได้นัดผ่าตัด
+                  </th>
+                  {agentDisplayList.map((agent) => {
+                    const value = filmDataSurgeryCounts[agent.id] ?? 0;
+                    return (
+                      <td
+                        key={`surgery-${agent.id}`}
+                        className="border border-gray-400 px-4 py-3 text-center font-semibold text-gray-900"
+                      >
+                        {value > 0 ? value : ""}
                       </td>
-                      <td className="border-2 border-gray-400 px-4 py-3 bg-white" />
-                      <td className="border-2 border-gray-400 px-4 py-3 bg-white" />
-                      <td className="border-2 border-gray-400 px-4 py-3 bg-white" />
-                    </tr>
-                    {agentDisplayList.map((agent) => (
-                      <tr key={`${slot.start}-${agent.id}`}>
-                        <td className="border-2 border-gray-300 px-4 py-3 font-semibold text-gray-700 bg-gray-50">
-                          {agent.label}
-                        </td>
+                    );
+                  })}
+                </tr>
+                <tr className="bg-white">
+                  <th className="border border-gray-400 px-4 py-3 text-left font-semibold text-gray-700">
+                    จำนวนวันที่ได้นัด consult
+                  </th>
+                  {agentDisplayList.map((agent) => {
+                    const value = filmDataCounts[agent.id] ?? 0;
+                    return (
+                      <td
+                        key={`appointment-${agent.id}`}
+                        className="border border-gray-400 px-4 py-3 text-center font-semibold text-gray-900"
+                      >
+                        {value > 0 ? value : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+                <tr className="bg-green-100">
+                  <th className="border border-green-300 px-4 py-3 text-left font-semibold text-green-900 bg-green-200">
+                    จำนวนโทร
+                  </th>
+                  {agentDisplayList.map((agent) => {
+                    const value = callMatrixYaleTotals[agent.id] ?? 0;
+                    return (
+                      <td
+                        key={`total-${agent.id}`}
+                        className="border border-green-300 px-4 py-3 text-center font-semibold text-green-900 bg-green-100"
+                      >
+                        {value > 0 ? value : ""}
+                      </td>
+                    );
+                  })}
+                </tr>
+                {callTableTimeSlots.map((slot) => (
+                  <tr key={`slot-${slot.start}`} className="bg-white">
+                    <th className="border border-gray-400 px-4 py-3 text-left font-semibold text-gray-700 bg-gray-100">
+                      {slot.label}
+                    </th>
+                    {agentDisplayList.map((agent) => {
+                      const value = getCallTableValue(
+                        agent.id,
+                        slot.start,
+                        "yale"
+                      );
+                      return (
                         <td
+                          key={`${slot.start}-${agent.id}`}
                           onClick={() =>
                             setCallInputModal({
                               isOpen: true,
@@ -1275,58 +1322,13 @@ const CustomerContactDashboard = () => {
                               hourSlot: slot.start,
                             })
                           }
-                          className="border-2 border-gray-300 px-4 py-3 text-center bg-white font-semibold text-gray-700 cursor-pointer hover:bg-blue-50"
+                          className="border border-gray-400 px-4 py-3 text-center font-semibold text-gray-900 cursor-pointer hover:bg-blue-50"
                         >
-                          {(() => {
-                            const value = getCallTableValue(
-                              agent.id,
-                              slot.start,
-                              "yale"
-                            );
-                            return value > 0 ? value : "";
-                          })()}
+                          {value > 0 ? value : ""}
                         </td>
-                        <td
-                          onClick={() =>
-                            setCallInputModal({
-                              isOpen: true,
-                              agentId: agent.id,
-                              hourSlot: slot.start,
-                            })
-                          }
-                          className="border-2 border-gray-300 px-4 py-3 text-center bg-white font-semibold text-orange-600 cursor-pointer hover:bg-orange-50"
-                        >
-                          {(() => {
-                            const value = getCallTableValue(
-                              agent.id,
-                              slot.start,
-                              "outgoing"
-                            );
-                            return value > 0 ? value : "";
-                          })()}
-                        </td>
-                        <td
-                          onClick={() =>
-                            setCallInputModal({
-                              isOpen: true,
-                              agentId: agent.id,
-                              hourSlot: slot.start,
-                            })
-                          }
-                          className="border-2 border-gray-300 px-4 py-3 text-center bg-white font-semibold text-green-600 cursor-pointer hover:bg-green-50"
-                        >
-                          {(() => {
-                            const value = getCallTableValue(
-                              agent.id,
-                              slot.start,
-                              "passed"
-                            );
-                            return value > 0 ? value : "";
-                          })()}
-                        </td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
+                      );
+                    })}
+                  </tr>
                 ))}
               </tbody>
             </table>
