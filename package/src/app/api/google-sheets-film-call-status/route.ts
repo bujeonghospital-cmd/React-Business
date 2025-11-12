@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     });
 
     const sheets = google.sheets({ version: "v4", auth });
-    const response = await sheets.spreadsheets().values().get({
+    const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
       range: "Film_dev!A:Z",
     });
