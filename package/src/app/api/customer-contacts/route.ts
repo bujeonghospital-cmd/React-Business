@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/utils/supabase/client";
+import { supabaseServer as supabase } from "@/utils/supabase/server";
 
 // Types
 interface ContactRecord {

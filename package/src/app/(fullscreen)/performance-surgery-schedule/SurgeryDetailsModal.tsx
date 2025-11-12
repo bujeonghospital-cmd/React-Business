@@ -10,6 +10,7 @@ interface SurgeryDetailsModalProps {
   month: number;
   year: number;
   contactPerson: string;
+  tableType?: "P" | "L"; // P = วันที่ได้นัดผ่าตัด, L = วันที่ผ่าตัด
 }
 
 export default function SurgeryDetailsModal({
@@ -20,6 +21,7 @@ export default function SurgeryDetailsModal({
   month,
   year,
   contactPerson,
+  tableType = "P",
 }: SurgeryDetailsModalProps) {
   if (!isOpen) return null;
 
@@ -38,6 +40,9 @@ export default function SurgeryDetailsModal({
     "ธันวาคม",
   ];
 
+  const tableTitle =
+    tableType === "P" ? "รายละเอียดนัดผ่าตัด" : "รายละเอียดผ่าตัดจริง";
+
   const formatCurrency = (amount: string) => {
     if (!amount) return "-";
     const num = parseFloat(amount.replace(/,/g, ""));
@@ -52,7 +57,7 @@ export default function SurgeryDetailsModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>รายละเอียดนัดผ่าตัด</h2>
+          <h2>{tableTitle}</h2>
           <button className="close-button" onClick={onClose}>
             ✕
           </button>
@@ -110,9 +115,13 @@ export default function SurgeryDetailsModal({
 
                 <div className="detail-row">
                   <span className="detail-icon">📅</span>
-                  <span className="detail-label">วันที่นัด:</span>
+                  <span className="detail-label">
+                    {tableType === "P" ? "วันที่นัด:" : "วันที่ผ่าตัด:"}
+                  </span>
                   <span className="detail-value">
-                    {surgery.วันที่ได้นัดผ่าตัด || "-"}
+                    {tableType === "P"
+                      ? surgery.วันที่ได้นัดผ่าตัด || "-"
+                      : surgery.วันที่ผ่าตัด || "-"}
                   </span>
                 </div>
 

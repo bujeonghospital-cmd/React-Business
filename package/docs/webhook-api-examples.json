@@ -1,0 +1,245 @@
+{
+  "description": "ตัวอย่างข้อมูลสำหรับทดสอบ Webhook API",
+  "version": "1.0",
+  "date": "2025-11-12",
+  "examples": {
+    "single_record": {
+      "description": "ส่งข้อมูลเดียว (Single record)",
+      "endpoint": "POST /api/webhooks/surgery-schedule",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer your-webhook-secret-here"
+      },
+      "body": {
+        "doctor": "หมอสมชาย",
+        "contact_person": "สา",
+        "customer_name": "คุณสมศรี",
+        "phone_number": "0812345678",
+        "date_consult_scheduled": "2025-11-15",
+        "date_surgery_scheduled": "2025-11-20",
+        "surgery_date": "2025-11-20",
+        "appointment_time": "10:00:00",
+        "proposed_amount": "50000",
+        "campaign": "Facebook Ads",
+        "remarks": "ลูกค้าสนใจทำตา 2 ข้าง"
+      }
+    },
+    "multiple_records": {
+      "description": "ส่งข้อมูลหลายรายการพร้อมกัน (Batch)",
+      "endpoint": "POST /api/webhooks/surgery-schedule",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer your-webhook-secret-here"
+      },
+      "body": [
+        {
+          "doctor": "หมอสมชาย",
+          "contact_person": "สา",
+          "customer_name": "คุณสมศรี",
+          "phone_number": "0812345678",
+          "date_consult_scheduled": "2025-11-15",
+          "proposed_amount": "50000"
+        },
+        {
+          "doctor": "หมอสมหญิง",
+          "contact_person": "พัชชา",
+          "customer_name": "คุณสมปอง",
+          "phone_number": "0823456789",
+          "date_consult_scheduled": "2025-11-16",
+          "date_surgery_scheduled": "2025-11-21",
+          "proposed_amount": "60000"
+        },
+        {
+          "doctor": "หมอสมชาย",
+          "contact_person": "ตั้งโอ๋",
+          "customer_name": "คุณสมหมาย",
+          "phone_number": "0834567890",
+          "surgery_date": "2025-11-22",
+          "appointment_time": "14:00:00",
+          "proposed_amount": "70000"
+        }
+      ]
+    },
+    "thai_date_format": {
+      "description": "ทดสอบฟอร์แมตวันที่แบบไทย (DD/MM/YYYY)",
+      "body": {
+        "doctor": "หมอทดสอบ",
+        "contact_person": "จีน",
+        "customer_name": "คุณทดสอบวันที่",
+        "phone_number": "0845678901",
+        "date_consult_scheduled": "15/11/2025",
+        "date_surgery_scheduled": "20/11/2025",
+        "surgery_date": "20/11/2025",
+        "appointment_time": "11:30:00",
+        "proposed_amount": "45000"
+      }
+    },
+    "full_contact_person": {
+      "description": "ทดสอบ contact_person แบบเต็ม (101-สา)",
+      "body": {
+        "doctor": "หมอทดสอบ",
+        "contact_person": "101-สา",
+        "customer_name": "คุณทดสอบ Contact",
+        "phone_number": "0856789012",
+        "date_consult_scheduled": "2025-11-17",
+        "proposed_amount": "55000",
+        "remarks": "จะแปลงเป็น 'สา' อัตโนมัติ"
+      }
+    },
+    "update_existing": {
+      "description": "อัพเดทข้อมูลที่มีอยู่แล้ว (ต้องมี id)",
+      "body": {
+        "id": "00000000-0000-0000-0000-000000000000",
+        "doctor": "หมอสมชาย (แก้ไข)",
+        "contact_person": "สา",
+        "customer_name": "คุณสมศรี (อัพเดท)",
+        "phone_number": "0812345678",
+        "surgery_date": "2025-11-25",
+        "proposed_amount": "55000",
+        "remarks": "อัพเดทข้อมูล"
+      }
+    },
+    "minimal_data": {
+      "description": "ข้อมูลขั้นต่ำที่จำเป็น",
+      "body": {
+        "customer_name": "คุณทดสอบ Minimal"
+      }
+    },
+    "complete_data": {
+      "description": "ข้อมูลครบทุก field",
+      "body": {
+        "doctor": "หมอสมชาย",
+        "contact_person": "101-สา",
+        "customer_name": "คุณสมศรี ใจดี",
+        "phone_number": "0812345678",
+        "date_consult_scheduled": "2025-11-15",
+        "date_surgery_scheduled": "2025-11-20",
+        "surgery_date": "2025-11-20",
+        "appointment_time": "10:00:00",
+        "proposed_amount": "50000",
+        "campaign": "Facebook Ads - Campaign 2025",
+        "campaign_link": "https://facebook.com/ads/123456",
+        "medical_fee": "30000",
+        "hospital_fee": "15000",
+        "anesthesia_fee": "3000",
+        "item_fee": "1000",
+        "other_expenses": "1000",
+        "consulting_specialist": "หมอสมหญิง",
+        "remarks": "ลูกค้า VIP, ต้องการบริการพิเศษ"
+      }
+    }
+  },
+  "curl_examples": {
+    "single_record": "curl -X POST http://localhost:3000/api/webhooks/surgery-schedule \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization: Bearer your-webhook-secret\" \\\n  -d '{\n    \"doctor\": \"หมอสมชาย\",\n    \"contact_person\": \"สา\",\n    \"customer_name\": \"คุณสมศรี\",\n    \"phone_number\": \"0812345678\",\n    \"date_consult_scheduled\": \"2025-11-15\",\n    \"proposed_amount\": \"50000\"\n  }'",
+    "get_info": "curl http://localhost:3000/api/webhooks/surgery-schedule"
+  },
+  "powershell_examples": {
+    "single_record": "$body = @{\n  doctor = \"หมอสมชาย\"\n  contact_person = \"สา\"\n  customer_name = \"คุณสมศรี\"\n  phone_number = \"0812345678\"\n  date_consult_scheduled = \"2025-11-15\"\n  proposed_amount = \"50000\"\n} | ConvertTo-Json\n\n$headers = @{\n  \"Content-Type\" = \"application/json\"\n  \"Authorization\" = \"Bearer your-webhook-secret\"\n}\n\nInvoke-RestMethod -Uri \"http://localhost:3000/api/webhooks/surgery-schedule\" `\n  -Method Post `\n  -Body $body `\n  -Headers $headers",
+    "get_info": "Invoke-RestMethod -Uri \"http://localhost:3000/api/webhooks/surgery-schedule\" -Method Get | ConvertTo-Json"
+  },
+  "field_descriptions": {
+    "doctor": "ชื่อหมอ (string, optional)",
+    "contact_person": "ผู้ติดต่อ - รองรับทั้ง 'สา' และ '101-สา' (string, optional)",
+    "customer_name": "ชื่อลูกค้า (string, required)",
+    "phone_number": "เบอร์โทรศัพท์ (string, optional)",
+    "date_consult_scheduled": "วันที่ได้นัด consult - รองรับ YYYY-MM-DD หรือ DD/MM/YYYY (string, optional)",
+    "date_surgery_scheduled": "วันที่ได้นัดผ่าตัด - รองรับ YYYY-MM-DD หรือ DD/MM/YYYY (string, optional)",
+    "surgery_date": "วันที่ผ่าตัดจริง - รองรับ YYYY-MM-DD หรือ DD/MM/YYYY (string, optional)",
+    "appointment_time": "เวลาที่นัด - ฟอร์แมต HH:MM:SS (string, optional)",
+    "proposed_amount": "ยอดนำเสนอ (string, optional)",
+    "campaign": "แคมเปญ (string, optional)",
+    "campaign_link": "ลิงก์แคมเปญ (string, optional)",
+    "medical_fee": "ค่าหมอ (string, optional)",
+    "hospital_fee": "ค่าโรงพยาบาล (string, optional)",
+    "anesthesia_fee": "ค่าวิสัญญี (string, optional)",
+    "item_fee": "ค่าอุปกรณ์ (string, optional)",
+    "other_expenses": "ค่าใช้จ่ายอื่นๆ (string, optional)",
+    "consulting_specialist": "แพทย์เฉพาะทาง (string, optional)",
+    "remarks": "หมายเหตุ (string, optional)",
+    "id": "Supabase ID สำหรับ update (uuid, optional)"
+  },
+  "response_examples": {
+    "success_single": {
+      "success": true,
+      "processed": 1,
+      "failed": 0,
+      "results": [
+        {
+          "action": "inserted",
+          "data": {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "doctor": "หมอสมชาย",
+            "contact_person": "สา",
+            "customer_name": "คุณสมศรี",
+            "created_at": "2025-11-12T10:30:00Z"
+          }
+        }
+      ]
+    },
+    "success_multiple": {
+      "success": true,
+      "processed": 3,
+      "failed": 0,
+      "results": [
+        {
+          "action": "inserted",
+          "data": {}
+        },
+        {
+          "action": "inserted",
+          "data": {}
+        },
+        {
+          "action": "updated",
+          "data": {}
+        }
+      ]
+    },
+    "partial_success": {
+      "success": true,
+      "processed": 2,
+      "failed": 1,
+      "results": [
+        {
+          "action": "inserted",
+          "data": {}
+        },
+        {
+          "action": "inserted",
+          "data": {}
+        }
+      ],
+      "errors": [
+        {
+          "data": {},
+          "error": "Error message here"
+        }
+      ]
+    },
+    "error_unauthorized": {
+      "error": "Unauthorized"
+    },
+    "error_no_data": {
+      "error": "No data provided"
+    },
+    "error_server": {
+      "error": "Internal server error",
+      "message": "Error details here"
+    }
+  },
+  "notes": {
+    "date_formats": [
+      "YYYY-MM-DD (ISO format) - แนะนำ",
+      "DD/MM/YYYY (Thai format)",
+      "D/M/YYYY (Thai format short)"
+    ],
+    "contact_person_formats": [
+      "ชื่อเดียว: 'สา', 'พัชชา', 'ตั้งโอ๋', ฯลฯ",
+      "แบบเต็ม: '101-สา', '102-พัชชา', '103-ตั้งโอ๋', ฯลฯ (จะแปลงอัตโนมัติ)"
+    ],
+    "time_format": "HH:MM:SS (24-hour format)",
+    "authentication": "ใช้ Bearer token ใน Authorization header",
+    "batch_size": "แนะนำไม่เกิน 100 records ต่อครั้ง",
+    "rate_limit": "ไม่จำกัด (แต่ควร delay 1 วินาทีระหว่าง batch)"
+  }
+}

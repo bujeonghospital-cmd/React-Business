@@ -1,0 +1,60 @@
+/* Fullscreen Layout Styles */
+.fullscreen-layout {
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+}
+
+/* Global overrides for fullscreen mode */
+.fullscreen-layout body {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.fullscreen-layout header,
+.fullscreen-layout .header,
+.fullscreen-layout nav,
+.fullscreen-layout .nav {
+  display: none !important;
+}
+
+.fullscreen-layout footer,
+.fullscreen-layout .footer {
+  display: none !important;
+}
+
+.fullscreen-layout .layout-grid {
+  display: block !important;
+}
+
+.fullscreen-layout main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Alternative: apply to body directly when in fullscreen routes */
+body:has(.fullscreen-layout) {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body:has(.fullscreen-layout) header,
+body:has(.fullscreen-layout) .header,
+body:has(.fullscreen-layout) nav,
+body:has(.fullscreen-layout) .nav {
+  display: none !important;
+}
+
+body:has(.fullscreen-layout) footer,
+body:has(.fullscreen-layout) .footer {
+  display: none !important;
+}
+
+body:has(.fullscreen-layout) .layout-grid {
+  display: block !important;
+}
+
+body:has(.fullscreen-layout) main {
+  padding: 0 !important;
+  margin: 0 !important;
+}

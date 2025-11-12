@@ -3,12 +3,25 @@
 import React, { useState, useEffect } from "react";
 import "./styles.css";
 import SurgeryDetailsModal from "./SurgeryDetailsModal";
+import { SurgeryScheduleData } from "@/utils/googleSheets";
+
+// Mapping for contact person (ย้ายมาจาก googleSheets)
+export const CONTACT_PERSON_MAPPING: Record<string, string> = {
+  "101-สา": "สา",
+  "102-พิชชา": "พิชชา",
+  "103-ตั้งโอ๋": "ตั้งโอ๋",
+  "104-Test": "Test",
+  "105-จีน": "จีน",
+  "106-มุก": "มุก",
+  "107-เจ": "เจ",
+  "108-ว่าน": "ว่าน",
+  "109-ไม่ระบุ": "ไม่ระบุ",
+};
 import {
-  fetchSurgeryScheduleData,
-  countSurgeriesByDateAndPerson,
-  CONTACT_PERSON_MAPPING,
-  SurgeryScheduleData,
-} from "@/utils/googleSheets";
+  fetchSurgeryScheduleFromSupabase,
+  countSupabaseSurgeriesByDateAndPerson,
+  countSupabaseSurgeriesByActualDateAndPerson,
+} from "@/utils/supabaseFilmData";
 
 export default function PerformanceSurgerySchedule() {
   // State for selected month and year
@@ -16,13 +29,18 @@ export default function PerformanceSurgerySchedule() {
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
-  // State for Google Sheets data
+  // State for surgery data
   const [surgeryData, setSurgeryData] = useState<SurgeryScheduleData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [countMap, setCountMap] = useState<
     Map<string, Map<number, SurgeryScheduleData[]>>
   >(new Map());
+  const [countMapL, setCountMapL] = useState<
+    Map<string, Map<number, SurgeryScheduleData[]>>
+  >(new Map());
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -31,35 +49,61 @@ export default function PerformanceSurgerySchedule() {
   >([]);
   const [selectedDate, setSelectedDate] = useState(1);
   const [selectedContactPerson, setSelectedContactPerson] = useState("");
+  const [selectedTableType, setSelectedTableType] = useState<"P" | "L">("P");
 
-  // Fetch data from Google Sheets
-  useEffect(() => {
-    const loadData = async () => {
+  // Function to load data from Supabase
+  const loadData = async (isManualRefresh = false) => {
+    if (isManualRefresh) {
+      setIsRefreshing(true);
+    } else {
       setIsLoading(true);
-      setError(null);
-      try {
-        const data = await fetchSurgeryScheduleData();
-        setSurgeryData(data);
-      } catch (error: any) {
-        console.error("Failed to load surgery schedule data:", error);
-        setError(error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    }
+    setError(null);
+    try {
+      // Fetch data from Supabase
+      const data = await fetchSurgeryScheduleFromSupabase();
+      setSurgeryData(data);
+      setLastUpdated(new Date());
+    } catch (error: any) {
+      setError(error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
+  // Fetch data from Supabase on mount
+  useEffect(() => {
     loadData();
   }, []);
 
-  // Update count map when data or date changes
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Update count maps when data or date changes
   useEffect(() => {
     if (surgeryData.length > 0) {
-      const newCountMap = countSurgeriesByDateAndPerson(
+      // P table - วันที่ได้นัดผ่าตัด
+      const newCountMap = countSupabaseSurgeriesByDateAndPerson(
         surgeryData,
         selectedMonth,
         selectedYear
       );
       setCountMap(newCountMap);
+
+      // L table - วันที่ผ่าตัด
+      const newCountMapL = countSupabaseSurgeriesByActualDateAndPerson(
+        surgeryData,
+        selectedMonth,
+        selectedYear
+      );
+      setCountMapL(newCountMapL);
     }
   }, [surgeryData, selectedMonth, selectedYear]);
 
@@ -120,11 +164,18 @@ export default function PerformanceSurgerySchedule() {
   };
 
   // Handle cell click to open modal
-  const handleCellClick = (day: number, rowId: string) => {
+  const handleCellClick = (
+    day: number,
+    rowId: string,
+    tableType: "P" | "L"
+  ) => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return;
 
-    const personMap = countMap.get(contactPerson);
+    const personMap =
+      tableType === "P"
+        ? countMap.get(contactPerson)
+        : countMapL.get(contactPerson);
     if (!personMap) return;
 
     const surgeries = personMap.get(day);
@@ -133,15 +184,23 @@ export default function PerformanceSurgerySchedule() {
     setSelectedSurgeries(surgeries);
     setSelectedDate(day);
     setSelectedContactPerson(contactPerson);
+    setSelectedTableType(tableType);
     setModalOpen(true);
   };
 
   // Get count for a specific cell
-  const getCellCount = (day: number, rowId: string): number => {
+  const getCellCount = (
+    day: number,
+    rowId: string,
+    tableType: "P" | "L"
+  ): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
 
-    const personMap = countMap.get(contactPerson);
+    const personMap =
+      tableType === "P"
+        ? countMap.get(contactPerson)
+        : countMapL.get(contactPerson);
     if (!personMap) return 0;
 
     const surgeries = personMap.get(day);
@@ -158,6 +217,7 @@ export default function PerformanceSurgerySchedule() {
     { id: "106-มุก", name: "106-มุก" },
     { id: "107-เจ", name: "107-เจ" },
     { id: "108-ว่าน", name: "108-ว่าน" },
+    { id: "109-ไม่ระบุ", name: "109-ไม่ระบุ" }, // สำหรับข้อมูลที่ไม่มีผู้ติดต่อ
   ];
 
   return (
@@ -208,6 +268,42 @@ export default function PerformanceSurgerySchedule() {
           </strong>
           <span className="days-count"> ({daysInMonth} วัน)</span>
         </div>
+
+        {/* Data Info and Refresh Button */}
+        <div className="data-info">
+          <div className="update-time">
+            {lastUpdated && (
+              <>
+                <span className="update-label">อัพเดทล่าสุด:</span>
+                <span className="update-value">
+                  {lastUpdated.toLocaleTimeString("th-TH", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}
+                </span>
+              </>
+            )}
+            {surgeryData.length > 0 && (
+              <span className="data-count">
+                📊 ข้อมูลทั้งหมด: {surgeryData.length} รายการ (Supabase)
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => loadData(true)}
+            className="refresh-button"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <>
+                <span className="refresh-spinner">⟳</span> กำลังอัพเดท...
+              </>
+            ) : (
+              <>🔄 รีเฟรชข้อมูล</>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Loading Indicator */}
@@ -229,17 +325,16 @@ export default function PerformanceSurgerySchedule() {
               <strong>แนะนำการแก้ไข:</strong>
               <ol>
                 <li>
-                  ตรวจสอบไฟล์ <code>.env.local</code> ว่ามี API Key และ
-                  Spreadsheet ID
+                  ตรวจสอบไฟล์ <code>.env.local</code> ว่ามี Supabase URL และ
+                  Anon Key
                 </li>
                 <li>
-                  ตรวจสอบว่า Google Sheet ถูกตั้งค่าให้ทุกคนที่มี link สามารถ
-                  "ดู" ได้
+                  ตรวจสอบว่าตาราง <code>film_data</code> มีอยู่ใน Supabase
                 </li>
-                <li>ตรวจสอบว่า API Key เปิดใช้งาน Google Sheets API แล้ว</li>
+                <li>ตรวจสอบว่ามีข้อมูลในตาราง film_data</li>
                 <li>
                   ดูคู่มือเพิ่มเติมได้ที่{" "}
-                  <code>GOOGLE_SHEETS_SURGERY_SCHEDULE_SETUP.md</code>
+                  <code>SUPABASE_SURGERY_SCHEDULE_INTEGRATION.md</code>
                 </li>
               </ol>
             </div>
@@ -275,13 +370,62 @@ export default function PerformanceSurgerySchedule() {
                 >
                   <td className="name-cell">{row.name}</td>
                   {days.map((day) => {
-                    const count = getCellCount(day, row.id);
+                    const count = getCellCount(day, row.id, "P");
                     return (
                       <td
                         key={`p-cell-${row.id}-${day}`}
                         className={`data-cell ${count > 0 ? "has-data" : ""}`}
                         onClick={() =>
-                          count > 0 && handleCellClick(day, row.id)
+                          count > 0 && handleCellClick(day, row.id, "P")
+                        }
+                        title={
+                          count > 0
+                            ? `คลิกเพื่อดูรายละเอียด (${count} รายการ)`
+                            : ""
+                        }
+                      >
+                        {count > 0 && (
+                          <span className="count-badge">{count}</span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Table - วันที่ผ่าตัด L */}
+      <div className="table-section">
+        <div className="table-wrapper">
+          <table className="schedule-table">
+            <thead>
+              <tr>
+                <th className="header-cell name-header">วันที่ผ่าตัด L</th>
+                {days.map((day) => (
+                  <th key={`l-day-${day}`} className="header-cell day-header">
+                    {day}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pScheduleRows.map((row, rowIndex) => (
+                <tr
+                  key={`l-row-${row.id}`}
+                  className={rowIndex % 2 === 0 ? "even-row" : "odd-row"}
+                >
+                  <td className="name-cell">{row.name}</td>
+                  {days.map((day) => {
+                    const count = getCellCount(day, row.id, "L");
+                    return (
+                      <td
+                        key={`l-cell-${row.id}-${day}`}
+                        className={`data-cell ${count > 0 ? "has-data" : ""}`}
+                        onClick={() =>
+                          count > 0 && handleCellClick(day, row.id, "L")
                         }
                         title={
                           count > 0
@@ -311,6 +455,7 @@ export default function PerformanceSurgerySchedule() {
         month={selectedMonth}
         year={selectedYear}
         contactPerson={selectedContactPerson}
+        tableType={selectedTableType}
       />
     </div>
   );

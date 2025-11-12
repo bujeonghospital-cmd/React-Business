@@ -1,6 +1,10 @@
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
 
+// Disable caching for this route
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   try {
     // Get the month and year from query parameters
@@ -52,6 +56,13 @@ export async function GET(request: Request) {
     const headers = rows[0];
     const dataRows = rows.slice(1);
 
+    // Debug: Show all headers with their column letters
+    console.log("📋 All Headers:");
+    headers.forEach((header: string, index: number) => {
+      const columnLetter = String.fromCharCode(65 + index); // A=65, B=66, etc.
+      console.log(`  ${columnLetter}: "${header}"`);
+    });
+
     // Map column indices
     const columnIndices = {
       หมอ: headers.indexOf("หมอ"),
@@ -61,17 +72,38 @@ export async function GET(request: Request) {
       วันที่ได้นัดผ่าตัด: headers.indexOf("วันที่ได้นัดผ่าตัด"),
       เวลาที่นัด: headers.indexOf("เวลาที่นัด"),
       ยอดนำเสนอ: headers.indexOf("ยอดนำเสนอ"),
+      วันที่ผ่าตัด: headers.indexOf("วันที่ผ่าตัด"), // Add L column
     };
 
-    // Check if all required columns exist
-    const missingColumns = Object.entries(columnIndices)
-      .filter(([_, index]) => index === -1)
-      .map(([name]) => name);
+    console.log("🔍 Column Indices Found:");
+    Object.entries(columnIndices).forEach(([name, index]) => {
+      const columnLetter =
+        index >= 0 ? String.fromCharCode(65 + index) : "NOT FOUND";
+      console.log(`  ${name}: Column ${columnLetter} (index ${index})`);
+    });
+
+    // Check required columns (วันที่ผ่าตัด is optional)
+    const requiredColumns = [
+      "หมอ",
+      "ผู้ติดต่อ",
+      "ชื่อ",
+      "เบอร์โทร",
+      "วันที่ได้นัดผ่าตัด",
+      "เวลาที่นัด",
+      "ยอดนำเสนอ",
+    ];
+
+    const missingColumns = requiredColumns.filter(
+      (col) => columnIndices[col as keyof typeof columnIndices] === -1
+    );
 
     if (missingColumns.length > 0) {
+      console.error("❌ Missing columns:", missingColumns);
       return NextResponse.json(
         {
-          error: `Missing required columns: ${missingColumns.join(", ")}`,
+          error: `Missing required columns: ${missingColumns.join(
+            ", "
+          )}. Please check your Google Sheet headers.`,
         },
         { status: 400 }
       );
@@ -79,7 +111,11 @@ export async function GET(request: Request) {
 
     // Parse data rows
     const scheduleData = dataRows
-      .filter((row: any[]) => row[columnIndices.วันที่ได้นัดผ่าตัด])
+      .filter(
+        (row: any[]) =>
+          row[columnIndices.วันที่ได้นัดผ่าตัด] ||
+          row[columnIndices.วันที่ผ่าตัด]
+      )
       .map((row: any[]) => ({
         หมอ: row[columnIndices.หมอ] || "",
         ผู้ติดต่อ: row[columnIndices.ผู้ติดต่อ] || "",
@@ -88,9 +124,35 @@ export async function GET(request: Request) {
         วันที่ได้นัดผ่าตัด: row[columnIndices.วันที่ได้นัดผ่าตัด] || "",
         เวลาที่นัด: row[columnIndices.เวลาที่นัด] || "",
         ยอดนำเสนอ: row[columnIndices.ยอดนำเสนอ] || "",
+        วันที่ผ่าตัด: row[columnIndices.วันที่ผ่าตัด] || "", // Add L data
       }));
 
-    return NextResponse.json({ data: scheduleData });
+    console.log(
+      `✅ API Route: ส่งข้อมูล ${scheduleData.length} รายการ จากทั้งหมด ${dataRows.length} แถว`
+    );
+
+    // Sample first 3 rows for debugging
+    console.log("� ตัวอย่างข้อมูล 3 รายการแรก:");
+    scheduleData.slice(0, 3).forEach((item: any, idx: number) => {
+      console.log(
+        `  [${idx + 1}] ชื่อ: "${item.ชื่อ}", ผู้ติดต่อ: "${
+          item.ผู้ติดต่อ
+        }", วันที่P: "${item.วันที่ได้นัดผ่าตัด}", วันที่L: "${
+          item.วันที่ผ่าตัด
+        }"`
+      );
+    });
+
+    return NextResponse.json(
+      { data: scheduleData },
+      {
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Error fetching surgery schedule data:", error);
     return NextResponse.json(
