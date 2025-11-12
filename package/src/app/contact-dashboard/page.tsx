@@ -327,7 +327,7 @@ const ContactDashboard = () => {
   useEffect(() => {
     fetchContacts();
 
-    // Auto-refresh every 30 seconds (background refresh only - no UI disruption)
+    // Auto-refresh every 3 seconds (background refresh only - no UI disruption)
     const interval = setInterval(async () => {
       try {
         // Silent refresh without showing loading state
@@ -366,7 +366,7 @@ const ContactDashboard = () => {
         console.error("Background refresh error:", error);
         // Silently fail - don't disrupt user experience
       }
-    }, 30000);
+    }, 3000);
 
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
