@@ -248,7 +248,7 @@ export async function GET(request: NextRequest) {
       0
     );
 
-    // ประมวลผลข้อมูลจาก Film_dev (นัด Consult VDO)
+    // ประมวลผลข้อมูลจาก Film_dev (วันที่ได้นัด consult - คอลัมน์ O)
     const filmDevConsultCounts: { [key: string]: number } = {};
     Object.values(agentNameMap).forEach((agentId) => {
       filmDevConsultCounts[agentId] = 0;
@@ -264,49 +264,53 @@ export async function GET(request: NextRequest) {
       console.log("Total Film_dev data rows:", filmDevDataRows.length);
 
       // หา index ของคอลัมน์ที่ต้องการ
-      const statusIndex = filmDevHeaders.findIndex(
-        (h: string) =>
-          h.toLowerCase().includes("สถานะ") ||
-          h === "สถานะ" ||
-          h.toLowerCase() === "status"
-      );
       const contactPersonIndexDev = filmDevHeaders.findIndex(
         (h: string) =>
           h.toLowerCase().includes("ผู้ติดต่อ") || h === "ผู้ติดต่อ"
       );
+      const consultDateIndexDev = filmDevHeaders.findIndex(
+        (h: string) =>
+          h.toLowerCase().includes("วันที่ได้นัด consult") ||
+          h === "วันที่ได้นัด consult"
+      );
 
-      console.log("Film_dev statusIndex:", statusIndex);
       console.log("Film_dev contactPersonIndex:", contactPersonIndexDev);
+      console.log("Film_dev consultDateIndex:", consultDateIndexDev);
 
-      if (statusIndex !== -1 && contactPersonIndexDev !== -1) {
+      if (contactPersonIndexDev !== -1 && consultDateIndexDev !== -1) {
         let matchedFilmDevRows = 0;
 
         filmDevDataRows.forEach((row, index) => {
           if (!row || row.length === 0) return;
 
-          const status = row[statusIndex]?.toString().trim() || "";
           const contactPerson =
             row[contactPersonIndexDev]?.toString().trim() || "";
+          const consultDate = row[consultDateIndexDev]?.toString().trim() || "";
 
-          // กรองเฉพาะสถานะ "นัด Consult (VDO)"
-          if (status === "นัด Consult (VDO)" && contactPerson) {
-            // หา agent ID จากชื่อผู้ติดต่อ
-            let matchedAgentId: string | null = null;
-            for (const [agentName, agentId] of Object.entries(agentNameMap)) {
-              if (contactPerson.includes(agentName)) {
-                matchedAgentId = agentId;
-                break;
+          // ตรวจสอบว่ามีวันที่และผู้ติดต่อ
+          if (consultDate && contactPerson) {
+            const normalizedConsultDate = normalizeDate(consultDate);
+
+            // กรองเฉพาะวันที่ตรงกับ targetDate
+            if (normalizedConsultDate === targetDate) {
+              // หา agent ID จากชื่อผู้ติดต่อ
+              let matchedAgentId: string | null = null;
+              for (const [agentName, agentId] of Object.entries(agentNameMap)) {
+                if (contactPerson.includes(agentName)) {
+                  matchedAgentId = agentId;
+                  break;
+                }
               }
-            }
 
-            if (matchedAgentId) {
-              filmDevConsultCounts[matchedAgentId]++;
-              matchedFilmDevRows++;
-              console.log(
-                `✅ Film_dev Row ${
-                  index + 2
-                }: ${contactPerson} (${matchedAgentId}) - นัด Consult (VDO)`
-              );
+              if (matchedAgentId) {
+                filmDevConsultCounts[matchedAgentId]++;
+                matchedFilmDevRows++;
+                console.log(
+                  `✅ Film_dev Row ${
+                    index + 2
+                  }: ${contactPerson} (${matchedAgentId}) on ${normalizedConsultDate}`
+                );
+              }
             }
           }
         });
