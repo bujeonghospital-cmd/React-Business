@@ -8,10 +8,11 @@ import {
   CONTACT_PERSON_MAPPING,
 } from "@/utils/googleSheets";
 import {
-  fetchSurgeryScheduleFromSupabase,
-  countSupabaseSurgeriesByDateAndPerson,
-  countSupabaseSurgeriesByActualDateAndPerson,
-} from "@/utils/supabaseFilmData";
+  fetchSurgeryScheduleFromPythonAPI,
+  countPythonApiSurgeriesByDateAndPerson,
+  countPythonApiSurgeriesByActualDateAndPerson,
+  calculateRevenueByDateAndPerson,
+} from "@/utils/pythonApiFilmData";
 
 export default function PerformanceSurgerySchedule() {
   // State for selected month and year
@@ -29,8 +30,31 @@ export default function PerformanceSurgerySchedule() {
   const [countMapL, setCountMapL] = useState<
     Map<string, Map<number, SurgeryScheduleData[]>>
   >(new Map());
+  const [revenueMap, setRevenueMap] = useState<
+    Map<string, Map<number, number>>
+  >(new Map());
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // KPI Data State (ข้อมูล KPI ที่กำหนดเอง ไม่ได้เชื่อมกับ Google Sheets)
+  // Note: kpiToDate จะถูกคำนวณอัตโนมัติจากจำนวนวันทำงานที่ผ่านมา
+  const [kpiData, setKpiData] = useState<{
+    [key: string]: {
+      kpiMonth: number;
+      kpiToDate: number;
+      actual: number;
+    };
+  }>({
+    "101-สา": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "102-พิชชา": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "103-ตั้งโอ๋": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "104-Test": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "105-จีน": { kpiMonth: 40, kpiToDate: 0, actual: 5 },
+    "106-มุก": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "107-เจ": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "108-ว่าน": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
+    "109-ไม่ระบุ": { kpiMonth: 0, kpiToDate: 0, actual: 0 },
+  });
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,7 +65,7 @@ export default function PerformanceSurgerySchedule() {
   const [selectedContactPerson, setSelectedContactPerson] = useState("");
   const [selectedTableType, setSelectedTableType] = useState<"P" | "L">("P");
 
-  // Function to load data from Supabase
+  // Function to load data from Python API
   const loadData = async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setIsRefreshing(true);
@@ -50,8 +74,8 @@ export default function PerformanceSurgerySchedule() {
     }
     setError(null);
     try {
-      // Fetch data from Supabase
-      const data = await fetchSurgeryScheduleFromSupabase();
+      // Fetch data from Python API (Google Sheets)
+      const data = await fetchSurgeryScheduleFromPythonAPI();
       setSurgeryData(data);
       setLastUpdated(new Date());
     } catch (error: any) {
@@ -62,7 +86,7 @@ export default function PerformanceSurgerySchedule() {
     }
   };
 
-  // Fetch data from Supabase on mount
+  // Fetch data when component mounts
   useEffect(() => {
     loadData();
   }, []);
@@ -76,27 +100,6 @@ export default function PerformanceSurgerySchedule() {
     return () => clearInterval(interval);
   }, []);
 
-  // Update count maps when data or date changes
-  useEffect(() => {
-    if (surgeryData.length > 0) {
-      // P table - วันที่ได้นัดผ่าตัด
-      const newCountMap = countSupabaseSurgeriesByDateAndPerson(
-        surgeryData,
-        selectedMonth,
-        selectedYear
-      );
-      setCountMap(newCountMap);
-
-      // L table - วันที่ผ่าตัด
-      const newCountMapL = countSupabaseSurgeriesByActualDateAndPerson(
-        surgeryData,
-        selectedMonth,
-        selectedYear
-      );
-      setCountMapL(newCountMapL);
-    }
-  }, [surgeryData, selectedMonth, selectedYear]);
-
   // Get number of days in selected month
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
@@ -104,6 +107,101 @@ export default function PerformanceSurgerySchedule() {
 
   const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  // Check if a day is a weekday (Monday-Friday)
+  const isWeekday = (day: number): boolean => {
+    const date = new Date(selectedYear, selectedMonth, day);
+    const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
+  };
+
+  // Calculate number of weekdays (Mon-Fri) from start of month to current date
+  const calculateWeekdaysToDate = (): number => {
+    const today = new Date();
+    const todayDate = today.getDate();
+    const todayMonth = today.getMonth();
+    const todayYear = today.getFullYear();
+
+    // If viewing a different month/year than current, return 0
+    if (selectedMonth !== todayMonth || selectedYear !== todayYear) {
+      return 0;
+    }
+
+    let weekdayCount = 0;
+    for (let day = 1; day <= todayDate; day++) {
+      if (isWeekday(day)) {
+        weekdayCount++;
+      }
+    }
+    return weekdayCount;
+  };
+
+  // Update count maps when data or date changes
+  useEffect(() => {
+    if (surgeryData.length > 0) {
+      // P table - วันที่ได้นัดผ่าตัด (Python API)
+      const newCountMap = countPythonApiSurgeriesByDateAndPerson(
+        surgeryData,
+        selectedMonth,
+        selectedYear
+      );
+
+      // L table - วันที่ผ่าตัด (Python API)
+      const newCountMapL = countPythonApiSurgeriesByActualDateAndPerson(
+        surgeryData,
+        selectedMonth,
+        selectedYear
+      );
+
+      // Revenue table - ประมาณการรายรับ (Python API)
+      const newRevenueMap = calculateRevenueByDateAndPerson(
+        surgeryData,
+        selectedMonth,
+        selectedYear
+      );
+
+      setCountMap(newCountMap);
+      setCountMapL(newCountMapL);
+      setRevenueMap(newRevenueMap);
+    }
+  }, [surgeryData, selectedMonth, selectedYear]);
+
+  // Update KPI To Date and Actual based on weekdays passed in current month
+  useEffect(() => {
+    const weekdaysToDate = calculateWeekdaysToDate();
+    const totalWeekdaysInMonth = days.filter((day) => isWeekday(day)).length;
+
+    // Update kpiToDate and actual for all rows
+    setKpiData((prevData) => {
+      const updatedData = { ...prevData };
+      Object.keys(updatedData).forEach((key) => {
+        // Calculate actual count - sum of all counts (total performance)
+        let actualCount = 0;
+        days.forEach((day) => {
+          const count = getCellCount(day, key, "P");
+          actualCount += count; // Sum up all the counts
+        });
+
+        if (updatedData[key].kpiMonth > 0) {
+          // Calculate proportional KPI based on weekdays passed
+          updatedData[key] = {
+            ...updatedData[key],
+            kpiToDate: Math.round(
+              (updatedData[key].kpiMonth / totalWeekdaysInMonth) *
+                weekdaysToDate
+            ),
+            actual: actualCount,
+          };
+        } else {
+          updatedData[key] = {
+            ...updatedData[key],
+            actual: actualCount,
+          };
+        }
+      });
+      return updatedData;
+    });
+  }, [selectedMonth, selectedYear, days.length, countMap]);
 
   // Month names in Thai
   const monthNames = [
@@ -197,6 +295,30 @@ export default function PerformanceSurgerySchedule() {
     return surgeries ? surgeries.length : 0;
   };
 
+  // Get revenue for a specific cell
+  const getCellRevenue = (day: number, rowId: string): number => {
+    const contactPerson = CONTACT_PERSON_MAPPING[rowId];
+    if (!contactPerson) return 0;
+
+    const personMap = revenueMap.get(contactPerson);
+    if (!personMap) return 0;
+
+    return personMap.get(day) || 0;
+  };
+
+  // Calculate KPI Diff (Actual - KPI To Date)
+  const calculateDiff = (rowId: string): number => {
+    const data = kpiData[rowId];
+    if (!data) return 0;
+    return data.actual - data.kpiToDate;
+  };
+
+  // Format number as Thai currency
+  const formatCurrency = (amount: number): string => {
+    if (amount === 0) return "";
+    return amount.toLocaleString("th-TH");
+  };
+
   // Data for table (วันที่ได้นัดผ่า P)
   const pScheduleRows = [
     { id: "101-สา", name: "101-สา" },
@@ -257,6 +379,12 @@ export default function PerformanceSurgerySchedule() {
             เดือน {monthNames[selectedMonth]} {selectedYear + 543}
           </strong>
           <span className="days-count"> ({daysInMonth} วัน)</span>
+          {calculateWeekdaysToDate() > 0 && (
+            <span className="weekdays-count">
+              {" "}
+              | 🗓️ วันทำงานที่ผ่านมา: {calculateWeekdaysToDate()} วัน
+            </span>
+          )}
         </div>
 
         {/* Data Info and Refresh Button */}
@@ -276,7 +404,8 @@ export default function PerformanceSurgerySchedule() {
             )}
             {surgeryData.length > 0 && (
               <span className="data-count">
-                📊 ข้อมูลทั้งหมด: {surgeryData.length} รายการ (Supabase)
+                📊 ข้อมูลทั้งหมด: {surgeryData.length} รายการ (Python API -
+                Google Sheets)
               </span>
             )}
           </div>
@@ -315,16 +444,26 @@ export default function PerformanceSurgerySchedule() {
               <strong>แนะนำการแก้ไข:</strong>
               <ol>
                 <li>
-                  ตรวจสอบไฟล์ <code>.env.local</code> ว่ามี Supabase URL และ
-                  Anon Key
+                  ตรวจสอบว่า Python API กำลังทำงานอยู่ (port 5000 โดย default)
                 </li>
                 <li>
-                  ตรวจสอบว่าตาราง <code>film_data</code> มีอยู่ใน Supabase
+                  รัน: <code>cd python-api && python app.py</code>
                 </li>
-                <li>ตรวจสอบว่ามีข้อมูลในตาราง film_data</li>
+                <li>
+                  ตรวจสอบไฟล์ <code>python-api/.env</code> ว่ามี Google Sheets
+                  credentials
+                </li>
+                <li>
+                  ตรวจสอบว่า Environment variable <code>PYTHON_API_URL</code>{" "}
+                  ถูกต้อง (default: http://localhost:5000)
+                </li>
+                <li>
+                  ตรวจสอบว่า Service Account มีสิทธิ์เข้าถึง Google Sheet "Film
+                  data"
+                </li>
                 <li>
                   ดูคู่มือเพิ่มเติมได้ที่{" "}
-                  <code>SUPABASE_SURGERY_SCHEDULE_INTEGRATION.md</code>
+                  <code>PYTHON_API_SURGERY_SCHEDULE_GUIDE.md</code>
                 </li>
               </ol>
             </div>
@@ -344,9 +483,20 @@ export default function PerformanceSurgerySchedule() {
           <table className="schedule-table">
             <thead>
               <tr>
-                <th className="header-cell name-header">วันที่ได้นัดผ่า P</th>
+                <th className="header-cell name-header" rowSpan={2}>
+                  จำนวนที่ได้นัดผ่าตัด
+                </th>
+                <th className="header-cell kpi-header">KPI Month</th>
+                <th className="header-cell kpi-header">KPI To Date</th>
+                <th className="header-cell kpi-header">Actual</th>
+                <th className="header-cell kpi-header">Diff</th>
                 {days.map((day) => (
-                  <th key={`p-day-${day}`} className="header-cell day-header">
+                  <th
+                    key={`p-day-${day}`}
+                    className={`header-cell day-header ${
+                      isWeekday(day) ? "weekday-header" : ""
+                    }`}
+                  >
                     {day}
                   </th>
                 ))}
@@ -359,6 +509,29 @@ export default function PerformanceSurgerySchedule() {
                   className={rowIndex % 2 === 0 ? "even-row" : "odd-row"}
                 >
                   <td className="name-cell">{row.name}</td>
+                  <td className="kpi-cell">
+                    {kpiData[row.id]?.kpiMonth || ""}
+                  </td>
+                  <td className="kpi-cell">
+                    {kpiData[row.id]?.kpiToDate || ""}
+                  </td>
+                  <td className="kpi-cell">{kpiData[row.id]?.actual || ""}</td>
+                  <td className="kpi-cell diff-cell">
+                    {(() => {
+                      if (kpiData[row.id]?.kpiToDate > 0) {
+                        const diff = calculateDiff(row.id);
+                        const diffColor = diff >= 0 ? "green" : "red";
+                        return (
+                          <span
+                            style={{ color: diffColor, fontWeight: "bold" }}
+                          >
+                            {diff.toFixed(1)}
+                          </span>
+                        );
+                      }
+                      return "";
+                    })()}
+                  </td>
                   {days.map((day) => {
                     const count = getCellCount(day, row.id, "P");
                     return (
@@ -393,9 +566,20 @@ export default function PerformanceSurgerySchedule() {
           <table className="schedule-table">
             <thead>
               <tr>
-                <th className="header-cell name-header">วันที่ผ่าตัด L</th>
+                <th className="header-cell name-header" rowSpan={2}>
+                  จำนวนผ่าตัด L
+                </th>
+                <th className="header-cell kpi-header">KPI Month</th>
+                <th className="header-cell kpi-header">KPI To Date</th>
+                <th className="header-cell kpi-header">Actual</th>
+                <th className="header-cell kpi-header">Diff</th>
                 {days.map((day) => (
-                  <th key={`l-day-${day}`} className="header-cell day-header">
+                  <th
+                    key={`l-day-${day}`}
+                    className={`header-cell day-header ${
+                      isWeekday(day) ? "weekday-header" : ""
+                    }`}
+                  >
                     {day}
                   </th>
                 ))}
@@ -408,6 +592,29 @@ export default function PerformanceSurgerySchedule() {
                   className={rowIndex % 2 === 0 ? "even-row" : "odd-row"}
                 >
                   <td className="name-cell">{row.name}</td>
+                  <td className="kpi-cell">
+                    {kpiData[row.id]?.kpiMonth || ""}
+                  </td>
+                  <td className="kpi-cell">
+                    {kpiData[row.id]?.kpiToDate || ""}
+                  </td>
+                  <td className="kpi-cell">{kpiData[row.id]?.actual || ""}</td>
+                  <td className="kpi-cell diff-cell">
+                    {(() => {
+                      if (kpiData[row.id]?.kpiToDate > 0) {
+                        const diff = calculateDiff(row.id);
+                        const diffColor = diff >= 0 ? "green" : "red";
+                        return (
+                          <span
+                            style={{ color: diffColor, fontWeight: "bold" }}
+                          >
+                            {diff.toFixed(1)}
+                          </span>
+                        );
+                      }
+                      return "";
+                    })()}
+                  </td>
                   {days.map((day) => {
                     const count = getCellCount(day, row.id, "L");
                     return (
@@ -436,6 +643,117 @@ export default function PerformanceSurgerySchedule() {
         </div>
       </div>
 
+      {/* Table - ประมาณการรายรับ */}
+      <div className="table-section">
+        <div className="table-wrapper">
+          <table className="schedule-table">
+            <thead>
+              <tr>
+                <th className="header-cell name-header" rowSpan={2}>
+                  ประมาณการรายรับ
+                </th>
+                <th className="header-cell kpi-header">KPI Month</th>
+                <th className="header-cell kpi-header">KPI To Date</th>
+                <th className="header-cell kpi-header">Actual</th>
+                <th className="header-cell kpi-header">Diff</th>
+                {days.map((day) => (
+                  <th
+                    key={`revenue-day-${day}`}
+                    className={`header-cell day-header ${
+                      isWeekday(day) ? "weekday-header" : ""
+                    }`}
+                  >
+                    {day}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pScheduleRows.map((row, rowIndex) => (
+                <tr
+                  key={`revenue-row-${row.id}`}
+                  className={rowIndex % 2 === 0 ? "even-row" : "odd-row"}
+                >
+                  <td className="name-cell">{row.name}</td>
+                  <td className="kpi-cell">
+                    {kpiData[row.id]?.kpiMonth
+                      ? formatCurrency(kpiData[row.id].kpiMonth * 25000)
+                      : ""}
+                  </td>
+                  <td className="kpi-cell">
+                    {kpiData[row.id]?.kpiToDate > 0
+                      ? formatCurrency(kpiData[row.id].kpiToDate * 25000)
+                      : ""}
+                  </td>
+                  <td className="kpi-cell">
+                    {(() => {
+                      // Calculate total revenue for this row
+                      let totalRevenue = 0;
+                      days.forEach((day) => {
+                        totalRevenue += getCellRevenue(day, row.id);
+                      });
+                      return totalRevenue > 0
+                        ? formatCurrency(totalRevenue)
+                        : "";
+                    })()}
+                  </td>
+                  <td className="kpi-cell diff-cell">
+                    {(() => {
+                      if (kpiData[row.id]?.kpiToDate > 0) {
+                        // Calculate total revenue for this row
+                        let totalRevenue = 0;
+                        days.forEach((day) => {
+                          totalRevenue += getCellRevenue(day, row.id);
+                        });
+                        const kpiToDateAmount =
+                          kpiData[row.id].kpiToDate * 25000;
+                        const diff = totalRevenue - kpiToDateAmount;
+                        const diffColor = diff >= 0 ? "green" : "red";
+                        return (
+                          <span
+                            style={{ color: diffColor, fontWeight: "bold" }}
+                          >
+                            {formatCurrency(diff)}
+                          </span>
+                        );
+                      }
+                      return "";
+                    })()}
+                  </td>
+                  {days.map((day) => {
+                    const revenue = getCellRevenue(day, row.id);
+                    const count = getCellCount(day, row.id, "P");
+                    return (
+                      <td
+                        key={`revenue-cell-${row.id}-${day}`}
+                        className={`data-cell ${
+                          revenue > 0 ? "has-data revenue-cell" : ""
+                        }`}
+                        onClick={() =>
+                          count > 0 && handleCellClick(day, row.id, "P")
+                        }
+                        title={
+                          revenue > 0
+                            ? `คลิกเพื่อดูรายละเอียด\nยอดรวม: ${formatCurrency(
+                                revenue
+                              )} บาท\nจำนวน: ${count} รายการ`
+                            : ""
+                        }
+                      >
+                        {revenue > 0 && (
+                          <span className="revenue-badge">
+                            {formatCurrency(revenue)}
+                          </span>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
       {/* Surgery Details Modal */}
       <SurgeryDetailsModal
         isOpen={modalOpen}

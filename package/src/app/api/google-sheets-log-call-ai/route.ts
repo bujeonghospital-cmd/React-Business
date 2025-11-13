@@ -4,7 +4,7 @@ import { google } from "googleapis";
 // In-memory cache
 let cachedData: any = null;
 let cacheTime: number = 0;
-const CACHE_DURATION = 10000; // 10 วินาที
+const CACHE_DURATION = 120000; // 2 นาที (120 วินาที) - ลด API calls
 
 export async function GET(request: NextRequest) {
   // ตรวจสอบ cache ก่อน

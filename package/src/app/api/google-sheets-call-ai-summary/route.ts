@@ -3,7 +3,7 @@ import { google } from "googleapis";
 
 // In-memory cache with date key
 const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 20000; // 20 วินาที
+const CACHE_DURATION = 120000; // 2 นาที (120 วินาที) - ลด API calls
 
 export async function GET(request: NextRequest) {
   try {

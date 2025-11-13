@@ -119,6 +119,96 @@ const fetchFilmCallStatusData = async () => {
 - ✅ Comprehensive debug logging
 - ✅ Error handling and validation
 - ✅ Health check endpoint
+- ✅ **Railway deployment ready** 🚂
+
+## 🚂 Railway Deployment
+
+This API is **ready to deploy** to Railway! All configuration files are included:
+
+- ✅ `requirements.txt` - Python dependencies
+- ✅ `Procfile` - Start command for Railway
+- ✅ `railway.json` - Railway configuration
+- ✅ `runtime.txt` - Python version specification
+- ✅ `.env.example` - Environment variables template
+
+### Quick Deploy to Railway
+
+1. **Read the guides:**
+
+   - Quick start (5 min): `../RAILWAY_QUICK_START.md`
+   - Full guide: `../RAILWAY_DEPLOYMENT_GUIDE.md`
+   - Files summary: `RAILWAY_FILES_SUMMARY.md`
+
+2. **Check files:**
+
+   ```powershell
+   # From project root
+   .\check-railway-files.ps1
+   ```
+
+3. **Deploy:**
+   - Push to GitHub
+   - Connect Railway to your repo
+   - Set Root Directory: `python-api`
+   - Add Environment Variables
+   - Deploy! 🚀
+
+### Railway Configuration
+
+**`railway.json`:**
+
+```json
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "gunicorn app:app --bind 0.0.0.0:$PORT --workers 4 --timeout 120",
+    "healthcheckPath": "/health",
+    "restartPolicyType": "ON_FAILURE"
+  }
+}
+```
+
+**Environment Variables needed:**
+
+- `GOOGLE_SPREADSHEET_ID`
+- `GOOGLE_SERVICE_ACCOUNT_EMAIL`
+- `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`
+- `GOOGLE_PROJECT_ID`
+- `GOOGLE_PRIVATE_KEY_ID`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_CERT_URL`
+
+### Testing Railway Deployment
+
+After deployment, test your endpoints:
+
+```bash
+# Health check
+curl https://your-project.up.railway.app/health
+
+# Film data
+curl https://your-project.up.railway.app/api/film-data
+
+# Film call status
+curl https://your-project.up.railway.app/api/film-call-status
+```
+
+### Connecting to Vercel Frontend
+
+Add to Vercel environment variables:
+
+```
+NEXT_PUBLIC_API_URL=https://your-project.up.railway.app
+```
+
+Then use in your Next.js code:
+
+```typescript
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const response = await fetch(`${API_URL}/api/film-call-status`);
+```
 
 ## Troubleshooting
 

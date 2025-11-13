@@ -51,6 +51,142 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     })
 
+@app.route('/api/film-data', methods=['GET'])
+def get_film_data():
+    """
+    Get all data from Film data sheet for surgery schedule
+    Returns all records with surgery-related information
+    """
+    try:
+        service = get_sheets_service()
+        
+        # Read data from Film data sheet - get all columns
+        sheet_range = 'Film data!A:AZ'
+        result = service.spreadsheets().values().get(
+            spreadsheetId=SPREADSHEET_ID,
+            range=sheet_range
+        ).execute()
+        
+        rows = result.get('values', [])
+        
+        if not rows:
+            return jsonify({
+                'success': True,
+                'data': [],
+                'total': 0,
+                'message': 'No data found in Film data sheet'
+            })
+        
+        # First row is header
+        headers = rows[0]
+        data_rows = rows[1:]
+        
+        print(f"\n=== GOOGLE SHEETS - Film data (Surgery Schedule) ===")
+        print(f"Total columns: {len(headers)}")
+        print(f"Headers: {headers}")
+        print(f"Total data rows: {len(data_rows)}")
+        
+        # Map column names to indexes (case-insensitive search)
+        def find_column_index(header_name):
+            for idx, header in enumerate(headers):
+                if header and header.strip().lower() == header_name.lower():
+                    return idx
+            return -1
+        
+        # Find indexes for surgery-related columns
+        doctor_idx = find_column_index('หมอ')
+        contact_person_idx = find_column_index('ผู้ติดต่อ')
+        name_idx = find_column_index('ชื่อ')
+        phone_idx = find_column_index('เบอร์โทร')
+        date_surgery_scheduled_idx = find_column_index('วันที่ได้นัดผ่าตัด')
+        time_scheduled_idx = find_column_index('เวลาที่นัด')
+        amount_idx = find_column_index('ยอดนำเสนอ')
+        surgery_date_idx = find_column_index('วันที่ผ่าตัด')
+        date_consult_scheduled_idx = find_column_index('วันที่ได้นัด consult')
+        
+        print(f"\n=== MAPPING COLUMNS ===")
+        print(f"หมอ (index {doctor_idx}): '{headers[doctor_idx] if doctor_idx >= 0 else 'N/A'}'")
+        print(f"ผู้ติดต่อ (index {contact_person_idx}): '{headers[contact_person_idx] if contact_person_idx >= 0 else 'N/A'}'")
+        print(f"ชื่อ (index {name_idx}): '{headers[name_idx] if name_idx >= 0 else 'N/A'}'")
+        print(f"เบอร์โทร (index {phone_idx}): '{headers[phone_idx] if phone_idx >= 0 else 'N/A'}'")
+        print(f"วันที่ได้นัดผ่าตัด (index {date_surgery_scheduled_idx}): '{headers[date_surgery_scheduled_idx] if date_surgery_scheduled_idx >= 0 else 'N/A'}'")
+        print(f"เวลาที่นัด (index {time_scheduled_idx}): '{headers[time_scheduled_idx] if time_scheduled_idx >= 0 else 'N/A'}'")
+        print(f"ยอดนำเสนอ (index {amount_idx}): '{headers[amount_idx] if amount_idx >= 0 else 'N/A'}'")
+        print(f"วันที่ผ่าตัด (index {surgery_date_idx}): '{headers[surgery_date_idx] if surgery_date_idx >= 0 else 'N/A'}'")
+        print(f"วันที่ได้นัด consult (index {date_consult_scheduled_idx}): '{headers[date_consult_scheduled_idx] if date_consult_scheduled_idx >= 0 else 'N/A'}'")
+        
+        # Process data rows
+        surgery_data = []
+        
+        for idx, row in enumerate(data_rows):
+            if not row or len(row) == 0:
+                continue
+            
+            # Get values safely
+            def get_value(col_idx):
+                return row[col_idx].strip() if len(row) > col_idx and row[col_idx] else ""
+            
+            doctor = get_value(doctor_idx) if doctor_idx >= 0 else ""
+            contact_person = get_value(contact_person_idx) if contact_person_idx >= 0 else ""
+            name = get_value(name_idx) if name_idx >= 0 else ""
+            phone = get_value(phone_idx) if phone_idx >= 0 else ""
+            date_surgery_scheduled = get_value(date_surgery_scheduled_idx) if date_surgery_scheduled_idx >= 0 else ""
+            time_scheduled = get_value(time_scheduled_idx) if time_scheduled_idx >= 0 else ""
+            amount = get_value(amount_idx) if amount_idx >= 0 else ""
+            surgery_date = get_value(surgery_date_idx) if surgery_date_idx >= 0 else ""
+            date_consult_scheduled = get_value(date_consult_scheduled_idx) if date_consult_scheduled_idx >= 0 else ""
+            
+            # Add record (include all records, frontend will filter)
+            surgery_data.append({
+                'id': f'film-{idx + 2}',
+                'หมอ': doctor,
+                'ผู้ติดต่อ': contact_person if contact_person else 'ไม่ระบุ',
+                'ชื่อ': name,
+                'เบอร์โทร': phone,
+                'วันที่ได้นัดผ่าตัด': date_surgery_scheduled,
+                'เวลาที่นัด': time_scheduled,
+                'ยอดนำเสนอ': amount,
+                'วันที่ผ่าตัด': surgery_date,
+                'date_consult_scheduled': date_consult_scheduled,
+                'contact_person': contact_person if contact_person else 'ไม่ระบุ',
+                'date_surgery_scheduled': date_surgery_scheduled,
+                'surgery_date': surgery_date
+            })
+        
+        print(f"\n=== RESULTS ===")
+        print(f"Total records processed: {len(surgery_data)}")
+        
+        return jsonify({
+            'success': True,
+            'data': surgery_data,
+            'total': len(surgery_data),
+            'timestamp': datetime.now().isoformat(),
+            'debug': {
+                'totalRows': len(data_rows),
+                'processedRows': len(surgery_data),
+                'columns': {
+                    'doctor': f"หมอ (index {doctor_idx})",
+                    'contact_person': f"ผู้ติดต่อ (index {contact_person_idx})",
+                    'name': f"ชื่อ (index {name_idx})",
+                    'phone': f"เบอร์โทร (index {phone_idx})",
+                    'date_surgery_scheduled': f"วันที่ได้นัดผ่าตัด (index {date_surgery_scheduled_idx})",
+                    'time_scheduled': f"เวลาที่นัด (index {time_scheduled_idx})",
+                    'amount': f"ยอดนำเสนอ (index {amount_idx})",
+                    'surgery_date': f"วันที่ผ่าตัด (index {surgery_date_idx})",
+                    'date_consult_scheduled': f"วันที่ได้นัด consult (index {date_consult_scheduled_idx})"
+                }
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 @app.route('/api/film-call-status', methods=['GET'])
 def get_film_call_status():
     """
@@ -195,6 +331,159 @@ def get_film_call_status():
                     'status': f"Column AS (index {status_call_idx}): {headers[status_call_idx] if len(headers) > status_call_idx else 'N/A'}"
                 },
                 'uniqueStatuses': sorted(list(status_values))
+            }
+        })
+        
+    except Exception as e:
+        print(f"❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/film-dev', methods=['GET'])
+def get_film_dev_data():
+    """Get Film_dev consult data with status 'นัด Consult (VDO)'"""
+    try:
+        # Get date parameter (optional)
+        target_date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+        
+        print(f"\n=== FETCHING FILM_DEV DATA ===")
+        print(f"Target date: {target_date}")
+        
+        # Get Google Sheets service
+        service = get_sheets_service()
+        sheet = service.spreadsheets()
+        
+        # Fetch data from Film_dev sheet
+        result = sheet.values().get(
+            spreadsheetId=SPREADSHEET_ID,
+            range='Film_dev!A:Z'
+        ).execute()
+        
+        values = result.get('values', [])
+        
+        if not values:
+            return jsonify({
+                'success': True,
+                'date': target_date,
+                'agentCounts': {},
+                'totalCount': 0
+            })
+        
+        # First row is header
+        headers = values[0]
+        data_rows = values[1:]
+        
+        print(f"Total columns: {len(headers)}")
+        print(f"Headers: {headers[:10]}...")  # Show first 10 headers
+        print(f"Total data rows: {len(data_rows)}")
+        
+        # Find column indices
+        status_idx = -1
+        contact_person_idx = -1
+        
+        for idx, header in enumerate(headers):
+            header_lower = str(header).lower().strip()
+            if 'สถานะ' in header_lower:
+                status_idx = idx
+            if 'ผู้ติดต่อ' in header_lower:
+                contact_person_idx = idx
+        
+        print(f"\nColumn indices:")
+        print(f"  สถานะ: {status_idx} ({headers[status_idx] if status_idx != -1 else 'NOT FOUND'})")
+        print(f"  ผู้ติดต่อ: {contact_person_idx} ({headers[contact_person_idx] if contact_person_idx != -1 else 'NOT FOUND'})")
+        
+        if status_idx == -1 or contact_person_idx == -1:
+            return jsonify({
+                'success': False,
+                'error': 'Required columns (สถานะ, ผู้ติดต่อ) not found',
+                'availableHeaders': headers
+            }), 500
+        
+        # Agent name mapping
+        agent_name_map = {
+            'สา': '101',
+            'พัชชา': '102',
+            'ตั้งโอ๋': '103',
+            'Test': '104',
+            'จีน': '105',
+            'มุก': '106',
+            'เจ': '107',
+            'ว่าน': '108'
+        }
+        
+        # Initialize agent counts
+        agent_counts = {agent_id: 0 for agent_id in agent_name_map.values()}
+        
+        matched_rows = 0
+        
+        # Process each row
+        for idx, row in enumerate(data_rows):
+            if not row or len(row) == 0:
+                continue
+            
+            # Get values safely
+            status = row[status_idx].strip() if len(row) > status_idx and row[status_idx] else ""
+            contact_person = row[contact_person_idx].strip() if len(row) > contact_person_idx and row[contact_person_idx] else ""
+            
+            # Debug first 5 rows
+            if idx < 5:
+                print(f"\n🔍 Debug Row {idx + 2}:")
+                print(f"  สถานะ: {status}")
+                print(f"  ผู้ติดต่อ: {contact_person}")
+            
+            if not status or not contact_person:
+                continue
+            
+            # Check if status matches "นัด Consult (VDO)" OR "นัด Consult"
+            is_consult_vdo = status == "นัด Consult (VDO)"
+            is_consult = status == "นัด Consult"
+            
+            if not (is_consult_vdo or is_consult):
+                continue
+            
+            # Find agent ID from contact person
+            matched_agent_id = None
+            
+            # First try to match by agent ID (101-108)
+            for agent_id in agent_name_map.values():
+                if agent_id in contact_person:
+                    matched_agent_id = agent_id
+                    break
+            
+            # If not found, try to match by agent name
+            if not matched_agent_id:
+                for agent_name, agent_id in agent_name_map.items():
+                    if agent_name in contact_person:
+                        matched_agent_id = agent_id
+                        break
+            
+            if matched_agent_id:
+                agent_counts[matched_agent_id] += 1
+                matched_rows += 1
+                if matched_rows <= 10:  # Show first 10 matches
+                    print(f"✅ Row {idx + 2}: {contact_person} ({matched_agent_id}) - สถานะ: {status}")
+        
+        total_count = sum(agent_counts.values())
+        
+        print(f"\n=== RESULTS ===")
+        print(f"Matched rows: {matched_rows}")
+        print(f"Agent counts: {agent_counts}")
+        print(f"Total count: {total_count}")
+        
+        return jsonify({
+            'success': True,
+            'date': target_date,
+            'agentCounts': agent_counts,
+            'totalCount': total_count,
+            'debug': {
+                'totalRows': len(data_rows),
+                'matchedRows': matched_rows,
+                'contactPersonColumn': headers[contact_person_idx],
+                'statusColumn': headers[status_idx]
             }
         })
         

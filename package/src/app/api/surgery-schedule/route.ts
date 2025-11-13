@@ -40,99 +40,149 @@ export async function GET(request: Request) {
 
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Fetch data from the sheet
+    // Fetch data from the sheet - get all columns like Python API
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
-      range: "Film data!A1:Z1000",
+      range: "Film data!A:AZ", // Extended range to match Python API
     });
 
     const rows = response.data.values;
 
     if (!rows || rows.length === 0) {
-      return NextResponse.json({ data: [] });
+      return NextResponse.json({
+        success: true,
+        data: [],
+        total: 0,
+        message: "No data found in Film data sheet",
+      });
     }
 
     // First row contains headers
     const headers = rows[0];
     const dataRows = rows.slice(1);
 
-    // Debug: Show all headers with their column letters
-    console.log("📋 All Headers:");
-    headers.forEach((header: string, index: number) => {
-      const columnLetter = String.fromCharCode(65 + index); // A=65, B=66, etc.
-      console.log(`  ${columnLetter}: "${header}"`);
-    });
+    console.log("\n=== GOOGLE SHEETS - Film data (Surgery Schedule) ===");
+    console.log(`Total columns: ${headers.length}`);
+    console.log(`Total data rows: ${dataRows.length}`);
 
-    // Map column indices
-    const columnIndices = {
-      หมอ: headers.indexOf("หมอ"),
-      ผู้ติดต่อ: headers.indexOf("ผู้ติดต่อ"),
-      ชื่อ: headers.indexOf("ชื่อ"),
-      เบอร์โทร: headers.indexOf("เบอร์โทร"),
-      วันที่ได้นัดผ่าตัด: headers.indexOf("วันที่ได้นัดผ่าตัด"),
-      เวลาที่นัด: headers.indexOf("เวลาที่นัด"),
-      ยอดนำเสนอ: headers.indexOf("ยอดนำเสนอ"),
-      วันที่ผ่าตัด: headers.indexOf("วันที่ผ่าตัด"), // Add L column
+    // Case-insensitive column finder (like Python API)
+    const findColumnIndex = (headerName: string): number => {
+      for (let idx = 0; idx < headers.length; idx++) {
+        const header = headers[idx];
+        if (
+          header &&
+          header.toString().trim().toLowerCase() === headerName.toLowerCase()
+        ) {
+          return idx;
+        }
+      }
+      return -1;
     };
 
-    console.log("🔍 Column Indices Found:");
-    Object.entries(columnIndices).forEach(([name, index]) => {
-      const columnLetter =
-        index >= 0 ? String.fromCharCode(65 + index) : "NOT FOUND";
-      console.log(`  ${name}: Column ${columnLetter} (index ${index})`);
-    });
+    // Find indexes for surgery-related columns
+    const doctorIdx = findColumnIndex("หมอ");
+    const contactPersonIdx = findColumnIndex("ผู้ติดต่อ");
+    const nameIdx = findColumnIndex("ชื่อ");
+    const phoneIdx = findColumnIndex("เบอร์โทร");
+    const dateSurgeryScheduledIdx = findColumnIndex("วันที่ได้นัดผ่าตัด");
+    const timeScheduledIdx = findColumnIndex("เวลาที่นัด");
+    const amountIdx = findColumnIndex("ยอดนำเสนอ");
+    const surgeryDateIdx = findColumnIndex("วันที่ผ่าตัด");
+    const dateConsultScheduledIdx = findColumnIndex("วันที่ได้นัด consult");
 
-    // Check required columns (วันที่ผ่าตัด is optional)
-    const requiredColumns = [
-      "หมอ",
-      "ผู้ติดต่อ",
-      "ชื่อ",
-      "เบอร์โทร",
-      "วันที่ได้นัดผ่าตัด",
-      "เวลาที่นัด",
-      "ยอดนำเสนอ",
-    ];
-
-    const missingColumns = requiredColumns.filter(
-      (col) => columnIndices[col as keyof typeof columnIndices] === -1
+    console.log("\n=== MAPPING COLUMNS ===");
+    console.log(
+      `หมอ (index ${doctorIdx}): '${
+        doctorIdx >= 0 ? headers[doctorIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `ผู้ติดต่อ (index ${contactPersonIdx}): '${
+        contactPersonIdx >= 0 ? headers[contactPersonIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `ชื่อ (index ${nameIdx}): '${nameIdx >= 0 ? headers[nameIdx] : "N/A"}'`
+    );
+    console.log(
+      `เบอร์โทร (index ${phoneIdx}): '${
+        phoneIdx >= 0 ? headers[phoneIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `วันที่ได้นัดผ่าตัด (index ${dateSurgeryScheduledIdx}): '${
+        dateSurgeryScheduledIdx >= 0 ? headers[dateSurgeryScheduledIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `เวลาที่นัด (index ${timeScheduledIdx}): '${
+        timeScheduledIdx >= 0 ? headers[timeScheduledIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `ยอดนำเสนอ (index ${amountIdx}): '${
+        amountIdx >= 0 ? headers[amountIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `วันที่ผ่าตัด (index ${surgeryDateIdx}): '${
+        surgeryDateIdx >= 0 ? headers[surgeryDateIdx] : "N/A"
+      }'`
+    );
+    console.log(
+      `วันที่ได้นัด consult (index ${dateConsultScheduledIdx}): '${
+        dateConsultScheduledIdx >= 0 ? headers[dateConsultScheduledIdx] : "N/A"
+      }'`
     );
 
-    if (missingColumns.length > 0) {
-      console.error("❌ Missing columns:", missingColumns);
-      return NextResponse.json(
-        {
-          error: `Missing required columns: ${missingColumns.join(
-            ", "
-          )}. Please check your Google Sheet headers.`,
-        },
-        { status: 400 }
-      );
+    // Process data rows (like Python API - include all records)
+    const scheduleData = [];
+
+    for (let idx = 0; idx < dataRows.length; idx++) {
+      const row = dataRows[idx];
+
+      if (!row || row.length === 0) {
+        continue;
+      }
+
+      // Get values safely (like Python API)
+      const getValue = (colIdx: number): string => {
+        return (row[colIdx] && row[colIdx].toString().trim()) || "";
+      };
+
+      const doctor = getValue(doctorIdx);
+      const contactPerson = getValue(contactPersonIdx);
+      const name = getValue(nameIdx);
+      const phone = getValue(phoneIdx);
+      const dateSurgeryScheduled = getValue(dateSurgeryScheduledIdx);
+      const timeScheduled = getValue(timeScheduledIdx);
+      const amount = getValue(amountIdx);
+      const surgeryDate = getValue(surgeryDateIdx);
+      const dateConsultScheduled = getValue(dateConsultScheduledIdx);
+
+      // Add record (include all records, frontend will filter)
+      scheduleData.push({
+        id: `film-${idx + 2}`,
+        หมอ: doctor,
+        ผู้ติดต่อ: contactPerson || "ไม่ระบุ",
+        ชื่อ: name,
+        เบอร์โทร: phone,
+        วันที่ได้นัดผ่าตัด: dateSurgeryScheduled,
+        เวลาที่นัด: timeScheduled,
+        ยอดนำเสนอ: amount,
+        วันที่ผ่าตัด: surgeryDate,
+        date_consult_scheduled: dateConsultScheduled,
+        contact_person: contactPerson || "ไม่ระบุ",
+        date_surgery_scheduled: dateSurgeryScheduled,
+        surgery_date: surgeryDate,
+      });
     }
 
-    // Parse data rows
-    const scheduleData = dataRows
-      .filter(
-        (row: any[]) =>
-          row[columnIndices.วันที่ได้นัดผ่าตัด] ||
-          row[columnIndices.วันที่ผ่าตัด]
-      )
-      .map((row: any[]) => ({
-        หมอ: row[columnIndices.หมอ] || "",
-        ผู้ติดต่อ: row[columnIndices.ผู้ติดต่อ] || "",
-        ชื่อ: row[columnIndices.ชื่อ] || "",
-        เบอร์โทร: row[columnIndices.เบอร์โทร] || "",
-        วันที่ได้นัดผ่าตัด: row[columnIndices.วันที่ได้นัดผ่าตัด] || "",
-        เวลาที่นัด: row[columnIndices.เวลาที่นัด] || "",
-        ยอดนำเสนอ: row[columnIndices.ยอดนำเสนอ] || "",
-        วันที่ผ่าตัด: row[columnIndices.วันที่ผ่าตัด] || "", // Add L data
-      }));
-
-    console.log(
-      `✅ API Route: ส่งข้อมูล ${scheduleData.length} รายการ จากทั้งหมด ${dataRows.length} แถว`
-    );
+    console.log("\n=== RESULTS ===");
+    console.log(`Total records processed: ${scheduleData.length}`);
 
     // Sample first 3 rows for debugging
-    console.log("� ตัวอย่างข้อมูล 3 รายการแรก:");
+    console.log("📊 ตัวอย่างข้อมูล 3 รายการแรก:");
     scheduleData.slice(0, 3).forEach((item: any, idx: number) => {
       console.log(
         `  [${idx + 1}] ชื่อ: "${item.ชื่อ}", ผู้ติดต่อ: "${
@@ -144,7 +194,27 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(
-      { data: scheduleData },
+      {
+        success: true,
+        data: scheduleData,
+        total: scheduleData.length,
+        timestamp: new Date().toISOString(),
+        debug: {
+          totalRows: dataRows.length,
+          processedRows: scheduleData.length,
+          columns: {
+            doctor: `หมอ (index ${doctorIdx})`,
+            contact_person: `ผู้ติดต่อ (index ${contactPersonIdx})`,
+            name: `ชื่อ (index ${nameIdx})`,
+            phone: `เบอร์โทร (index ${phoneIdx})`,
+            date_surgery_scheduled: `วันที่ได้นัดผ่าตัด (index ${dateSurgeryScheduledIdx})`,
+            time_scheduled: `เวลาที่นัด (index ${timeScheduledIdx})`,
+            amount: `ยอดนำเสนอ (index ${amountIdx})`,
+            surgery_date: `วันที่ผ่าตัด (index ${surgeryDateIdx})`,
+            date_consult_scheduled: `วันที่ได้นัด consult (index ${dateConsultScheduledIdx})`,
+          },
+        },
+      },
       {
         headers: {
           "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",

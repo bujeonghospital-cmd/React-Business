@@ -3,7 +3,7 @@ import { google } from "googleapis";
 
 // In-memory cache with date key
 const cache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 20000; // 20 วินาที
+const CACHE_DURATION = 120000; // 2 นาที (120 วินาที) - ลด API calls
 
 export async function GET(request: NextRequest) {
   try {
@@ -64,6 +64,14 @@ export async function GET(request: NextRequest) {
     });
 
     const rows = response.data.values;
+
+    // ดึงข้อมูลจากชีท "Film_dev" เพิ่มเติม
+    const filmDevResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
+      range: "Film_dev!A:Z",
+    });
+
+    const filmDevRows = filmDevResponse.data.values || [];
 
     if (!rows || rows.length === 0) {
       return NextResponse.json({
@@ -240,26 +248,115 @@ export async function GET(request: NextRequest) {
       0
     );
 
+    // ประมวลผลข้อมูลจาก Film_dev (นัด Consult VDO)
+    const filmDevConsultCounts: { [key: string]: number } = {};
+    Object.values(agentNameMap).forEach((agentId) => {
+      filmDevConsultCounts[agentId] = 0;
+    });
+
+    if (filmDevRows.length > 0) {
+      const filmDevHeaders = filmDevRows[0];
+      const filmDevDataRows = filmDevRows.slice(1);
+
+      console.log("=== GOOGLE SHEETS - Film_dev ===");
+      console.log("Total Film_dev columns:", filmDevHeaders.length);
+      console.log("Film_dev Headers:", filmDevHeaders);
+      console.log("Total Film_dev data rows:", filmDevDataRows.length);
+
+      // หา index ของคอลัมน์ที่ต้องการ
+      const statusIndex = filmDevHeaders.findIndex(
+        (h: string) =>
+          h.toLowerCase().includes("สถานะ") ||
+          h === "สถานะ" ||
+          h.toLowerCase() === "status"
+      );
+      const contactPersonIndexDev = filmDevHeaders.findIndex(
+        (h: string) =>
+          h.toLowerCase().includes("ผู้ติดต่อ") || h === "ผู้ติดต่อ"
+      );
+
+      console.log("Film_dev statusIndex:", statusIndex);
+      console.log("Film_dev contactPersonIndex:", contactPersonIndexDev);
+
+      if (statusIndex !== -1 && contactPersonIndexDev !== -1) {
+        let matchedFilmDevRows = 0;
+
+        filmDevDataRows.forEach((row, index) => {
+          if (!row || row.length === 0) return;
+
+          const status = row[statusIndex]?.toString().trim() || "";
+          const contactPerson =
+            row[contactPersonIndexDev]?.toString().trim() || "";
+
+          // กรองเฉพาะสถานะ "นัด Consult (VDO)"
+          if (status === "นัด Consult (VDO)" && contactPerson) {
+            // หา agent ID จากชื่อผู้ติดต่อ
+            let matchedAgentId: string | null = null;
+            for (const [agentName, agentId] of Object.entries(agentNameMap)) {
+              if (contactPerson.includes(agentName)) {
+                matchedAgentId = agentId;
+                break;
+              }
+            }
+
+            if (matchedAgentId) {
+              filmDevConsultCounts[matchedAgentId]++;
+              matchedFilmDevRows++;
+              console.log(
+                `✅ Film_dev Row ${
+                  index + 2
+                }: ${contactPerson} (${matchedAgentId}) - นัด Consult (VDO)`
+              );
+            }
+          }
+        });
+
+        console.log("Film_dev matched rows:", matchedFilmDevRows);
+        console.log("Film_dev consult counts:", filmDevConsultCounts);
+      } else {
+        console.warn("⚠️ Film_dev: Required columns not found");
+      }
+    }
+
+    // รวมจำนวน consult จาก Film data และ Film_dev
+    const combinedConsultCounts: { [key: string]: number } = {};
+    Object.keys(agentCounts).forEach((agentId) => {
+      combinedConsultCounts[agentId] =
+        (agentCounts[agentId] || 0) + (filmDevConsultCounts[agentId] || 0);
+    });
+
+    const totalCombinedConsults = Object.values(combinedConsultCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
+
     console.log("=== RESULTS ===");
-    console.log("Matched consult rows:", matchedConsultRows);
+    console.log("Matched consult rows (Film data):", matchedConsultRows);
     console.log("Matched surgery rows:", matchedSurgeryRows);
-    console.log("Agent consult counts:", agentCounts);
+    console.log("Film data consult counts:", agentCounts);
+    console.log("Film_dev consult counts:", filmDevConsultCounts);
+    console.log("Combined consult counts:", combinedConsultCounts);
     console.log("Agent surgery counts:", surgeryCounts);
-    console.log("Total consults:", totalConsults);
+    console.log("Total consults (Film data only):", totalConsults);
+    console.log("Total consults (Combined):", totalCombinedConsults);
     console.log("Total surgeries:", totalSurgeries);
 
     // อัพเดท cache
     const responseData = {
       success: true,
       date: targetDate,
-      agentCounts: agentCounts,
+      agentCounts: combinedConsultCounts, // ใช้จำนวนรวมจาก Film data + Film_dev
       surgeryCounts: surgeryCounts,
-      totalConsults: totalConsults,
+      totalConsults: totalCombinedConsults, // ใช้จำนวนรวม
       totalSurgeries: totalSurgeries,
       debug: {
-        totalRows: dataRows.length,
+        filmDataRows: dataRows.length,
+        filmDevRows: filmDevRows.length - 1,
         matchedConsultRows: matchedConsultRows,
         matchedSurgeryRows: matchedSurgeryRows,
+        filmDataConsultCounts: agentCounts,
+        filmDevConsultCounts: filmDevConsultCounts,
+        combinedConsultCounts: combinedConsultCounts,
         contactPersonColumn: headers[contactPersonIndex],
         consultDateColumn: headers[consultDateIndex],
         surgeryDateColumn:

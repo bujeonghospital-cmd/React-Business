@@ -110,46 +110,11 @@
   margin-left: 5px;
 }
 
-/* Data Source Selector */
-.data-source-selector {
-  margin-top: 15px;
-  padding: 10px 20px;
-  background-color: #fff3cd;
-  border-radius: 5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 2px solid #ffc107;
-}
-
-.data-source-selector label {
+.weekdays-count {
+  color: #2196f3;
+  font-size: 16px;
   font-weight: 600;
-  color: #856404;
-  font-size: 14px;
-}
-
-.source-select {
-  padding: 8px 12px;
-  font-size: 14px;
-  font-weight: 600;
-  border: 2px solid #ffc107;
-  border-radius: 5px;
-  background-color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: #856404;
-}
-
-.source-select:hover {
-  border-color: #ff9800;
-  background-color: #fff9e6;
-}
-
-.source-select:focus {
-  outline: none;
-  border-color: #ff9800;
-  box-shadow: 0 0 5px rgba(255, 152, 0, 0.3);
+  margin-left: 5px;
 }
 
 /* Data Info and Refresh Button */
@@ -289,9 +254,21 @@
   background-color: #ffd700;
 }
 
+.kpi-header {
+  width: 100px;
+  min-width: 100px;
+  background-color: #90ee90 !important;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
 .day-header {
-  width: 60px;
-  min-width: 60px;
+  width: 80px;
+  min-width: 80px;
+}
+
+.weekday-header {
+  background-color: #87ceeb !important; /* Sky blue for weekdays (Mon-Fri) */
 }
 
 .name-cell {
@@ -308,14 +285,31 @@
   white-space: nowrap;
 }
 
-.data-cell {
+.kpi-cell {
+  background-color: #f0fff0;
+  color: #000;
   padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.kpi-cell.diff-cell {
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.data-cell {
+  padding: 12px 4px;
   text-align: center;
   border: 1px solid #ccc;
   background-color: #fff;
   min-height: 40px;
   font-size: 13px;
   position: relative;
+  overflow: visible;
 }
 
 .data-cell.has-data {
@@ -345,6 +339,36 @@
   font-size: 14px;
   box-shadow: 0 2px 6px rgba(102, 126, 234, 0.4);
   animation: fadeIn 0.3s ease;
+}
+
+/* Revenue Badge */
+.revenue-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+  animation: fadeIn 0.3s ease;
+  white-space: nowrap;
+  min-width: 70px;
+  max-width: 100%;
+}
+
+.data-cell.revenue-cell {
+  background-color: #fff7ed;
+  padding: 8px 2px;
+}
+
+.data-cell.revenue-cell:hover {
+  background-color: #fed7aa;
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+  z-index: 3;
 }
 
 @keyframes fadeIn {
@@ -518,12 +542,24 @@
   background-color: #f9f9f9;
 }
 
+.even-row .kpi-cell {
+  background-color: #f0fff0;
+}
+
+.odd-row .kpi-cell {
+  background-color: #e8f5e8;
+}
+
 tbody tr:hover .data-cell {
   background-color: #e6f3ff;
 }
 
 tbody tr:hover .name-cell {
   background-color: #cce5ff;
+}
+
+tbody tr:hover .kpi-cell {
+  background-color: #d0f0d0;
 }
 
 /* Responsive adjustments */
