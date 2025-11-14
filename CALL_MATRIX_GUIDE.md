@@ -52,7 +52,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```sql
 - id (SERIAL)
 - agent_id (VARCHAR) - '101', '102', ..., '108'
-- agent_name (VARCHAR) - 'สา', 'พัชชา', etc.
+- agent_name (VARCHAR) - 'สา', 'พัดชา', etc.
 - is_active (BOOLEAN)
 - created_at, updated_at
 ```

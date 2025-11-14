@@ -33,7 +33,7 @@ const DATA_SHEET_NAME = "Film data"; // เปลี่ยนเป็นชื�
 // Column mapping (ปรับตาม Google Sheets ของคุณ)
 const COLUMN_MAPPING = {
   doctor: 1, // Column A
-  contact_person: 2, // Column B (101-สา, 102-พัชชา, ฯลฯ)
+  contact_person: 2, // Column B (101-สา, 102-พัดชา, ฯลฯ)
   customer_name: 3, // Column C
   phone_number: 4, // Column D
   date_consult_scheduled: 5, // Column E

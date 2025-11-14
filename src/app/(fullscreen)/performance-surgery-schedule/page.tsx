@@ -45,12 +45,7 @@ export default function PerformanceSurgerySchedule() {
       actual: number;
     };
   }>({
-    "101-สา": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
-    "102-พิชชา": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
-    "103-ตั้งโอ๋": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
-    "104-Test": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
     "105-จีน": { kpiMonth: 40, kpiToDate: 0, actual: 5 },
-    "106-มุก": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
     "107-เจ": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
     "108-ว่าน": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
     "109-ไม่ระบุ": { kpiMonth: 0, kpiToDate: 0, actual: 0 },
@@ -260,18 +255,34 @@ export default function PerformanceSurgerySchedule() {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return;
 
-    const personMap =
-      tableType === "P"
-        ? countMap.get(contactPerson)
-        : countMapL.get(contactPerson);
-    if (!personMap) return;
+    const personMap = tableType === "P" ? countMap : countMapL;
 
-    const surgeries = personMap.get(day);
-    if (!surgeries || surgeries.length === 0) return;
+    let surgeries: SurgeryScheduleData[] = [];
+
+    // For จีน row, combine จีน and มุก data
+    if (rowId === "105-จีน") {
+      const jinMap = personMap.get("จีน");
+      const mukMap = personMap.get("มุก");
+
+      const jinSurgeries = jinMap?.get(day) || [];
+      const mukSurgeries = mukMap?.get(day) || [];
+
+      surgeries = [...jinSurgeries, ...mukSurgeries];
+    } else {
+      const surgeryMap = personMap.get(contactPerson);
+      if (!surgeryMap) return;
+      surgeries = surgeryMap.get(day) || [];
+    }
+
+    if (surgeries.length === 0) return;
+
+    // Find the display name from pScheduleRows
+    const rowInfo = pScheduleRows.find((r) => r.id === rowId);
+    const displayName = rowInfo ? rowInfo.name : contactPerson;
 
     setSelectedSurgeries(surgeries);
     setSelectedDate(day);
-    setSelectedContactPerson(contactPerson);
+    setSelectedContactPerson(displayName);
     setSelectedTableType(tableType);
     setModalOpen(true);
   };
@@ -285,13 +296,23 @@ export default function PerformanceSurgerySchedule() {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
 
-    const personMap =
-      tableType === "P"
-        ? countMap.get(contactPerson)
-        : countMapL.get(contactPerson);
-    if (!personMap) return 0;
+    const personMap = tableType === "P" ? countMap : countMapL;
 
-    const surgeries = personMap.get(day);
+    // For จีน row, combine จีน and มุก data
+    if (rowId === "105-จีน") {
+      const jinMap = personMap.get("จีน");
+      const mukMap = personMap.get("มุก");
+
+      const jinSurgeries = jinMap?.get(day) || [];
+      const mukSurgeries = mukMap?.get(day) || [];
+
+      return jinSurgeries.length + mukSurgeries.length;
+    }
+
+    const surgeryMap = personMap.get(contactPerson);
+    if (!surgeryMap) return 0;
+
+    const surgeries = surgeryMap.get(day);
     return surgeries ? surgeries.length : 0;
   };
 
@@ -299,6 +320,17 @@ export default function PerformanceSurgerySchedule() {
   const getCellRevenue = (day: number, rowId: string): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
+
+    // For จีน row, combine จีน and มุก revenue
+    if (rowId === "105-จีน") {
+      const jinMap = revenueMap.get("จีน");
+      const mukMap = revenueMap.get("มุก");
+
+      const jinRevenue = jinMap?.get(day) || 0;
+      const mukRevenue = mukMap?.get(day) || 0;
+
+      return jinRevenue + mukRevenue;
+    }
 
     const personMap = revenueMap.get(contactPerson);
     if (!personMap) return 0;
@@ -310,7 +342,10 @@ export default function PerformanceSurgerySchedule() {
   const calculateDiff = (rowId: string): number => {
     const data = kpiData[rowId];
     if (!data) return 0;
-    return data.actual - data.kpiToDate;
+    // For "105-จีน & มุก", multiply kpiToDate by 2
+    const adjustedKpiToDate =
+      rowId === "105-จีน" ? data.kpiToDate * 2 : data.kpiToDate;
+    return data.actual - adjustedKpiToDate;
   };
 
   // Format number as Thai currency
@@ -321,15 +356,9 @@ export default function PerformanceSurgerySchedule() {
 
   // Data for table (วันที่ได้นัดผ่า P)
   const pScheduleRows = [
-    { id: "101-สา", name: "101-สา" },
-    { id: "102-พิชชา", name: "102-พิชชา" },
-    { id: "103-ตั้งโอ๋", name: "103-ตั้งโอ๋" },
-    { id: "104-Test", name: "104-Test" },
-    { id: "105-จีน", name: "105-จีน" },
-    { id: "106-มุก", name: "106-มุก" },
+    { id: "105-จีน", name: "105-จีน & มุก" },
     { id: "107-เจ", name: "107-เจ" },
     { id: "108-ว่าน", name: "108-ว่าน" },
-    { id: "109-ไม่ระบุ", name: "109-ไม่ระบุ" }, // สำหรับข้อมูลที่ไม่มีผู้ติดต่อ
   ];
 
   return (
@@ -425,6 +454,141 @@ export default function PerformanceSurgerySchedule() {
         </div>
       </div>
 
+      {/* Team Summary Dashboard */}
+      {!isLoading && !error && (
+        <div className="team-summary-dashboard">
+          {pScheduleRows.map((row, index) => {
+            const pActual = kpiData[row.id]?.actual || 0;
+            const pDiff = calculateDiff(row.id);
+            const pKpiToDate = kpiData[row.id]?.kpiToDate || 0;
+
+            // Calculate L table actual
+            let lActual = 0;
+            days.forEach((day) => {
+              lActual += getCellCount(day, row.id, "L");
+            });
+
+            // Calculate revenue actual
+            let revenueActual = 0;
+            days.forEach((day) => {
+              revenueActual += getCellRevenue(day, row.id);
+            });
+
+            // Calculate L diff (using same KPI as P table)
+            const lDiff = lActual - pKpiToDate;
+            const lKpiToDate = pKpiToDate;
+
+            // Calculate revenue diff
+            // For "105-จีน & มุก", multiply KPI by 2
+            const revenueKpiToDate =
+              row.id === "105-จีน"
+                ? pKpiToDate * 2 * 25000
+                : pKpiToDate * 25000;
+            const revenueDiff = revenueActual - revenueKpiToDate;
+
+            // Different color for each team
+            const teamColors = [
+              "team-color-1", // 105-จีน & มุก
+              "team-color-2", // 107-เจ
+              "team-color-3", // 108-ว่าน
+            ];
+
+            return (
+              <div
+                key={row.id}
+                className={`team-summary-card ${teamColors[index]}`}
+              >
+                <div className="team-summary-header">
+                  <h3>{row.name}</h3>
+                </div>
+                <div className="team-summary-body">
+                  <div className="summary-metric">
+                    <div className="metric-label">รายรับ</div>
+                    <div className="metric-row">
+                      <div className="metric-item">
+                        <div className="metric-title">KPI to date</div>
+                        <div className="metric-value">
+                          {formatCurrency(revenueKpiToDate)}
+                        </div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-title">Actual</div>
+                        <div className="metric-value">
+                          {formatCurrency(revenueActual)}
+                        </div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-title">Diff</div>
+                        <div
+                          className={`metric-value ${
+                            revenueDiff >= 0 ? "positive" : "negative"
+                          }`}
+                        >
+                          {revenueDiff >= 0 ? "+" : ""}
+                          {formatCurrency(Math.abs(revenueDiff))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="summary-metric">
+                    <div className="metric-label">จำนวนนัดผ่าตัด</div>
+                    <div className="metric-row">
+                      <div className="metric-item">
+                        <div className="metric-title">KPI to date</div>
+                        <div className="metric-value">
+                          {row.id === "105-จีน" ? pKpiToDate * 2 : pKpiToDate}
+                        </div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-title">Actual</div>
+                        <div className="metric-value">{pActual}</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-title">Diff</div>
+                        <div
+                          className={`metric-value ${
+                            pDiff >= 0 ? "positive" : "negative"
+                          }`}
+                        >
+                          {pDiff >= 0 ? "+" : ""}
+                          {pDiff}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* <div className="summary-metric">
+                    <div className="metric-label">ว่าน</div>
+                    <div className="metric-row">
+                      <div className="metric-item">
+                        <div className="metric-title">KPI to date</div>
+                        <div className="metric-value">{lKpiToDate}</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-title">Actual</div>
+                        <div className="metric-value">{lActual}</div>
+                      </div>
+                      <div className="metric-item">
+                        <div className="metric-title">Diff</div>
+                        <div
+                          className={`metric-value ${
+                            lDiff >= 0 ? "positive" : "negative"
+                          }`}
+                        >
+                          {lDiff >= 0 ? "+" : ""}
+                          {lDiff.toFixed(1)}
+                        </div>
+                      </div>
+                    </div>
+                  </div> */}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Loading Indicator */}
       {isLoading && (
         <div className="loading-indicator">
@@ -514,10 +678,18 @@ export default function PerformanceSurgerySchedule() {
                 >
                   <td className="name-cell">{row.name}</td>
                   <td className="kpi-cell">
-                    {kpiData[row.id]?.kpiMonth || ""}
+                    {kpiData[row.id]?.kpiMonth
+                      ? row.id === "105-จีน"
+                        ? kpiData[row.id].kpiMonth * 2
+                        : kpiData[row.id].kpiMonth
+                      : ""}
                   </td>
                   <td className="kpi-cell">
-                    {kpiData[row.id]?.kpiToDate || ""}
+                    {kpiData[row.id]?.kpiToDate
+                      ? row.id === "105-จีน"
+                        ? kpiData[row.id].kpiToDate * 2
+                        : kpiData[row.id].kpiToDate
+                      : ""}
                   </td>
                   <td className="kpi-cell">{kpiData[row.id]?.actual || ""}</td>
                   <td className="kpi-cell diff-cell">
@@ -529,7 +701,7 @@ export default function PerformanceSurgerySchedule() {
                           <span
                             style={{ color: diffColor, fontWeight: "bold" }}
                           >
-                            {diff.toFixed(1)}
+                            {diff}
                           </span>
                         );
                       }
@@ -597,10 +769,18 @@ export default function PerformanceSurgerySchedule() {
                 >
                   <td className="name-cell">{row.name}</td>
                   <td className="kpi-cell">
-                    {kpiData[row.id]?.kpiMonth || ""}
+                    {kpiData[row.id]?.kpiMonth
+                      ? row.id === "105-จีน"
+                        ? kpiData[row.id].kpiMonth * 2
+                        : kpiData[row.id].kpiMonth
+                      : ""}
                   </td>
                   <td className="kpi-cell">
-                    {kpiData[row.id]?.kpiToDate || ""}
+                    {kpiData[row.id]?.kpiToDate
+                      ? row.id === "105-จีน"
+                        ? kpiData[row.id].kpiToDate * 2
+                        : kpiData[row.id].kpiToDate
+                      : ""}
                   </td>
                   <td className="kpi-cell">{kpiData[row.id]?.actual || ""}</td>
                   <td className="kpi-cell diff-cell">
@@ -612,7 +792,7 @@ export default function PerformanceSurgerySchedule() {
                           <span
                             style={{ color: diffColor, fontWeight: "bold" }}
                           >
-                            {diff.toFixed(1)}
+                            {diff}
                           </span>
                         );
                       }
@@ -681,12 +861,20 @@ export default function PerformanceSurgerySchedule() {
                   <td className="name-cell">{row.name}</td>
                   <td className="kpi-cell">
                     {kpiData[row.id]?.kpiMonth
-                      ? formatCurrency(kpiData[row.id].kpiMonth * 25000)
+                      ? formatCurrency(
+                          (row.id === "105-จีน"
+                            ? kpiData[row.id].kpiMonth * 2
+                            : kpiData[row.id].kpiMonth) * 25000
+                        )
                       : ""}
                   </td>
                   <td className="kpi-cell">
                     {kpiData[row.id]?.kpiToDate > 0
-                      ? formatCurrency(kpiData[row.id].kpiToDate * 25000)
+                      ? formatCurrency(
+                          (row.id === "105-จีน"
+                            ? kpiData[row.id].kpiToDate * 2
+                            : kpiData[row.id].kpiToDate) * 25000
+                        )
                       : ""}
                   </td>
                   <td className="kpi-cell">
@@ -709,8 +897,11 @@ export default function PerformanceSurgerySchedule() {
                         days.forEach((day) => {
                           totalRevenue += getCellRevenue(day, row.id);
                         });
+                        // For "105-จีน & มุก", multiply KPI by 2
                         const kpiToDateAmount =
-                          kpiData[row.id].kpiToDate * 25000;
+                          row.id === "105-จีน"
+                            ? kpiData[row.id].kpiToDate * 2 * 25000
+                            : kpiData[row.id].kpiToDate * 25000;
                         const diff = totalRevenue - kpiToDateAmount;
                         const diffColor = diff >= 0 ? "green" : "red";
                         return (

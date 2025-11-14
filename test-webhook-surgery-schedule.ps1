@@ -78,7 +78,7 @@ Write-Host "========================================`n" -ForegroundColor Cyan
 $multipleRecords = @(
     @{
         doctor = "หมอทดสอบ API"
-        contact_person = "พัชชา"
+        contact_person = "พัดชา"
         customer_name = "คุณทดสอบ Batch 1"
         phone_number = "0812345672"
         date_consult_scheduled = "2025-11-16"

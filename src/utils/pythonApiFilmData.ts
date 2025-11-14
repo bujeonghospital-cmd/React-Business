@@ -147,7 +147,7 @@ export function countPythonApiSurgeriesByDateAndPerson(
           matchedCount++;
           const day = date.getUTCDate();
 
-          // ใช้คอลัมน์ E "ผู้ติดต่อ" จากข้อมูล
+          // ใช้คอลัมน์ E "ผู้ติดต่อ" จากข้อมูล (surgery_date)
           const person =
             (item.contact_person || item.ผู้ติดต่อ || "").trim() || "ไม่ระบุ";
 

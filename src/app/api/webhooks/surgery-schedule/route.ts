@@ -17,7 +17,7 @@ function getSupabaseClient() {
 interface SurgeryScheduleWebhookData {
   // ข้อมูลพื้นฐาน
   doctor?: string; // หมอ
-  contact_person?: string; // ผู้ติดต่อ (101-สา, 102-พัชชา, ฯลฯ)
+  contact_person?: string; // ผู้ติดต่อ (101-สา, 102-พัดชา, ฯลฯ)
   customer_name?: string; // ชื่อลูกค้า
   phone_number?: string; // เบอร์โทร
 

@@ -623,6 +623,177 @@ tbody tr:hover .kpi-cell {
   }
 }
 
+/* Team Summary Dashboard */
+.team-summary-dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+  padding: 0;
+}
+
+.team-summary-card {
+  border-radius: 16px;
+  padding: 0;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.team-summary-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
+}
+
+/* Team Color 1 - จีน & มุก - Purple/Pink gradient */
+.team-summary-card.team-color-1 .team-summary-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Team Color 2 - เจ - Blue/Cyan gradient */
+.team-summary-card.team-color-2 .team-summary-header {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+}
+
+/* Team Color 3 - ว่าน - Orange/Red gradient */
+.team-summary-card.team-color-3 .team-summary-header {
+  background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+}
+
+.team-summary-header {
+  padding: 24px;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.team-summary-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.3px;
+}
+
+.team-summary-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #ffffff;
+}
+
+.summary-metric {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 0;
+}
+
+.summary-metric:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.summary-metric:first-child {
+  padding-top: 0;
+}
+
+.metric-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: #f9fafb;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.metric-item {
+  text-align: center;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.metric-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.metric-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.metric-value.positive {
+  color: #059669;
+  animation: pulse 0.5s ease-in-out;
+}
+
+.metric-value.negative {
+  color: #dc2626;
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive for team summary */
+@media (max-width: 1024px) {
+  .team-summary-dashboard {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .team-summary-dashboard {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .metric-row {
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  .team-summary-header h3 {
+    font-size: 20px;
+  }
+}
+
 /* Print styles */
 @media print {
   .surgery-schedule-container {
@@ -635,6 +806,16 @@ tbody tr:hover .kpi-cell {
 
   .nav-button {
     display: none;
+  }
+
+  .team-summary-dashboard {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .team-summary-card {
+    break-inside: avoid;
   }
 
   .schedule-table {
