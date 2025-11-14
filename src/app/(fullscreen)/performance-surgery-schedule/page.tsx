@@ -524,7 +524,7 @@ export default function PerformanceSurgerySchedule() {
                             revenueDiff >= 0 ? "positive" : "negative"
                           }`}
                         >
-                          {revenueDiff >= 0 ? "+" : ""}
+                          {revenueDiff >= 0 ? "+" : "−"}
                           {formatCurrency(Math.abs(revenueDiff))}
                         </div>
                       </div>
@@ -532,7 +532,7 @@ export default function PerformanceSurgerySchedule() {
                   </div>
 
                   <div className="summary-metric">
-                    <div className="metric-label">จำนวนนัดผ่าตัด</div>
+                    <div className="metric-label">จำนวนผ่าตัด</div>
                     <div className="metric-row">
                       <div className="metric-item">
                         <div className="metric-title">KPI to date</div>
@@ -551,8 +551,8 @@ export default function PerformanceSurgerySchedule() {
                             pDiff >= 0 ? "positive" : "negative"
                           }`}
                         >
-                          {pDiff >= 0 ? "+" : ""}
-                          {pDiff}
+                          {pDiff >= 0 ? "+" : "−"}
+                          {Math.abs(pDiff)}
                         </div>
                       </div>
                     </div>
@@ -701,7 +701,8 @@ export default function PerformanceSurgerySchedule() {
                           <span
                             style={{ color: diffColor, fontWeight: "bold" }}
                           >
-                            {diff}
+                            {diff >= 0 ? "+" : "−"}
+                            {Math.abs(diff)}
                           </span>
                         );
                       }
@@ -792,7 +793,8 @@ export default function PerformanceSurgerySchedule() {
                           <span
                             style={{ color: diffColor, fontWeight: "bold" }}
                           >
-                            {diff}
+                            {diff >= 0 ? "+" : "−"}
+                            {Math.abs(diff)}
                           </span>
                         );
                       }
@@ -908,7 +910,8 @@ export default function PerformanceSurgerySchedule() {
                           <span
                             style={{ color: diffColor, fontWeight: "bold" }}
                           >
-                            {formatCurrency(diff)}
+                            {diff >= 0 ? "+" : "−"}
+                            {formatCurrency(Math.abs(diff))}
                           </span>
                         );
                       }
