@@ -1437,15 +1437,10 @@ const CustomerAllDataPage = () => {
             </div>
           </div>
 
-          {/* Results Info */}
+          {/* Active Filters Display */}
           {tableData.length > 0 && (
-            <div className="mt-3 text-sm text-gray-600">
-              แสดง {(currentPage - 1) * itemsPerPage + 1}-
-              {Math.min(
-                currentPage * itemsPerPage,
-                filteredAndSortedData.length
-              )}{" "}
-              จาก {filteredAndSortedData.length} รายการ
+            <div className="mt-4 space-y-2">
+              {/* Active Filters Tags */}
               {(searchTerm ||
                 statusFilter !== "all" ||
                 productFilter !== "all" ||
@@ -1463,8 +1458,401 @@ const CustomerAllDataPage = () => {
                 getConsultApptStart ||
                 getConsultApptEnd ||
                 getSurgeryApptStart ||
-                getSurgeryApptEnd) &&
-                ` (กรองจาก ${tableData[0].data.length} รายการทั้งหมด)`}
+                getSurgeryApptEnd) && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg
+                      className="w-4 h-4 text-blue-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      />
+                    </svg>
+                    <span className="text-sm font-semibold text-blue-900">
+                      ฟิลเตอร์ที่ใช้งานอยู่:
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {searchTerm && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-teal-300 rounded-full text-xs font-medium text-teal-700 shadow-sm">
+                        <span className="font-semibold">ค้นหา:</span>
+                        <span className="max-w-[200px] truncate">
+                          "{searchTerm}"
+                        </span>
+                        <button
+                          onClick={() => setSearchTerm("")}
+                          className="ml-1 hover:bg-teal-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {statusFilter !== "all" && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-cyan-300 rounded-full text-xs font-medium text-cyan-700 shadow-sm">
+                        <span className="font-semibold">สถานะ:</span>
+                        <span className="max-w-[150px] truncate">
+                          {statusFilter}
+                        </span>
+                        <button
+                          onClick={() => setStatusFilter("all")}
+                          className="ml-1 hover:bg-cyan-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {productFilter !== "all" && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-indigo-300 rounded-full text-xs font-medium text-indigo-700 shadow-sm">
+                        <span className="font-semibold">สินค้า:</span>
+                        <span className="max-w-[150px] truncate">
+                          {productFilter}
+                        </span>
+                        <button
+                          onClick={() => setProductFilter("all")}
+                          className="ml-1 hover:bg-indigo-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {contactFilter !== "all" && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-rose-300 rounded-full text-xs font-medium text-rose-700 shadow-sm">
+                        <span className="font-semibold">ผู้ติดต่อ:</span>
+                        <span>{contactFilter}</span>
+                        <button
+                          onClick={() => setContactFilter("all")}
+                          className="ml-1 hover:bg-rose-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(followUpLastStart || followUpLastEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-emerald-300 rounded-full text-xs font-medium text-emerald-700 shadow-sm">
+                        <span className="font-semibold">วันติดตาม-ล่าสุด:</span>
+                        <span>
+                          {followUpLastStart || "..."} -{" "}
+                          {followUpLastEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setFollowUpLastStart("");
+                            setFollowUpLastEnd("");
+                          }}
+                          className="ml-1 hover:bg-emerald-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(followUpNextStart || followUpNextEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-violet-300 rounded-full text-xs font-medium text-violet-700 shadow-sm">
+                        <span className="font-semibold">วันติดตาม-ถัดไป:</span>
+                        <span>
+                          {followUpNextStart || "..."} -{" "}
+                          {followUpNextEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setFollowUpNextStart("");
+                            setFollowUpNextEnd("");
+                          }}
+                          className="ml-1 hover:bg-violet-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(consultStart || consultEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-fuchsia-300 rounded-full text-xs font-medium text-fuchsia-700 shadow-sm">
+                        <span className="font-semibold">วันที่ Consult:</span>
+                        <span>
+                          {consultStart || "..."} - {consultEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setConsultStart("");
+                            setConsultEnd("");
+                          }}
+                          className="ml-1 hover:bg-fuchsia-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(surgeryStart || surgeryEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 rounded-full text-xs font-medium text-orange-700 shadow-sm">
+                        <span className="font-semibold">วันที่ผ่าตัด:</span>
+                        <span>
+                          {surgeryStart || "..."} - {surgeryEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setSurgeryStart("");
+                            setSurgeryEnd("");
+                          }}
+                          className="ml-1 hover:bg-orange-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(getNameStart || getNameEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-300 rounded-full text-xs font-medium text-blue-700 shadow-sm">
+                        <span className="font-semibold">วันได้ชื่อ:</span>
+                        <span>
+                          {getNameStart || "..."} - {getNameEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setGetNameStart("");
+                            setGetNameEnd("");
+                          }}
+                          className="ml-1 hover:bg-blue-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(getConsultApptStart || getConsultApptEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-300 rounded-full text-xs font-medium text-purple-700 shadow-sm">
+                        <span className="font-semibold">
+                          วันได้นัด Consult:
+                        </span>
+                        <span>
+                          {getConsultApptStart || "..."} -{" "}
+                          {getConsultApptEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setGetConsultApptStart("");
+                            setGetConsultApptEnd("");
+                          }}
+                          className="ml-1 hover:bg-purple-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {(getSurgeryApptStart || getSurgeryApptEnd) && (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-pink-300 rounded-full text-xs font-medium text-pink-700 shadow-sm">
+                        <span className="font-semibold">วันได้นัด ผ่าตัด:</span>
+                        <span>
+                          {getSurgeryApptStart || "..."} -{" "}
+                          {getSurgeryApptEnd || "..."}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setGetSurgeryApptStart("");
+                            setGetSurgeryApptEnd("");
+                          }}
+                          className="ml-1 hover:bg-pink-100 rounded-full p-0.5 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Clear All Button */}
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setStatusFilter("all");
+                        setProductFilter("all");
+                        setContactFilter("all");
+                        setFollowUpLastStart("");
+                        setFollowUpLastEnd("");
+                        setFollowUpNextStart("");
+                        setFollowUpNextEnd("");
+                        setConsultStart("");
+                        setConsultEnd("");
+                        setSurgeryStart("");
+                        setSurgeryEnd("");
+                        setGetNameStart("");
+                        setGetNameEnd("");
+                        setGetConsultApptStart("");
+                        setGetConsultApptEnd("");
+                        setGetSurgeryApptStart("");
+                        setGetSurgeryApptEnd("");
+                      }}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs font-medium shadow-sm transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                      <span>ล้างทั้งหมด</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Results Info */}
+              <div className="text-sm text-gray-600">
+                แสดง {(currentPage - 1) * itemsPerPage + 1}-
+                {Math.min(
+                  currentPage * itemsPerPage,
+                  filteredAndSortedData.length
+                )}{" "}
+                จาก {filteredAndSortedData.length} รายการ
+                {(searchTerm ||
+                  statusFilter !== "all" ||
+                  productFilter !== "all" ||
+                  contactFilter !== "all" ||
+                  followUpLastStart ||
+                  followUpLastEnd ||
+                  followUpNextStart ||
+                  followUpNextEnd ||
+                  consultStart ||
+                  consultEnd ||
+                  surgeryStart ||
+                  surgeryEnd ||
+                  getNameStart ||
+                  getNameEnd ||
+                  getConsultApptStart ||
+                  getConsultApptEnd ||
+                  getSurgeryApptStart ||
+                  getSurgeryApptEnd) &&
+                  ` (กรองจาก ${tableData[0].data.length} รายการทั้งหมด)`}
+              </div>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {tableData.length > 0 && totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-center gap-2">
+              {/* First Page */}
+              <button
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="หน้าแรก"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+
+              {/* Previous Page */}
+              <button
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                ← ก่อนหน้า
+              </button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {/* Show first page if not near it */}
+                {currentPage > 3 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentPage(1)}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      1
+                    </button>
+                    {currentPage > 4 && (
+                      <span className="px-2 text-gray-500">...</span>
+                    )}
+                  </>
+                )}
+
+                {/* Pages around current page */}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((page) => {
+                    return (
+                      page === currentPage ||
+                      page === currentPage - 1 ||
+                      page === currentPage + 1 ||
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    );
+                  })
+                  .map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-2 rounded-lg transition-all font-medium ${
+                        page === currentPage
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-white border border-gray-300 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                {/* Show last page if not near it */}
+                {currentPage < totalPages - 2 && (
+                  <>
+                    {currentPage < totalPages - 3 && (
+                      <span className="px-2 text-gray-500">...</span>
+                    )}
+                    <button
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Next Page */}
+              <button
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              >
+                ถัดไป →
+              </button>
+
+              {/* Last Page */}
+              <button
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                title="หน้าสุดท้าย"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
             </div>
           )}
         </div>
@@ -1473,10 +1861,10 @@ const CustomerAllDataPage = () => {
           <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4 flex-1 flex flex-col">
             <div
               className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar custom-scrollbar-horizontal"
-              style={{ order: -1 }}
+              style={{ order: -1, maxHeight: "calc(100vh - 400px)" }}
             >
               <table className="w-full border-collapse text-sm">
-                <thead className="sticky top-0 z-20">
+                <thead className="sticky top-0 z-30 bg-yellow-300">
                   <tr className="bg-yellow-300 border border-gray-400">
                     {tableData[0].headers.map((header, idx) => (
                       <th
