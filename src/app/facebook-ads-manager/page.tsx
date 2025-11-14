@@ -93,8 +93,8 @@ export default function FacebookAdsManagerPage() {
           ? "adset"
           : "ad";
 
-      // สร้าง URL parameters
-      let url = `/api/facebook-ads-campaigns?level=${levelParam}`;
+      // สร้าง URL parameters - ใช้ Railway API
+      let url = `https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=${levelParam}`;
 
       // ใช้ filtering เพื่อให้ API ส่งมาแค่ action_type ที่ต้องการ
       const filtering = JSON.stringify([
@@ -179,8 +179,9 @@ export default function FacebookAdsManagerPage() {
     try {
       setGoogleSheetsLoading(true);
 
-      // สร้าง URL parameters สำหรับ Google Sheets API
-      let url = "/api/google-sheets-data";
+      // สร้าง URL parameters สำหรับ Google Sheets API - ใช้ Railway API
+      let url =
+        "https://believable-ambition-production.up.railway.app/api/google-sheets-data";
 
       // ถ้าเลือก custom date ให้ใช้ time_range แทน date_preset
       if (dateRange === "custom" && customDateStart && customDateEnd) {
@@ -222,9 +223,9 @@ export default function FacebookAdsManagerPage() {
       const since = startDate.toISOString().split("T")[0];
       const until = endDate.toISOString().split("T")[0];
 
-      // ดึงข้อมูล Facebook Ads แบบรายวัน
+      // ดึงข้อมูล Facebook Ads แบบรายวัน - ใช้ Railway API
       const timeRange = JSON.stringify({ since, until });
-      const fbUrl = `/api/facebook-ads-campaigns?level=campaign&time_range=${encodeURIComponent(
+      const fbUrl = `https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=campaign&time_range=${encodeURIComponent(
         timeRange
       )}&time_increment=1&action_breakdowns=action_type`;
 
@@ -278,10 +279,10 @@ export default function FacebookAdsManagerPage() {
         }
       });
 
-      // ดึงข้อมูล Google Sheets รายวัน
+      // ดึงข้อมูล Google Sheets รายวัน - ใช้ Railway API
       try {
         const sheetsTimeRange = JSON.stringify({ since, until });
-        const sheetsUrl = `/api/google-sheets-data?time_range=${encodeURIComponent(
+        const sheetsUrl = `https://believable-ambition-production.up.railway.app/api/google-sheets-data?time_range=${encodeURIComponent(
           sheetsTimeRange
         )}&daily=true`;
 
@@ -317,9 +318,9 @@ export default function FacebookAdsManagerPage() {
         // ไม่ throw error เพราะเราต้องการให้แสดงข้อมูล FB Ads ต่อไป
       }
 
-      // ดึงข้อมูล Google Ads รายวัน
+      // ดึงข้อมูล Google Ads รายวัน - ใช้ Railway API
       try {
-        const adsUrl = `/api/google-ads?startDate=${since}&endDate=${until}&daily=true`;
+        const adsUrl = `https://believable-ambition-production.up.railway.app/api/google-ads?startDate=${since}&endDate=${until}&daily=true`;
 
         const adsResponse = await fetch(adsUrl);
         const adsResult = await adsResponse.json();
@@ -367,8 +368,9 @@ export default function FacebookAdsManagerPage() {
     try {
       setGoogleAdsLoading(true);
 
-      // สร้าง URL parameters สำหรับ Google Ads API
-      let url = "/api/google-ads";
+      // สร้าง URL parameters สำหรับ Google Ads API - ใช้ Railway API
+      let url =
+        "https://believable-ambition-production.up.railway.app/api/google-ads";
 
       // ถ้าเลือก custom date ให้ส่ง startDate และ endDate
       if (dateRange === "custom" && customDateStart && customDateEnd) {
@@ -816,7 +818,7 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
               ลองอีกครั้ง
             </button>
             <a
-              href="/api/facebook-ads-campaigns?level=campaign&date_preset=today"
+              href="https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=campaign&date_preset=today"
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded transition-colors text-center"
