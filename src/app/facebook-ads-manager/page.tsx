@@ -71,7 +71,7 @@ export default function FacebookAdsManagerPage() {
   const [customDateEnd, setCustomDateEnd] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [countdown, setCountdown] = useState(60);
+  const [countdown, setCountdown] = useState(50);
   const [googleSheetsData, setGoogleSheetsData] = useState<number>(0);
   const [googleSheetsLoading, setGoogleSheetsLoading] = useState(false);
   const [googleAdsData, setGoogleAdsData] = useState<number>(0);
@@ -79,101 +79,108 @@ export default function FacebookAdsManagerPage() {
   const [dailyData, setDailyData] = useState<any[]>([]);
   const [dailyDataLoading, setDailyDataLoading] = useState(false);
 
-  const fetchInsights = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // ใช้ API ใหม่ที่รองรับ campaign, adset, ad level
-      // รองรับ time_range และ action_breakdowns
-      const levelParam =
-        viewMode === "campaigns"
-          ? "campaign"
-          : viewMode === "adsets"
-          ? "adset"
-          : "ad";
-
-      // สร้าง URL parameters - ใช้ Railway API
-      let url = `https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=${levelParam}`;
-
-      // ใช้ filtering เพื่อให้ API ส่งมาแค่ action_type ที่ต้องการ
-      const filtering = JSON.stringify([
-        {
-          field: "action_type",
-          operator: "IN",
-          value: [
-            "onsite_conversion.messaging_first_reply",
-            "onsite_conversion.total_messaging_connection",
-          ],
-        },
-      ]);
-      url += `&filtering=${encodeURIComponent(filtering)}`;
-      url += `&action_breakdowns=action_type`;
-
-      // ถ้าเลือก custom date ให้ใช้ time_range แทน date_preset
-      if (dateRange === "custom" && customDateStart && customDateEnd) {
-        const timeRange = JSON.stringify({
-          since: customDateStart,
-          until: customDateEnd,
-        });
-        url += `&time_range=${encodeURIComponent(timeRange)}`;
-      } else {
-        url += `&date_preset=${dateRange}`;
-      }
-
-      const response = await fetch(url);
-
-      const result: ApiResponse = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
-      }
-
-      // รวมข้อมูลที่ซ้ำกัน (กรณีที่ API ส่งข้อมูลเดียวกันมาหลายแถวเพราะ action_breakdowns)
-      const uniqueData = new Map<string, AdInsight>();
-
-      result.data.forEach((item) => {
-        const key = item.ad_id || item.adset_id || item.campaign_id;
-
-        if (uniqueData.has(key)) {
-          // ถ้ามีข้อมูลนี้อยู่แล้ว ให้รวม actions เข้าด้วยกัน
-          const existing = uniqueData.get(key)!;
-
-          // รวม actions โดยบวกค่าเข้าด้วยกัน
-          if (item.actions) {
-            if (!existing.actions) {
-              existing.actions = [];
-            }
-            item.actions.forEach((action) => {
-              const existingAction = existing.actions!.find(
-                (a) => a.action_type === action.action_type
-              );
-              if (!existingAction) {
-                existing.actions!.push(action);
-              } else {
-                // บวกรวมค่าถ้ามี action_type เดียวกัน
-                const existingValue = parseInt(existingAction.value || "0");
-                const newValue = parseInt(action.value || "0");
-                existingAction.value = (existingValue + newValue).toString();
-              }
-            });
-          }
-        } else {
-          // ถ้ายังไม่มี ให้เพิ่มเข้าไป
-          uniqueData.set(key, { ...item });
+  const fetchInsights = useCallback(
+    async (isBackgroundRefresh = false) => {
+      try {
+        if (!isBackgroundRefresh) {
+          setLoading(true);
         }
-      });
+        setError(null);
 
-      setInsights(Array.from(uniqueData.values()));
-      setLastUpdated(new Date());
-      setCountdown(60); // รีเซ็ต countdown เมื่ออัพเดทข้อมูลสำเร็จ
-    } catch (err) {
-      console.error("Error fetching insights:", err);
-      setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
-    } finally {
-      setLoading(false);
-    }
-  }, [dateRange, viewMode, customDateStart, customDateEnd]);
+        // ใช้ API ใหม่ที่รองรับ campaign, adset, ad level
+        // รองรับ time_range และ action_breakdowns
+        const levelParam =
+          viewMode === "campaigns"
+            ? "campaign"
+            : viewMode === "adsets"
+            ? "adset"
+            : "ad";
+
+        // สร้าง URL parameters - ใช้ Railway API
+        let url = `https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=${levelParam}`;
+
+        // ใช้ filtering เพื่อให้ API ส่งมาแค่ action_type ที่ต้องการ
+        const filtering = JSON.stringify([
+          {
+            field: "action_type",
+            operator: "IN",
+            value: [
+              "onsite_conversion.messaging_first_reply",
+              "onsite_conversion.total_messaging_connection",
+            ],
+          },
+        ]);
+        url += `&filtering=${encodeURIComponent(filtering)}`;
+        url += `&action_breakdowns=action_type`;
+
+        // ถ้าเลือก custom date ให้ใช้ time_range แทน date_preset
+        if (dateRange === "custom" && customDateStart && customDateEnd) {
+          const timeRange = JSON.stringify({
+            since: customDateStart,
+            until: customDateEnd,
+          });
+          url += `&time_range=${encodeURIComponent(timeRange)}`;
+        } else {
+          url += `&date_preset=${dateRange}`;
+        }
+
+        const response = await fetch(url);
+
+        const result: ApiResponse = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
+        }
+
+        // รวมข้อมูลที่ซ้ำกัน (กรณีที่ API ส่งข้อมูลเดียวกันมาหลายแถวเพราะ action_breakdowns)
+        const uniqueData = new Map<string, AdInsight>();
+
+        result.data.forEach((item) => {
+          const key = item.ad_id || item.adset_id || item.campaign_id;
+
+          if (uniqueData.has(key)) {
+            // ถ้ามีข้อมูลนี้อยู่แล้ว ให้รวม actions เข้าด้วยกัน
+            const existing = uniqueData.get(key)!;
+
+            // รวม actions โดยบวกค่าเข้าด้วยกัน
+            if (item.actions) {
+              if (!existing.actions) {
+                existing.actions = [];
+              }
+              item.actions.forEach((action) => {
+                const existingAction = existing.actions!.find(
+                  (a) => a.action_type === action.action_type
+                );
+                if (!existingAction) {
+                  existing.actions!.push(action);
+                } else {
+                  // บวกรวมค่าถ้ามี action_type เดียวกัน
+                  const existingValue = parseInt(existingAction.value || "0");
+                  const newValue = parseInt(action.value || "0");
+                  existingAction.value = (existingValue + newValue).toString();
+                }
+              });
+            }
+          } else {
+            // ถ้ายังไม่มี ให้เพิ่มเข้าไป
+            uniqueData.set(key, { ...item });
+          }
+        });
+
+        setInsights(Array.from(uniqueData.values()));
+        setLastUpdated(new Date());
+        setCountdown(50); // รีเซ็ต countdown เมื่ออัพเดทข้อมูลสำเร็จ
+      } catch (err) {
+        console.error("Error fetching insights:", err);
+        setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
+      } finally {
+        if (!isBackgroundRefresh) {
+          setLoading(false);
+        }
+      }
+    },
+    [dateRange, viewMode, customDateStart, customDateEnd]
+  );
 
   const fetchGoogleSheetsData = useCallback(async () => {
     try {
@@ -467,15 +474,15 @@ export default function FacebookAdsManagerPage() {
     fetchDailyData,
   ]);
 
-  // Auto-refresh ทุก 1 นาที
+  // Auto-refresh ทุก 50 วินาที (พื้นหลัง)
   useEffect(() => {
     const refreshInterval = setInterval(() => {
-      console.log("🔄 Auto-refreshing all data...");
-      fetchInsights();
+      console.log("🔄 Background refresh...");
+      fetchInsights(true); // ส่ง true เพื่อบอกว่าเป็น background refresh
       fetchGoogleSheetsData();
       fetchGoogleAdsData();
       fetchDailyData();
-    }, 60000); // 60000ms = 1 นาที
+    }, 50000); // 50000ms = 50 วินาที
 
     return () => clearInterval(refreshInterval);
   }, [
@@ -490,11 +497,11 @@ export default function FacebookAdsManagerPage() {
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          return 60;
+          return 50;
         }
         return prev - 1;
       });
-    }, 1000);
+    }, 5000);
 
     return () => clearInterval(countdownInterval);
   }, []);
@@ -812,7 +819,7 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
 
           <div className="flex gap-3">
             <button
-              onClick={fetchInsights}
+              onClick={() => fetchInsights(false)}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition-colors"
             >
               ลองอีกครั้ง
@@ -1001,7 +1008,7 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
                 <div className="relative">
                   <svg
                     className={`w-4 h-4 text-green-500 ${
-                      countdown <= 10 ? "animate-pulse" : ""
+                      countdown <= 5 ? "animate-pulse" : ""
                     }`}
                     fill="none"
                     stroke="currentColor"
@@ -1014,7 +1021,7 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
                       d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                     />
                   </svg>
-                  {countdown <= 5 && (
+                  {countdown <= 3 && (
                     <span className="absolute -top-1 -right-1 flex h-2 w-2">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -1022,11 +1029,11 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
                   )}
                 </div>
                 <span className="text-gray-600">
-                  อัพเดทใน{" "}
+                  รีเฟรชใน{" "}
                   <span className="font-semibold text-green-600">
                     {countdown}
                   </span>{" "}
-                  วินาที
+                  วิ
                 </span>
               </div>
               {lastUpdated && (
@@ -1043,7 +1050,7 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
                 </>
               )}
               <button
-                onClick={() => fetchInsights()}
+                onClick={() => fetchInsights(false)}
                 className="ml-2 p-1 hover:bg-gray-100 rounded transition-colors"
                 title="รีเฟรชข้อมูลทันที"
               >
@@ -1074,14 +1081,19 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
               <div className="flex items-center space-x-1">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-xs text-gray-600 font-medium">
-                  ข้อมูลเรียลไทม์
+                  รีเฟรชพื้นหลังทุก 50 วินาที
                 </span>
               </div>
               {lastUpdated && (
                 <>
                   <span className="text-gray-300">•</span>
                   <span className="text-xs text-gray-500">
-                    อัพเดทอัตโนมัติทุก 1 นาที
+                    อัพเดทล่าสุด:{" "}
+                    {lastUpdated.toLocaleTimeString("th-TH", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}
                   </span>
                 </>
               )}
@@ -1100,7 +1112,7 @@ FACEBOOK_AD_ACCOUNT_ID=act_1234567890`}
                   d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>อัพเดทครั้งถัดไปใน {countdown} วินาที</span>
+              <span>รีเฟรชใน {countdown} วิ</span>
             </div>
           </div>
           <div className="grid grid-cols-5 gap-6">
