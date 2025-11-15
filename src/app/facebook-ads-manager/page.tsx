@@ -323,7 +323,10 @@ export default function FacebookAdsManagerPage() {
           });
         }
       } catch (sheetsErr) {
-        console.error("⚠️ Google Sheets daily data error (ignored):", sheetsErr);
+        console.error(
+          "⚠️ Google Sheets daily data error (ignored):",
+          sheetsErr
+        );
         // ไม่ throw error เพราะเราต้องการให้แสดงข้อมูล FB Ads ต่อไป
       }
 
@@ -365,7 +368,11 @@ export default function FacebookAdsManagerPage() {
       );
 
       setDailyData(dailyArray);
-      console.log("✅ Daily data loaded successfully:", dailyArray.length, "days");
+      console.log(
+        "✅ Daily data loaded successfully:",
+        dailyArray.length,
+        "days"
+      );
     } catch (err) {
       console.error("❌ Error fetching daily data:", err);
       // ไม่ให้ crash - แสดงตารางว่างแทน

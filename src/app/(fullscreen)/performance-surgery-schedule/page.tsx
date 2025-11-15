@@ -13,6 +13,11 @@ import {
   countPythonApiSurgeriesByActualDateAndPerson,
   calculateRevenueByDateAndPerson,
 } from "@/utils/pythonApiFilmData";
+import {
+  fetchSaleIncentiveFromPythonAPI,
+  calculateDailyRevenueByPerson,
+  SaleIncentiveData,
+} from "@/utils/saleIncentiveApi";
 
 export default function PerformanceSurgerySchedule() {
   // State for selected month and year
@@ -33,6 +38,12 @@ export default function PerformanceSurgerySchedule() {
   const [revenueMap, setRevenueMap] = useState<
     Map<string, Map<number, number>>
   >(new Map());
+  const [filmRevenueMap, setFilmRevenueMap] = useState<
+    Map<string, Map<number, number>>
+  >(new Map());
+  const [saleIncentiveData, setSaleIncentiveData] = useState<
+    SaleIncentiveData[]
+  >([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -60,7 +71,7 @@ export default function PerformanceSurgerySchedule() {
   const [selectedContactPerson, setSelectedContactPerson] = useState("");
   const [selectedTableType, setSelectedTableType] = useState<"P" | "L">("P");
 
-  // Function to load data from Python API
+  // Function to load surgery schedule data from Python API
   const loadData = async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setIsRefreshing(true);
@@ -69,9 +80,10 @@ export default function PerformanceSurgerySchedule() {
     }
     setError(null);
     try {
-      // Fetch data from Python API (Google Sheets)
+      // Fetch surgery schedule data from Python API (Google Sheets)
       const data = await fetchSurgeryScheduleFromPythonAPI();
       setSurgeryData(data);
+
       setLastUpdated(new Date());
     } catch (error: any) {
       setError(error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
@@ -81,15 +93,42 @@ export default function PerformanceSurgerySchedule() {
     }
   };
 
-  // Fetch data when component mounts
+  // Function to load N_SaleIncentive data separately (NOT combined with surgery data)
+  const loadSaleIncentiveData = async () => {
+    try {
+      const saleData = await fetchSaleIncentiveFromPythonAPI();
+      setSaleIncentiveData(saleData);
+      console.log("✅ Loaded N_SaleIncentive data separately");
+    } catch (error: any) {
+      console.error("❌ Error loading N_SaleIncentive data:", error);
+      // Don't set error state - let revenue table just be empty
+      setSaleIncentiveData([]);
+    }
+  };
+
+  // Fetch surgery data when component mounts
   useEffect(() => {
     loadData();
   }, []);
 
-  // Auto-refresh every 30 seconds
+  // Fetch N_SaleIncentive data when component mounts or when month/year changes
+  useEffect(() => {
+    loadSaleIncentiveData();
+  }, [selectedMonth, selectedYear]);
+
+  // Auto-refresh surgery data every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       loadData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-refresh N_SaleIncentive data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadSaleIncentiveData();
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
@@ -131,7 +170,7 @@ export default function PerformanceSurgerySchedule() {
     return weekdayCount;
   };
 
-  // Update count maps when data or date changes
+  // Update count maps and film revenue when data or date changes
   useEffect(() => {
     if (surgeryData.length > 0) {
       // P table - วันที่ได้นัดผ่าตัด (Python API)
@@ -148,8 +187,8 @@ export default function PerformanceSurgerySchedule() {
         selectedYear
       );
 
-      // Revenue table - ประมาณการรายรับ (Python API)
-      const newRevenueMap = calculateRevenueByDateAndPerson(
+      // Revenue from Film Data (ยอดนำเสนอ)
+      const newFilmRevenueMap = calculateRevenueByDateAndPerson(
         surgeryData,
         selectedMonth,
         selectedYear
@@ -157,9 +196,26 @@ export default function PerformanceSurgerySchedule() {
 
       setCountMap(newCountMap);
       setCountMapL(newCountMapL);
-      setRevenueMap(newRevenueMap);
+      setFilmRevenueMap(newFilmRevenueMap);
     }
   }, [surgeryData, selectedMonth, selectedYear]);
+
+  // Update revenue map when N_SaleIncentive data changes
+  useEffect(() => {
+    if (saleIncentiveData.length > 0) {
+      // Revenue table - ประมาณการรายรับจากข้อมูลจริง (N_SaleIncentive)
+      const newRevenueMap = calculateDailyRevenueByPerson(
+        saleIncentiveData,
+        selectedMonth,
+        selectedYear
+      );
+
+      setRevenueMap(newRevenueMap);
+    } else {
+      // Clear revenue map if no data
+      setRevenueMap(new Map());
+    }
+  }, [saleIncentiveData, selectedMonth, selectedYear]);
 
   // Update KPI To Date and Actual based on weekdays passed in current month
   useEffect(() => {
@@ -316,26 +372,42 @@ export default function PerformanceSurgerySchedule() {
     return surgeries ? surgeries.length : 0;
   };
 
-  // Get revenue for a specific cell
+  // Get revenue for a specific cell (รวมจาก Film Data + N_SaleIncentive)
   const getCellRevenue = (day: number, rowId: string): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
 
-    // For จีน row, combine จีน and มุก revenue
+    let totalRevenue = 0;
+
+    // For จีน row, combine จีน and มุก revenue from BOTH sources
     if (rowId === "105-จีน") {
-      const jinMap = revenueMap.get("จีน");
-      const mukMap = revenueMap.get("มุก");
+      // Revenue from N_SaleIncentive
+      const jinSaleMap = revenueMap.get("จีน");
+      const mukSaleMap = revenueMap.get("มุก");
+      const jinSaleRevenue = jinSaleMap?.get(day) || 0;
+      const mukSaleRevenue = mukSaleMap?.get(day) || 0;
 
-      const jinRevenue = jinMap?.get(day) || 0;
-      const mukRevenue = mukMap?.get(day) || 0;
+      // Revenue from Film Data (ยอดนำเสนอ)
+      const jinFilmMap = filmRevenueMap.get("จีน");
+      const mukFilmMap = filmRevenueMap.get("มุก");
+      const jinFilmRevenue = jinFilmMap?.get(day) || 0;
+      const mukFilmRevenue = mukFilmMap?.get(day) || 0;
 
-      return jinRevenue + mukRevenue;
+      totalRevenue =
+        jinSaleRevenue + mukSaleRevenue + jinFilmRevenue + mukFilmRevenue;
+    } else {
+      // Revenue from N_SaleIncentive
+      const salePersonMap = revenueMap.get(contactPerson);
+      const saleRevenue = salePersonMap?.get(day) || 0;
+
+      // Revenue from Film Data (ยอดนำเสนอ)
+      const filmPersonMap = filmRevenueMap.get(contactPerson);
+      const filmRevenue = filmPersonMap?.get(day) || 0;
+
+      totalRevenue = saleRevenue + filmRevenue;
     }
 
-    const personMap = revenueMap.get(contactPerson);
-    if (!personMap) return 0;
-
-    return personMap.get(day) || 0;
+    return totalRevenue;
   };
 
   // Calculate KPI Diff (Actual - KPI To Date)
@@ -433,8 +505,11 @@ export default function PerformanceSurgerySchedule() {
             )}
             {surgeryData.length > 0 && (
               <span className="data-count">
-                📊 ข้อมูลทั้งหมด: {surgeryData.length} รายการ (Python API -
-                Google Sheets)
+                📊 ข้อมูลนัดผ่าตัด: {surgeryData.length} รายการ
+                {saleIncentiveData.length > 0 && (
+                  <> | 💰 ข้อมูลรายรับ: {saleIncentiveData.length} รายการ</>
+                )}
+                {" (Python API - Google Sheets)"}
               </span>
             )}
           </div>
