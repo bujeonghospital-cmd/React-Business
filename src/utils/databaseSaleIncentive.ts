@@ -9,6 +9,8 @@ export interface SaleIncentiveData {
   year: number;
   customer_name?: string;
   notes?: string;
+  data_source?: string;
+  is_bjh_count?: number; // 1 if using bjh_all_leads data, 0 if using n_saleIncentive
 }
 
 /**
@@ -87,7 +89,23 @@ export function calculateDailyRevenueByPerson(
   let matchedCount = 0;
   let totalRevenue = 0;
 
-  data.forEach((item) => {
+  let bjhCountUsed = 0;
+  let saleIncentiveUsed = 0;
+
+  console.log(`🔍 calculateDailyRevenueByPerson called:`, {
+    totalDataLength: data.length,
+    targetMonth: month + 1,
+    targetYear: year,
+    sampleData: data.slice(0, 5).map((d) => ({
+      person: d.sale_person,
+      month: d.month,
+      year: d.year,
+      day: d.day,
+      income: d.income,
+    })),
+  });
+
+  data.forEach((item, index) => {
     // Filter by month and year (API returns month as 1-12, convert JS month 0-11 to 1-12)
     if (item.month !== month + 1 || item.year !== year) {
       return;
@@ -98,7 +116,29 @@ export function calculateDailyRevenueByPerson(
 
     const person = item.sale_person?.trim() || "ไม่ระบุ";
     const day = item.day;
-    const income = item.income || 0;
+    const income =
+      typeof item.income === "string"
+        ? parseFloat(item.income) || 0
+        : item.income || 0;
+
+    // Log first few matched records
+    if (matchedCount <= 5) {
+      console.log(`📝 Matched record #${matchedCount}:`, {
+        person,
+        day,
+        income,
+        month: item.month,
+        year: item.year,
+        is_bjh_count: item.is_bjh_count,
+      });
+    }
+
+    // Track data source
+    if (item.is_bjh_count === 1) {
+      bjhCountUsed++;
+    } else {
+      saleIncentiveUsed++;
+    }
 
     // Initialize map for person if not exists
     if (!revenueMap.has(person)) {
@@ -114,10 +154,22 @@ export function calculateDailyRevenueByPerson(
   });
 
   console.log(
-    `💰 Calculate Revenue from Sale Incentive: Processed ${processedCount} records, matched ${matchedCount} for ${year}-${
+    `💰 Calculate Revenue: Processed ${processedCount} records, matched ${matchedCount} for ${year}-${
       month + 1
-    }, total revenue: ${totalRevenue.toLocaleString()} บาท`
+    }, total revenue: ${totalRevenue.toLocaleString()} บาท | BJH: ${bjhCountUsed}, SaleIncentive: ${saleIncentiveUsed}`
   );
+
+  console.log(`📊 Revenue Map Summary:`, {
+    mapSize: revenueMap.size,
+    persons: Array.from(revenueMap.keys()),
+    sampleRevenue: Array.from(revenueMap.entries())
+      .slice(0, 3)
+      .map(([person, dayMap]) => ({
+        person,
+        totalDays: dayMap.size,
+        sampleDays: Array.from(dayMap.entries()).slice(0, 3),
+      })),
+  });
 
   return revenueMap;
 }

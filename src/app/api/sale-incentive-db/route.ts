@@ -43,21 +43,99 @@ export async function GET(request: NextRequest) {
     console.log(`📡 Fetching sale incentive from database...`);
 
     // สร้าง SQL query แบบ dynamic
+    // ดึงข้อมูลจาก n_saleIncentive และเปรียบเทียบกับ bjh_all_leads
     let query = `
+      WITH sale_data AS (
+        SELECT 
+          s.sale_code,
+          s.item_name,
+          FLOOR(s.income) as income,
+          n.nickname as sale_person,
+          CONCAT(n.name, ' ', n.surname) AS full_name,
+          EXTRACT(DAY FROM s.sale_date) as day,
+          EXTRACT(MONTH FROM s.sale_date) as month,
+          EXTRACT(YEAR FROM s.sale_date) as year,
+          s.sale_date,
+          '' as customer_name,
+          '' as notes,
+          'n_saleIncentive' as data_source,
+          CURRENT_TIMESTAMP as created_at,
+          CURRENT_TIMESTAMP as updated_at
+        FROM postgres."BJH-Server"."n_saleIncentive" AS s
+        LEFT JOIN postgres."BJH-Server".n_staff AS n
+          ON s.emp_code = n.code
+      ),
+      bjh_data AS (
+        SELECT 
+          contact_staff as sale_person,
+          CASE 
+            WHEN surgery_date ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$' 
+            THEN TO_DATE(surgery_date, 'DD/MM/YYYY')::DATE
+            WHEN surgery_date ~ '^[0-9]+$' AND surgery_date::INTEGER BETWEEN 1 AND 100000
+            THEN (DATE '1899-12-30' + surgery_date::INTEGER)::DATE
+            ELSE NULL 
+          END as surgery_date,
+          CASE 
+            WHEN REPLACE(proposed_amount, ',', '') ~ '^[0-9]+\.?[0-9]*$' 
+            THEN REPLACE(proposed_amount, ',', '')::NUMERIC
+            ELSE 0
+          END as proposed_amount,
+          doctor,
+          customer_name,
+          phone,
+          appointment_time
+        FROM postgres."BJH-Server".bjh_all_leads
+        WHERE surgery_date IS NOT NULL
+      ),
+      combined_data AS (
+        SELECT 
+          COALESCE(s.sale_person, '') as sale_person,
+          COALESCE(TO_CHAR(s.sale_date, 'YYYY-MM-DD'), '') as sale_date,
+          CASE 
+            WHEN COALESCE(b.proposed_amount, 0) > COALESCE(s.income, 0) AND b.proposed_amount IS NOT NULL 
+            THEN b.proposed_amount
+            ELSE COALESCE(s.income, 0)
+          END as income,
+          COALESCE(s.day, 0) as day,
+          COALESCE(s.month, 0) as month,
+          COALESCE(s.year, 0) as year,
+          CASE 
+            WHEN COALESCE(b.proposed_amount, 0) > COALESCE(s.income, 0) AND b.customer_name IS NOT NULL 
+            THEN b.customer_name
+            ELSE COALESCE(s.customer_name, '')
+          END as customer_name,
+          COALESCE(s.notes, '') as notes,
+          CASE 
+            WHEN COALESCE(b.proposed_amount, 0) > COALESCE(s.income, 0) AND b.proposed_amount IS NOT NULL 
+            THEN 'bjh_all_leads'
+            ELSE COALESCE(s.data_source, 'n_saleIncentive')
+          END as data_source,
+          s.created_at,
+          s.updated_at,
+          CASE 
+            WHEN COALESCE(b.proposed_amount, 0) > COALESCE(s.income, 0) AND b.proposed_amount IS NOT NULL 
+            THEN 1
+            ELSE 0
+          END as is_bjh_count
+        FROM sale_data s
+        LEFT JOIN bjh_data b
+          ON s.sale_person = b.sale_person 
+          AND s.sale_date::DATE = b.surgery_date
+      )
       SELECT 
-        id,
         sale_person,
-        TO_CHAR(sale_date, 'YYYY-MM-DD') as sale_date,
-        income,
-        day,
-        month,
-        year,
+        sale_date,
+        income::NUMERIC as income,
+        day::INTEGER as day,
+        month::INTEGER as month,
+        year::INTEGER as year,
         customer_name,
         notes,
         data_source,
         created_at,
-        updated_at
-      FROM sale_incentive
+        updated_at,
+        is_bjh_count::INTEGER as is_bjh_count
+      FROM combined_data
       WHERE 1=1
     `;
 

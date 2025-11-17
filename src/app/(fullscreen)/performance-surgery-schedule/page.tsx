@@ -23,6 +23,11 @@ import {
   calculateDailyRevenueByPerson,
   SaleIncentiveData,
 } from "@/utils/databaseSaleIncentive";
+import {
+  fetchRevenueCombinedFromDatabase,
+  calculateDailyRevenueByPersonCombined,
+  RevenueCombinedData,
+} from "@/utils/databaseRevenueCombined";
 
 export default function PerformanceSurgerySchedule() {
   // State for selected month and year
@@ -51,6 +56,9 @@ export default function PerformanceSurgerySchedule() {
   >(new Map());
   const [saleIncentiveData, setSaleIncentiveData] = useState<
     SaleIncentiveData[]
+  >([]);
+  const [revenueCombinedData, setRevenueCombinedData] = useState<
+    RevenueCombinedData[]
   >([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -109,12 +117,42 @@ export default function PerformanceSurgerySchedule() {
   const loadSaleIncentiveData = async () => {
     try {
       const saleData = await fetchSaleIncentiveFromDatabase();
+      console.log("📊 Sale Incentive Data Loaded:", {
+        totalRecords: saleData.length,
+        sampleRecords: saleData.slice(0, 3),
+        uniquePersons: [...new Set(saleData.map((d) => d.sale_person))],
+        monthYearCounts: saleData.reduce((acc: any, d) => {
+          const key = `${d.year}-${d.month}`;
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {}),
+      });
       setSaleIncentiveData(saleData);
       console.log("✅ Loaded N_SaleIncentive data from Database");
     } catch (error: any) {
       console.error("❌ Error loading N_SaleIncentive data:", error);
       // Don't set error state - let revenue table just be empty
       setSaleIncentiveData([]);
+    }
+  };
+
+  // Function to load Combined Revenue data (max_amount with DISTINCT ON sale_code)
+  const loadRevenueCombinedData = async () => {
+    try {
+      const combinedData = await fetchRevenueCombinedFromDatabase();
+      console.log("💰 Revenue Data Loaded (bjh_all_leads):", {
+        totalRecords: combinedData.length,
+        sampleRecords: combinedData.slice(0, 3),
+        uniquePersons: [
+          ...new Set(combinedData.map((d) => d.contact_staff || "ไม่ระบุ")),
+        ],
+      });
+      setRevenueCombinedData(combinedData);
+      console.log("✅ Loaded Combined Revenue data from Database");
+    } catch (error: any) {
+      console.error("❌ Error loading Combined Revenue data:", error);
+      // Don't set error state - let revenue table just be empty
+      setRevenueCombinedData([]);
     }
   };
 
@@ -132,6 +170,13 @@ export default function PerformanceSurgerySchedule() {
     })();
   }, [selectedMonth, selectedYear]);
 
+  // Fetch Combined Revenue data when component mounts or when month/year changes
+  useEffect(() => {
+    (async () => {
+      await loadRevenueCombinedData();
+    })();
+  }, [selectedMonth, selectedYear]);
+
   // Auto-refresh surgery data every 30 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -145,6 +190,15 @@ export default function PerformanceSurgerySchedule() {
   useEffect(() => {
     const interval = setInterval(async () => {
       await loadSaleIncentiveData();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Auto-refresh Combined Revenue data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      await loadRevenueCombinedData();
     }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
@@ -205,7 +259,7 @@ export default function PerformanceSurgerySchedule() {
     return weekdayCount;
   };
 
-  // Update count maps and film revenue when data or date changes
+  // Update count maps when data or date changes
   useEffect(() => {
     if (surgeryData.length > 0) {
       // P table - วันที่ได้นัดผ่าตัด (Database)
@@ -215,17 +269,37 @@ export default function PerformanceSurgerySchedule() {
         selectedYear
       );
 
-      // Revenue from Film Data P table (ยอดนำเสนอ)
-      const newFilmRevenueMap = calculateDatabaseRevenueByDateAndPerson(
-        surgeryData,
+      setCountMap(newCountMap);
+    }
+  }, [surgeryData, selectedMonth, selectedYear]);
+
+  // Update film revenue map when revenue data from bjh_all_leads changes
+  useEffect(() => {
+    if (revenueCombinedData.length > 0) {
+      // Revenue from bjh_all_leads (proposed_amount)
+      const newFilmRevenueMap = calculateDailyRevenueByPersonCombined(
+        revenueCombinedData,
         selectedMonth,
         selectedYear
       );
 
-      setCountMap(newCountMap);
+      console.log("🔍 Film Revenue Map Debug (bjh_all_leads):", {
+        mapSize: newFilmRevenueMap.size,
+        persons: Array.from(newFilmRevenueMap.keys()),
+        sampleData: Array.from(newFilmRevenueMap.entries())
+          .slice(0, 2)
+          .map(([person, dayMap]) => ({
+            person,
+            days: Array.from(dayMap.entries()),
+          })),
+      });
+
       setFilmRevenueMap(newFilmRevenueMap);
+    } else {
+      // Clear revenue map if no data
+      setFilmRevenueMap(new Map());
     }
-  }, [surgeryData, selectedMonth, selectedYear]);
+  }, [revenueCombinedData, selectedMonth, selectedYear]);
 
   // Update L table count map when surgery actual data changes
   useEffect(() => {
@@ -250,6 +324,17 @@ export default function PerformanceSurgerySchedule() {
         selectedMonth,
         selectedYear
       );
+
+      console.log("🔍 Revenue Map Debug:", {
+        mapSize: newRevenueMap.size,
+        persons: Array.from(newRevenueMap.keys()),
+        sampleData: Array.from(newRevenueMap.entries())
+          .slice(0, 2)
+          .map(([person, dayMap]) => ({
+            person,
+            days: Array.from(dayMap.entries()),
+          })),
+      });
 
       setRevenueMap(newRevenueMap);
     } else {
@@ -413,62 +498,43 @@ export default function PerformanceSurgerySchedule() {
     return surgeries ? surgeries.length : 0;
   };
 
-  // Get revenue for a specific cell (ใช้ข้อมูลจาก surgery_date - L table)
+  // Get revenue for a specific cell (ใช้ max_amount จาก Combined Revenue API)
   const getCellRevenue = (day: number, rowId: string): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
 
     let totalRevenue = 0;
 
-    // ใช้ข้อมูลจาก surgeryActualData (L table - surgery_date)
-    if (surgeryActualData.length > 0) {
-      surgeryActualData.forEach((row) => {
-        const rowContactPerson = row.contact_person || row["ผู้ติดต่อ"] || "";
-        const surgeryDateStr = row.surgery_date || row["วันที่ผ่าตัด"];
-        const proposedAmountStr = row["ยอดนำเสนอ"] || "";
-
-        if (!surgeryDateStr) return;
-
-        // Parse date
-        let surgeryDate: Date | null = null;
-        if (/^\d{4}-\d{2}-\d{2}$/.test(surgeryDateStr)) {
-          const [year, month, dayNum] = surgeryDateStr.split("-").map(Number);
-          surgeryDate = new Date(year, month - 1, dayNum);
-        } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(surgeryDateStr)) {
-          const [dayNum, month, year] = surgeryDateStr.split("/").map(Number);
-          surgeryDate = new Date(year, month - 1, dayNum);
-        }
-
-        if (!surgeryDate) return;
-
-        // Check if matches selected month/year and day
-        if (
-          surgeryDate.getMonth() === selectedMonth &&
-          surgeryDate.getFullYear() === selectedYear &&
-          surgeryDate.getDate() === day
-        ) {
-          // For จีน row, include both จีน and มุก
-          if (rowId === "105-จีน") {
-            if (rowContactPerson === "จีน" || rowContactPerson === "มุก") {
-              const amount = proposedAmountStr
-                ? parseFloat(proposedAmountStr.replace(/,/g, ""))
-                : 0;
-              if (!isNaN(amount)) {
-                totalRevenue += amount;
-              }
-            }
-          } else {
-            if (rowContactPerson === contactPerson) {
-              const amount = proposedAmountStr
-                ? parseFloat(proposedAmountStr.replace(/,/g, ""))
-                : 0;
-              if (!isNaN(amount)) {
-                totalRevenue += amount;
-              }
-            }
-          }
-        }
+    // Debug: ตรวจสอบ filmRevenueMap
+    if (day === 1 && rowId === "105-จีน") {
+      console.log("🔍 Debug getCellRevenue:", {
+        rowId,
+        contactPerson,
+        filmRevenueMapSize: filmRevenueMap.size,
+        filmRevenueMapKeys: Array.from(filmRevenueMap.keys()),
+        day1Data: {
+          จีน: filmRevenueMap.get("จีน")?.get(1),
+          มุก: filmRevenueMap.get("มุก")?.get(1),
+          เจ: filmRevenueMap.get("เจ")?.get(1),
+          ว่าน: filmRevenueMap.get("ว่าน")?.get(1),
+        },
       });
+    }
+
+    // ใช้ข้อมูลจาก filmRevenueMap (Combined Revenue: max_amount DISTINCT ON sale_code)
+    if (filmRevenueMap.size > 0) {
+      // For จีน row, combine จีน and มุก revenue (ไม่ซ้ำกัน)
+      if (rowId === "105-จีน") {
+        // จีน - เช็คแค่ชื่อไทย
+        const jinRevenue = filmRevenueMap.get("จีน")?.get(day) || 0;
+        // มุก - เช็คแค่ชื่อไทย
+        const mukRevenue = filmRevenueMap.get("มุก")?.get(day) || 0;
+        totalRevenue = jinRevenue + mukRevenue;
+      } else {
+        // For other rows, ใช้ชื่อจาก mapping โดยตรง
+        const revenue = filmRevenueMap.get(contactPerson)?.get(day) || 0;
+        totalRevenue = revenue;
+      }
     }
 
     return totalRevenue;
@@ -573,8 +639,12 @@ export default function PerformanceSurgerySchedule() {
                 {surgeryActualData.length > 0 && (
                   <> | L: {surgeryActualData.length} รายการ</>
                 )}
-                {saleIncentiveData.length > 0 && (
-                  <> | 💰 รายรับ: {saleIncentiveData.length} รายการ</>
+                {revenueCombinedData.length > 0 && (
+                  <>
+                    {" "}
+                    | 💰 รายรับ: {revenueCombinedData.length} รายการ
+                    (n_saleIncentive)
+                  </>
                 )}
                 {" (PostgreSQL Database)"}
               </span>
@@ -773,6 +843,7 @@ export default function PerformanceSurgerySchedule() {
               onClick={async () => {
                 await loadData();
                 await loadSaleIncentiveData();
+                await loadRevenueCombinedData();
               }}
               className="retry-button"
             >

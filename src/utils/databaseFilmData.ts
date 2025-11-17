@@ -268,6 +268,7 @@ export function parseAmount(amountStr: string): number {
 }
 
 // Calculate total revenue by date and contact person (for Revenue table)
+// ใช้ข้อมูลจาก bjh_all_leads โดยตรง (surgery_date และ proposed_amount)
 export function calculateDatabaseRevenueByDateAndPerson(
   data: SurgeryScheduleData[],
   month: number,
@@ -285,27 +286,27 @@ export function calculateDatabaseRevenueByDateAndPerson(
   let totalRevenue = 0;
 
   data.forEach((item) => {
-    // ใช้คอลัมน์ P "วันที่ได้นัดผ่าตัด" เหมือนตาราง P
-    const surgeryScheduledDate =
-      item.date_surgery_scheduled || item.วันที่ได้นัดผ่าตัด || "";
+    // ใช้ surgery_date (วันที่ผ่าตัดจริง) สำหรับตารางรายรับ
+    const surgeryDate = item.surgery_date || item.วันที่ผ่าตัด || "";
 
-    if (surgeryScheduledDate) {
+    if (surgeryDate) {
       processedCount++;
-      const date = parseDatabaseDate(surgeryScheduledDate);
+      const date = parseDatabaseDate(surgeryDate);
 
       if (date) {
         if (date.getUTCMonth() === month && date.getUTCFullYear() === year) {
           matchedCount++;
           const day = date.getUTCDate();
 
-          // ใช้คอลัมน์ E "ผู้ติดต่อ" จากข้อมูล
+          // ใช้ contact_staff จากข้อมูล
           const person =
             (item.contact_person || item.ผู้ติดต่อ || "").trim() || "ไม่ระบุ";
 
-          // ใช้คอลัมน์ Q "ยอดนำเสนอ" จากข้อมูล
-          const amount = parseAmount(item.ยอดนำเสนอ || "0");
+          // ใช้ proposed_amount จากข้อมูล (ตัดทศนิยมออก)
+          const amountStr = item.ยอดนำเสนอ || "0";
+          const amount = Math.floor(parseAmount(amountStr));
 
-          if (revenueMap.has(person)) {
+          if (amount > 0 && revenueMap.has(person)) {
             const personMap = revenueMap.get(person)!;
             const currentAmount = personMap.get(day) || 0;
             personMap.set(day, currentAmount + amount);
@@ -317,7 +318,7 @@ export function calculateDatabaseRevenueByDateAndPerson(
   });
 
   console.log(
-    `💰 Calculate Revenue: Processed ${processedCount} records, matched ${matchedCount} for ${year}-${
+    `💰 Calculate Revenue from bjh_all_leads (surgery_date): Processed ${processedCount} records, matched ${matchedCount} for ${year}-${
       month + 1
     }, total revenue: ${totalRevenue.toLocaleString()} บาท`
   );
