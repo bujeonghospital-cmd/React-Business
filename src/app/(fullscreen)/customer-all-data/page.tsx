@@ -116,19 +116,23 @@ const CustomerAllDataPage = () => {
   const fetchData = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(
-        "https://believable-ambition-production.up.railway.app/data_bjh"
-      );
+      // ใช้ API endpoint ที่เชื่อมกับ n8n database
+      const response = await fetch("/api/customer-data");
       const result = await response.json();
 
-      // Check if we have valid data from the new API
-      if (!result.columns || !result.data || result.data.length === 0) {
-        console.error("Invalid API response format");
+      if (
+        !result.success ||
+        !result.columns ||
+        !result.data ||
+        result.data.length === 0
+      ) {
         return;
       }
 
-      // The API already returns data in the correct format
-      const headers = result.columns;
+      // API ตอนนี้ return format: { success: true, columns: [...], data: [{...}, {...}], ... }
+      // ข้อมูลเป็น array of objects แล้ว ไม่ต้องแปลง
+      // เอา 'id' ออกจาก headers เพราะไม่ต้องแสดงในตาราง
+      const headers = result.columns.filter((col: string) => col !== "id");
       const formattedData = result.data;
 
       const tables = [
@@ -242,7 +246,7 @@ const CustomerAllDataPage = () => {
         setTableData([]);
       }
     } catch (err) {
-      console.error("Fetch error:", err);
+      // Error during fetch
     } finally {
       setIsLoading(false);
     }
@@ -365,36 +369,28 @@ const CustomerAllDataPage = () => {
 
   const handleSaveCustomer = async (updatedData: Record<string, any>) => {
     try {
-      // For now, show a success message and update local data
-      // TODO: Implement actual save API endpoint if available
-      alert("บันทึกข้อมูลสำเร็จ (ข้อมูลจะถูกอัพเดทในครั้งถัดไป)");
-      setIsEditModalOpen(false);
-
-      // Update local data immediately for better UX
-      setTableData((prevData) => {
-        if (prevData.length === 0) return prevData;
-        return [
-          {
-            ...prevData[0],
-            data: prevData[0].data.map((row) => {
-              // Find and update the matching row
-              if (
-                row["รหัสลูกค้า"] === updatedData["รหัสลูกค้า"] ||
-                (row["ชื่อ"] === updatedData["ชื่อ"] &&
-                  row["เบอร์โทร"] === updatedData["เบอร์โทร"])
-              ) {
-                return { ...row, ...updatedData };
-              }
-              return row;
-            }),
-          },
-        ];
+      const response = await fetch("/api/customer-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "update",
+          data: updatedData,
+        }),
       });
 
-      // Optionally reload from server
-      // await fetchData();
+      const result = await response.json();
+
+      if (result.success) {
+        alert("บันทึกข้อมูลสำเร็จ");
+        setIsEditModalOpen(false);
+        // รีโหลดข้อมูลใหม่
+        await fetchData();
+      } else {
+        alert(`เกิดข้อผิดพลาด: ${result.error}`);
+      }
     } catch (error) {
-      console.error("Error saving customer:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };

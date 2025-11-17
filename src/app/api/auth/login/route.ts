@@ -66,10 +66,10 @@ export async function POST(request: NextRequest) {
         d.name AS department_name_fix,
         d.name_full_th AS department_name,
         p.name_full_th AS position_name
-      FROM "user" u
-      LEFT JOIN roles r ON u.id_role = r.id_role
-      LEFT JOIN department d ON u.id_dep = d.id
-      LEFT JOIN "position" p ON u.position = p.id
+      FROM "BJH-Server"."user" u
+      LEFT JOIN "BJH-Server".roles r ON u.id_role = r.id_role
+      LEFT JOIN "BJH-Server".department d ON u.id_dep = d.id
+      LEFT JOIN "BJH-Server"."position" p ON u.position = p.id
       WHERE (u.email = $1 OR u.username = $1)
         AND u.delete_date IS NULL
       LIMIT 1
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     // Get user avatar
     const avatarQuery = `
       SELECT path, name_file
-      FROM parth_file
+      FROM "BJH-Server".parth_file
       WHERE id_ref = $1 
         AND prefix = 'user_img' 
         AND delete_date IS NULL
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     // Update last login and token
     await client.query(
-      `UPDATE "user" 
+      `UPDATE "BJH-Server"."user" 
        SET last_login = CURRENT_TIMESTAMP, token = $1 
        WHERE id = $2`,
       [token, user.id]

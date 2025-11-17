@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     // Check if email already exists
     const emailCheckQuery = `
-      SELECT id FROM "user" 
+      SELECT id FROM "BJH-Server"."user" 
       WHERE email = $1 AND delete_date IS NULL
       LIMIT 1
     `;
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Check if username already exists
     const usernameCheckQuery = `
-      SELECT id FROM "user" 
+      SELECT id FROM "BJH-Server"."user" 
       WHERE username = $1 AND delete_date IS NULL
       LIMIT 1
     `;
@@ -105,29 +105,58 @@ export async function POST(request: NextRequest) {
 
     // Get default role (user role)
     const roleQuery = `
-      SELECT id_role FROM roles 
+      SELECT id_role FROM "BJH-Server".roles 
       WHERE tag = 'user' 
       LIMIT 1
     `;
     const roleResult = await client.query(roleQuery);
     const defaultRoleId = roleResult.rows[0]?.id_role || null;
 
+    console.log("📝 Preparing to insert user with data:", {
+      name,
+      lname,
+      email,
+      username,
+      phone: phone || null,
+      department: department || null,
+      position: position || null,
+      defaultRoleId,
+    });
+
     // Insert new user
     const insertUserQuery = `
-      INSERT INTO "user" (
+      INSERT INTO "BJH-Server"."user" (
         name, 
         lname, 
         email, 
         username, 
-        password, 
+        password,
+        phone,
+        id_dep,
+        position,
         id_role,
         status_rank,
         admin,
         create_date
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP)
-      RETURNING id, name, lname, email, username
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP)
+      RETURNING id, name, lname, email, username, phone, id_dep, position
     `;
+
+    console.log("🔍 Insert query:", insertUserQuery);
+    console.log("🔍 Query parameters:", [
+      name,
+      lname,
+      email,
+      username,
+      "(password hashed)",
+      phone || null,
+      department || null,
+      position || null,
+      defaultRoleId,
+      "user",
+      false,
+    ]);
 
     const userResult = await client.query(insertUserQuery, [
       name,
@@ -135,6 +164,9 @@ export async function POST(request: NextRequest) {
       email,
       username,
       hashedPassword,
+      phone || null,
+      department || null,
+      position || null,
       defaultRoleId,
       "user", // status_rank
       false, // admin
@@ -155,12 +187,21 @@ export async function POST(request: NextRequest) {
         username: newUser.username,
       },
     });
-  } catch (error) {
-    console.error("Registration error:", error);
+  } catch (error: any) {
+    console.error("❌ Registration error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      stack: error.stack,
+    });
+
     return NextResponse.json(
       {
         success: false,
         message: "เกิดข้อผิดพลาดในการสมัครสมาชิก กรุณาลองใหม่อีกครั้ง",
+        error: error.message,
+        detail: error.detail,
       },
       { status: 500 }
     );

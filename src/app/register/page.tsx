@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Mail,
@@ -18,6 +18,17 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+interface Department {
+  id: number;
+  name: string;
+  name_full_th: string;
+}
+
+interface Position {
+  id: number;
+  name_full_th: string;
+}
+
 interface RegisterFormData {
   name: string;
   lname: string;
@@ -26,8 +37,8 @@ interface RegisterFormData {
   password: string;
   confirmPassword: string;
   phone?: string;
-  department?: string;
-  position?: string;
+  department?: number;
+  position?: number;
 }
 
 export default function RegisterPage() {
@@ -46,10 +57,60 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [errors, setErrors] = useState<
     Partial<Record<keyof RegisterFormData | "general", string>>
   >({});
   const [successMessage, setSuccessMessage] = useState("");
+
+  // Fetch departments and positions on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        console.log("🔄 Fetching departments and positions...");
+
+        const [deptResponse, posResponse] = await Promise.all([
+          fetch("/api/departments"),
+          fetch("/api/positions"),
+        ]);
+
+        console.log("📦 Departments response status:", deptResponse.status);
+        console.log("📦 Positions response status:", posResponse.status);
+
+        const deptData = await deptResponse.json();
+        const posData = await posResponse.json();
+
+        console.log("📊 Departments data:", deptData);
+        console.log("📊 Positions data:", posData);
+
+        if (deptData.success && deptData.data) {
+          setDepartments(deptData.data);
+          console.log(`✅ Loaded ${deptData.data.length} departments`);
+        } else {
+          console.error("❌ Failed to load departments:", deptData.message);
+        }
+
+        if (posData.success && posData.data) {
+          setPositions(posData.data);
+          console.log(`✅ Loaded ${posData.data.length} positions`);
+        } else {
+          console.error("❌ Failed to load positions:", posData.message);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching data:", error);
+        setErrors((prev) => ({
+          ...prev,
+          general: "ไม่สามารถโหลดข้อมูลแผนกและตำแหน่งได้ กรุณาลองใหม่อีกครั้ง",
+        }));
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Real-time validation
   const validateField = (field: keyof RegisterFormData, value: string) => {
@@ -124,9 +185,46 @@ export default function RegisterPage() {
     setErrors(newErrors);
   };
 
+  const validateSelectField = (
+    field: keyof RegisterFormData,
+    value: number | undefined
+  ) => {
+    const newErrors = { ...errors };
+
+    if (field === "department") {
+      if (!value) {
+        newErrors.department = "กรุณาเลือกแผนก";
+      } else {
+        delete newErrors.department;
+      }
+    } else if (field === "position") {
+      if (!value) {
+        newErrors.position = "กรุณาเลือกตำแหน่ง";
+      } else {
+        delete newErrors.position;
+      }
+    }
+
+    setErrors(newErrors);
+  };
+
   const handleInputChange = (field: keyof RegisterFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     validateField(field, value);
+    if (errors.general) {
+      setErrors((prev) => {
+        const { general, ...rest } = prev;
+        return rest;
+      });
+    }
+  };
+
+  const handleSelectChange = (
+    field: keyof RegisterFormData,
+    value: number | undefined
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    validateSelectField(field, value);
     if (errors.general) {
       setErrors((prev) => {
         const { general, ...rest } = prev;
@@ -168,6 +266,14 @@ export default function RegisterPage() {
       newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
     } else if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
+    }
+
+    if (!formData.department) {
+      newErrors.department = "กรุณาเลือกแผนก";
+    }
+
+    if (!formData.position) {
+      newErrors.position = "กรุณาเลือกตำแหน่ง";
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -567,93 +673,144 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Optional Fields */}
-            <div className="pt-4 border-t border-gray-200">
-              <p className="text-sm text-gray-600 mb-4">
-                ข้อมูลเพิ่มเติม (ไม่บังคับ)
-              </p>
-
-              <div className="space-y-4">
-                {/* Phone */}
-                <div>
-                  <label
-                    htmlFor="phone"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+            {/* Department & Position - Required Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Department */}
+              <div>
+                <label
+                  htmlFor="department"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  แผนก <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Building2 className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <select
+                    id="department"
+                    value={formData.department || ""}
+                    onChange={(e) =>
+                      handleSelectChange(
+                        "department",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                    onBlur={(e) =>
+                      validateSelectField(
+                        "department",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                    className={`block w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all appearance-none bg-white ${
+                      errors.department
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-red-500 focus:border-red-500"
+                    }`}
+                    disabled={isLoading || isLoadingData}
                   >
-                    เบอร์โทรศัพท์
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Phone className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="tel"
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
-                      placeholder="081-234-5678"
-                      disabled={isLoading}
-                    />
-                  </div>
+                    <option value="">เลือกแผนก</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name_full_th}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-
-                {/* Department & Position - Grid 2 columns */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Department */}
-                  <div>
-                    <label
-                      htmlFor="department"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                <AnimatePresence>
+                  {errors.department && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="mt-2 text-sm text-red-600 flex items-center gap-1"
                     >
-                      แผนก
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Building2 className="h-5 w-5 text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        id="department"
-                        value={formData.department}
-                        onChange={(e) =>
-                          handleInputChange("department", e.target.value)
-                        }
-                        className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
-                        placeholder="ฝ่ายขาย"
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.department}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
 
-                  {/* Position */}
-                  <div>
-                    <label
-                      htmlFor="position"
-                      className="block text-sm font-medium text-gray-700 mb-2"
-                    >
-                      ตำแหน่ง
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <Briefcase className="h-5 w-5 text-gray-400" />
-                      </div>
-                      <input
-                        type="text"
-                        id="position"
-                        value={formData.position}
-                        onChange={(e) =>
-                          handleInputChange("position", e.target.value)
-                        }
-                        className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
-                        placeholder="พนักงานขาย"
-                        disabled={isLoading}
-                      />
-                    </div>
+              {/* Position */}
+              <div>
+                <label
+                  htmlFor="position"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  ตำแหน่ง <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <Briefcase className="h-5 w-5 text-gray-400" />
                   </div>
+                  <select
+                    id="position"
+                    value={formData.position || ""}
+                    onChange={(e) =>
+                      handleSelectChange(
+                        "position",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                    onBlur={(e) =>
+                      validateSelectField(
+                        "position",
+                        e.target.value ? Number(e.target.value) : undefined
+                      )
+                    }
+                    className={`block w-full pl-12 pr-4 py-3 border rounded-xl focus:outline-none focus:ring-2 transition-all appearance-none bg-white ${
+                      errors.position
+                        ? "border-red-300 focus:ring-red-500 focus:border-red-500"
+                        : "border-gray-300 focus:ring-red-500 focus:border-red-500"
+                    }`}
+                    disabled={isLoading || isLoadingData}
+                  >
+                    <option value="">เลือกตำแหน่ง</option>
+                    {positions.map((pos) => (
+                      <option key={pos.id} value={pos.id}>
+                        {pos.name_full_th}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                <AnimatePresence>
+                  {errors.position && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="mt-2 text-sm text-red-600 flex items-center gap-1"
+                    >
+                      <AlertCircle className="w-4 h-4" />
+                      {errors.position}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Phone - Optional Field */}
+            <div>
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                เบอร์โทรศัพท์
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="tel"
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+                  placeholder="081-234-5678"
+                  disabled={isLoading}
+                />
               </div>
             </div>
 

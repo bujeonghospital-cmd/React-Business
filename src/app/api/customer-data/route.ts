@@ -79,19 +79,22 @@ export async function GET(request: NextRequest) {
       (field) => columnMapping[field.name] || field.name
     );
 
-    // แปลงข้อมูลให้อยู่ในรูปแบบที่หน้า customer-all-data ต้องการ
-    const data = [
-      thaiHeaders,
-      ...customers.map((row) => result.fields.map((field) => row[field.name])),
-    ];
+    // แปลงข้อมูลให้อยู่ในรูปแบบ { columns: [], data: [] } เหมือน Railway API
+    const formattedData = customers.map((row) => {
+      const rowObj: Record<string, any> = {};
+      result.fields.forEach((field, index) => {
+        const thaiColumnName = thaiHeaders[index];
+        rowObj[thaiColumnName] = row[field.name];
+      });
+      return rowObj;
+    });
 
     return NextResponse.json({
       success: true,
-      data: {
-        all_data: data,
-      },
+      columns: thaiHeaders,
+      data: formattedData,
       totalRecords: customers.length,
-      source: `${process.env.DB_HOST || "192.168.1.19"}:${
+      source: `${process.env.DB_HOST || "n8n.bjhbangkok.com"}:${
         process.env.DB_PORT || "5432"
       }`,
     });
