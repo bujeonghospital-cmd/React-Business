@@ -7,17 +7,22 @@ import {
   SurgeryScheduleData,
   CONTACT_PERSON_MAPPING,
 } from "@/utils/googleSheets";
+// Import Database API functions (แทน Python API)
 import {
-  fetchSurgeryScheduleFromPythonAPI,
-  countPythonApiSurgeriesByDateAndPerson,
-  countPythonApiSurgeriesByActualDateAndPerson,
-  calculateRevenueByDateAndPerson,
-} from "@/utils/pythonApiFilmData";
+  fetchSurgeryScheduleFromDatabase,
+  countDatabaseSurgeriesByDateAndPerson,
+  calculateDatabaseRevenueByDateAndPerson,
+} from "@/utils/databaseFilmData";
 import {
-  fetchSaleIncentiveFromPythonAPI,
+  fetchSurgeryActualFromDatabase,
+  countDatabaseActualSurgeriesByDate,
+  calculateDatabaseActualRevenue,
+} from "@/utils/databaseActualSurgery";
+import {
+  fetchSaleIncentiveFromDatabase,
   calculateDailyRevenueByPerson,
   SaleIncentiveData,
-} from "@/utils/saleIncentiveApi";
+} from "@/utils/databaseSaleIncentive";
 
 export default function PerformanceSurgerySchedule() {
   // State for selected month and year
@@ -27,6 +32,9 @@ export default function PerformanceSurgerySchedule() {
 
   // State for surgery data
   const [surgeryData, setSurgeryData] = useState<SurgeryScheduleData[]>([]);
+  const [surgeryActualData, setSurgeryActualData] = useState<
+    SurgeryScheduleData[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [countMap, setCountMap] = useState<
@@ -71,7 +79,7 @@ export default function PerformanceSurgerySchedule() {
   const [selectedContactPerson, setSelectedContactPerson] = useState("");
   const [selectedTableType, setSelectedTableType] = useState<"P" | "L">("P");
 
-  // Function to load surgery schedule data from Python API
+  // Function to load surgery schedule data from Database
   const loadData = async (isManualRefresh = false) => {
     if (isManualRefresh) {
       setIsRefreshing(true);
@@ -80,9 +88,13 @@ export default function PerformanceSurgerySchedule() {
     }
     setError(null);
     try {
-      // Fetch surgery schedule data from Python API (Google Sheets)
-      const data = await fetchSurgeryScheduleFromPythonAPI();
+      // Fetch surgery schedule data from Database (แทน Python API/Google Sheets)
+      const data = await fetchSurgeryScheduleFromDatabase();
       setSurgeryData(data);
+
+      // Fetch surgery actual data (L table)
+      const actualData = await fetchSurgeryActualFromDatabase();
+      setSurgeryActualData(actualData);
 
       setLastUpdated(new Date());
     } catch (error: any) {
@@ -93,12 +105,12 @@ export default function PerformanceSurgerySchedule() {
     }
   };
 
-  // Function to load N_SaleIncentive data separately (NOT combined with surgery data)
+  // Function to load N_SaleIncentive data separately from Database
   const loadSaleIncentiveData = async () => {
     try {
-      const saleData = await fetchSaleIncentiveFromPythonAPI();
+      const saleData = await fetchSaleIncentiveFromDatabase();
       setSaleIncentiveData(saleData);
-      console.log("✅ Loaded N_SaleIncentive data separately");
+      console.log("✅ Loaded N_SaleIncentive data from Database");
     } catch (error: any) {
       console.error("❌ Error loading N_SaleIncentive data:", error);
       // Don't set error state - let revenue table just be empty
@@ -196,32 +208,38 @@ export default function PerformanceSurgerySchedule() {
   // Update count maps and film revenue when data or date changes
   useEffect(() => {
     if (surgeryData.length > 0) {
-      // P table - วันที่ได้นัดผ่าตัด (Python API)
-      const newCountMap = countPythonApiSurgeriesByDateAndPerson(
+      // P table - วันที่ได้นัดผ่าตัด (Database)
+      const newCountMap = countDatabaseSurgeriesByDateAndPerson(
         surgeryData,
         selectedMonth,
         selectedYear
       );
 
-      // L table - วันที่ผ่าตัด (Python API)
-      const newCountMapL = countPythonApiSurgeriesByActualDateAndPerson(
-        surgeryData,
-        selectedMonth,
-        selectedYear
-      );
-
-      // Revenue from Film Data (ยอดนำเสนอ)
-      const newFilmRevenueMap = calculateRevenueByDateAndPerson(
+      // Revenue from Film Data P table (ยอดนำเสนอ)
+      const newFilmRevenueMap = calculateDatabaseRevenueByDateAndPerson(
         surgeryData,
         selectedMonth,
         selectedYear
       );
 
       setCountMap(newCountMap);
-      setCountMapL(newCountMapL);
       setFilmRevenueMap(newFilmRevenueMap);
     }
   }, [surgeryData, selectedMonth, selectedYear]);
+
+  // Update L table count map when surgery actual data changes
+  useEffect(() => {
+    if (surgeryActualData.length > 0) {
+      // L table - วันที่ผ่าตัด (Surgery Actual Database)
+      const newCountMapL = countDatabaseActualSurgeriesByDate(
+        surgeryActualData,
+        selectedMonth,
+        selectedYear
+      );
+
+      setCountMapL(newCountMapL);
+    }
+  }, [surgeryActualData, selectedMonth, selectedYear]);
 
   // Update revenue map when N_SaleIncentive data changes
   useEffect(() => {
@@ -395,39 +413,62 @@ export default function PerformanceSurgerySchedule() {
     return surgeries ? surgeries.length : 0;
   };
 
-  // Get revenue for a specific cell (รวมจาก Film Data + N_SaleIncentive)
+  // Get revenue for a specific cell (ใช้ข้อมูลจาก surgery_date - L table)
   const getCellRevenue = (day: number, rowId: string): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
 
     let totalRevenue = 0;
 
-    // For จีน row, combine จีน and มุก revenue from BOTH sources
-    if (rowId === "105-จีน") {
-      // Revenue from N_SaleIncentive
-      const jinSaleMap = revenueMap.get("จีน");
-      const mukSaleMap = revenueMap.get("มุก");
-      const jinSaleRevenue = jinSaleMap?.get(day) || 0;
-      const mukSaleRevenue = mukSaleMap?.get(day) || 0;
+    // ใช้ข้อมูลจาก surgeryActualData (L table - surgery_date)
+    if (surgeryActualData.length > 0) {
+      surgeryActualData.forEach((row) => {
+        const rowContactPerson = row.contact_person || row["ผู้ติดต่อ"] || "";
+        const surgeryDateStr = row.surgery_date || row["วันที่ผ่าตัด"];
+        const proposedAmountStr = row["ยอดนำเสนอ"] || "";
 
-      // Revenue from Film Data (ยอดนำเสนอ)
-      const jinFilmMap = filmRevenueMap.get("จีน");
-      const mukFilmMap = filmRevenueMap.get("มุก");
-      const jinFilmRevenue = jinFilmMap?.get(day) || 0;
-      const mukFilmRevenue = mukFilmMap?.get(day) || 0;
+        if (!surgeryDateStr) return;
 
-      totalRevenue =
-        jinSaleRevenue + mukSaleRevenue + jinFilmRevenue + mukFilmRevenue;
-    } else {
-      // Revenue from N_SaleIncentive
-      const salePersonMap = revenueMap.get(contactPerson);
-      const saleRevenue = salePersonMap?.get(day) || 0;
+        // Parse date
+        let surgeryDate: Date | null = null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(surgeryDateStr)) {
+          const [year, month, dayNum] = surgeryDateStr.split("-").map(Number);
+          surgeryDate = new Date(year, month - 1, dayNum);
+        } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(surgeryDateStr)) {
+          const [dayNum, month, year] = surgeryDateStr.split("/").map(Number);
+          surgeryDate = new Date(year, month - 1, dayNum);
+        }
 
-      // Revenue from Film Data (ยอดนำเสนอ)
-      const filmPersonMap = filmRevenueMap.get(contactPerson);
-      const filmRevenue = filmPersonMap?.get(day) || 0;
+        if (!surgeryDate) return;
 
-      totalRevenue = saleRevenue + filmRevenue;
+        // Check if matches selected month/year and day
+        if (
+          surgeryDate.getMonth() === selectedMonth &&
+          surgeryDate.getFullYear() === selectedYear &&
+          surgeryDate.getDate() === day
+        ) {
+          // For จีน row, include both จีน and มุก
+          if (rowId === "105-จีน") {
+            if (rowContactPerson === "จีน" || rowContactPerson === "มุก") {
+              const amount = proposedAmountStr
+                ? parseFloat(proposedAmountStr.replace(/,/g, ""))
+                : 0;
+              if (!isNaN(amount)) {
+                totalRevenue += amount;
+              }
+            }
+          } else {
+            if (rowContactPerson === contactPerson) {
+              const amount = proposedAmountStr
+                ? parseFloat(proposedAmountStr.replace(/,/g, ""))
+                : 0;
+              if (!isNaN(amount)) {
+                totalRevenue += amount;
+              }
+            }
+          }
+        }
+      });
     }
 
     return totalRevenue;
@@ -528,11 +569,14 @@ export default function PerformanceSurgerySchedule() {
             )}
             {surgeryData.length > 0 && (
               <span className="data-count">
-                📊 ข้อมูลนัดผ่าตัด: {surgeryData.length} รายการ
-                {saleIncentiveData.length > 0 && (
-                  <> | 💰 ข้อมูลรายรับ: {saleIncentiveData.length} รายการ</>
+                📊 P: {surgeryData.length} รายการ
+                {surgeryActualData.length > 0 && (
+                  <> | L: {surgeryActualData.length} รายการ</>
                 )}
-                {" (Python API - Google Sheets)"}
+                {saleIncentiveData.length > 0 && (
+                  <> | 💰 รายรับ: {saleIncentiveData.length} รายการ</>
+                )}
+                {" (PostgreSQL Database)"}
               </span>
             )}
           </div>
@@ -705,32 +749,24 @@ export default function PerformanceSurgerySchedule() {
             <div className="error-help">
               <strong>แนะนำการแก้ไข:</strong>
               <ol>
+                <li>ตรวจสอบว่า PostgreSQL Database กำลังทำงานอยู่</li>
                 <li>
-                  ตรวจสอบว่า Python API บน Railway กำลังทำงานอยู่:
-                  <br />
-                  <code>
-                    https://believable-ambition-production.up.railway.app/health
-                  </code>
-                </li>
-                <li>
-                  ตรวจสอบ Environment Variables ใน Railway (Settings →
+                  ตรวจสอบ Environment Variables (Settings → Environment
                   Variables):
-                  <br />- <code>GOOGLE_SPREADSHEET_ID</code>
-                  <br />- <code>GOOGLE_SERVICE_ACCOUNT_EMAIL</code>
-                  <br />- <code>GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY</code>
+                  <br />- <code>DB_HOST</code>
+                  <br />- <code>DB_PORT</code>
+                  <br />- <code>DB_USER</code>
+                  <br />- <code>DB_PASSWORD</code>
+                  <br />- <code>DB_NAME</code>
                 </li>
                 <li>
-                  ตรวจสอบ Environment variable ใน Vercel (Settings → Environment
-                  Variables):
-                  <br />
-                  <code>PYTHON_API_URL</code> =
-                  https://believable-ambition-production.up.railway.app
+                  ตรวจสอบว่ามีตาราง <code>surgery_schedule</code> และ{" "}
+                  <code>sale_incentive</code> ในฐานข้อมูล
                 </li>
                 <li>
-                  ตรวจสอบว่า Service Account มีสิทธิ์เข้าถึง Google Sheet "Film
-                  data"
+                  รันคำสั่ง SQL schema: <code>surgery-schedule-schema.sql</code>
                 </li>
-                <li>ลอง Redeploy Railway และ Vercel อีกครั้ง</li>
+                <li>ลอง Redeploy Vercel อีกครั้ง</li>
               </ol>
             </div>
             <button

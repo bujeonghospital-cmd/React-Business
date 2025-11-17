@@ -23,9 +23,9 @@ const pool = new Pool({
   database: process.env.DB_NAME || "postgres",
   max: 20, // จำนวน connection สูงสุด
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000, // เพิ่มเป็น 10 วินาที
-  statement_timeout: 30000, // Query timeout 30 วินาที
-  query_timeout: 30000,
+  connectionTimeoutMillis: 30000, // เพิ่มเป็น 30 วินาที
+  statement_timeout: 60000, // Query timeout 60 วินาที
+  query_timeout: 60000,
   // n8n ไม่รองรับ SSL
   ssl: false,
 });
