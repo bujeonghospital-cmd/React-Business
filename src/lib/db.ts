@@ -2,6 +2,24 @@ import { Pool } from "pg";
 
 // สร้าง connection pool สำหรับ PostgreSQL
 const isSupabase = process.env.DB_HOST?.includes("supabase.co");
+const isN8n = process.env.DB_HOST?.includes("bjhbangkok.com");
+
+// Debug: แสดง config ที่กำลังใช้
+console.log("🔧 Database Configuration:");
+console.log("   Host:", process.env.DB_HOST || "192.168.1.19");
+console.log("   Port:", process.env.DB_PORT || "5432");
+console.log("   User:", process.env.DB_USER || "postgres");
+console.log("   Database:", process.env.DB_NAME || "postgres");
+console.log(
+  "   Password:",
+  process.env.DB_PASSWORD
+    ? "***" + process.env.DB_PASSWORD.slice(-4)
+    : "NOT SET"
+);
+console.log(
+  "   SSL:",
+  isSupabase || process.env.NODE_ENV === "production" ? "enabled" : "disabled"
+);
 
 const pool = new Pool({
   host: process.env.DB_HOST || "192.168.1.19",
@@ -14,7 +32,7 @@ const pool = new Pool({
   connectionTimeoutMillis: 10000, // เพิ่มเป็น 10 วินาที
   statement_timeout: 30000, // Query timeout 30 วินาที
   query_timeout: 30000,
-  // เปิด SSL สำหรับ Supabase และ production
+  // เปิด SSL สำหรับ Supabase เท่านั้น (n8n ไม่รองรับ SSL)
   ssl:
     isSupabase || process.env.NODE_ENV === "production"
       ? { rejectUnauthorized: false }
