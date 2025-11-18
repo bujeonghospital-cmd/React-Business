@@ -24,12 +24,14 @@ import {
 // Types
 interface ContactRecord {
   id: string;
+  dbId?: number; // ID จาก database
   customerName: string;
   phoneNumber: string;
   remarks: string;
   product?: string; // ผลิตภัณฑ์ที่สนใจ (Column C)
   status: "incoming" | "outgoing" | "pending" | "completed";
   contactDate: string;
+  nextContactDate?: string; // วันที่ติดต่อครั้งถัดไป
   company?: string;
   email?: string;
   agentId?: string; // ผู้ติดต่อ - Agent ID from YaleCom
@@ -80,6 +82,13 @@ const ContactDashboard = () => {
     null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editedRemarks, setEditedRemarks] = useState("");
+  const [isSavingRemarks, setIsSavingRemarks] = useState(false);
+  const [editedNextContactDate, setEditedNextContactDate] = useState("");
+  const [isSavingNextContact, setIsSavingNextContact] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastType, setToastType] = useState<"success" | "error">("success");
 
   // Statistics - Ensure contacts is always an array
   const contactsArray = Array.isArray(contacts) ? contacts : [];
@@ -410,16 +419,155 @@ const ContactDashboard = () => {
     }).format(date);
   };
 
-  // Handle row click
-  const handleRowClick = (contact: ContactRecord) => {
+  // Handle row click - บันทึก last_followup อัตโนมัติ
+  const handleRowClick = async (contact: ContactRecord) => {
     setSelectedContact(contact);
+    setEditedRemarks(contact.remarks || "");
+    setEditedNextContactDate(contact.nextContactDate || "");
     setIsModalOpen(true);
+
+    // บันทึก last_followup อัตโนมัติเป็นเวลาปัจจุบัน
+    if (contact.dbId) {
+      try {
+        const response = await fetch(
+          "/api/film-contacts/update-last-followup",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              id: contact.dbId,
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const result = await response.json();
+          const newContactDate = result.data.last_followup;
+
+          // อัพเดทข้อมูลใน state แบบเงียบๆ
+          const updatedContacts = contacts.map((c) =>
+            c.dbId === contact.dbId ? { ...c, contactDate: newContactDate } : c
+          );
+          setContacts(updatedContacts);
+
+          // อัพเดท selectedContact
+          setSelectedContact((prev) =>
+            prev ? { ...prev, contactDate: newContactDate } : prev
+          );
+
+          console.log(
+            `✅ Auto-saved last_followup for contact ID ${contact.dbId}`
+          );
+        }
+      } catch (error) {
+        console.error("Error auto-saving last followup:", error);
+        // ไม่แสดง error ให้ผู้ใช้เห็น เพื่อไม่รบกวนประสบการณ์การใช้งาน
+      }
+    }
   };
 
   // Close modal
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setTimeout(() => setSelectedContact(null), 300); // Clear after animation
+    setTimeout(() => {
+      setSelectedContact(null);
+      setEditedRemarks("");
+      setEditedNextContactDate("");
+    }, 300); // Clear after animation
+  };
+
+  // Show toast notification
+  const showToastNotification = (
+    message: string,
+    type: "success" | "error"
+  ) => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
+  };
+
+  // Save all data (remarks + next contact date)
+  const handleSaveAll = async () => {
+    if (!selectedContact || !selectedContact.dbId) {
+      showToastNotification("ไม่สามารถบันทึกได้: ไม่พบ ID ของข้อมูล", "error");
+      return;
+    }
+
+    try {
+      setIsSavingRemarks(true);
+      setIsSavingNextContact(true);
+
+      // บันทึกทั้งสองพร้อมกัน
+      const [remarksResponse, nextContactResponse] = await Promise.all([
+        fetch("/api/film-contacts/update-remarks", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: selectedContact.dbId,
+            remarks: editedRemarks,
+          }),
+        }),
+        fetch("/api/film-contacts/update-next-contact", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: selectedContact.dbId,
+            nextContactDate: editedNextContactDate,
+          }),
+        }),
+      ]);
+
+      if (remarksResponse.ok && nextContactResponse.ok) {
+        showToastNotification("✅ บันทึกข้อมูลทั้งหมดสำเร็จ!", "success");
+
+        // อัพเดทข้อมูลใน state
+        const updatedContacts = contacts.map((c) =>
+          c.dbId === selectedContact.dbId
+            ? {
+                ...c,
+                remarks: editedRemarks,
+                nextContactDate: editedNextContactDate,
+              }
+            : c
+        );
+        setContacts(updatedContacts);
+
+        // อัพเดท selectedContact
+        setSelectedContact({
+          ...selectedContact,
+          remarks: editedRemarks,
+          nextContactDate: editedNextContactDate,
+        });
+      } else {
+        const errors = [];
+        if (!remarksResponse.ok) {
+          const error = await remarksResponse.json();
+          errors.push(`หมายเหตุ: ${error.message || "ไม่สามารถบันทึกได้"}`);
+        }
+        if (!nextContactResponse.ok) {
+          const error = await nextContactResponse.json();
+          errors.push(`วันที่ติดต่อ: ${error.message || "ไม่สามารถบันทึกได้"}`);
+        }
+        showToastNotification(`❌ ${errors.join(", ")}`, "error");
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+      showToastNotification("❌ เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
+    } finally {
+      setIsSavingRemarks(false);
+      setIsSavingNextContact(false);
+    }
   };
 
   // Get status badge
@@ -1081,7 +1229,7 @@ const ContactDashboard = () => {
                       </div>
                     </motion.div>
 
-                    {/* วันที่ติดต่อ */}
+                    {/* วันที่ติดต่อ - บันทึกอัตโนมัติ */}
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -1094,16 +1242,59 @@ const ContactDashboard = () => {
                         </div>
                         <div className="flex-1">
                           <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                            วันที่ติดต่อ
+                            วันที่ติดต่อ (บันทึกอัตโนมัติ)
                           </label>
                           <p className="text-lg font-semibold text-gray-900 mt-1">
                             {formatDate(selectedContact.contactDate)}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-2">
+                            💡 บันทึกอัตโนมัติเมื่อเปิดดูรายละเอียด
                           </p>
                         </div>
                       </div>
                     </motion.div>
 
-                    {/* หมายเหตุ */}
+                    {/* วันที่ติดต่อครั้งถัดไป - แก้ไขได้ */}
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.37 }}
+                      className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-200"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-3 rounded-xl">
+                          <Calendar className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
+                            วันที่ติดต่อครั้งถัดไป (แก้ไขได้)
+                          </label>
+
+                          {/* แสดง last_followup */}
+                          <div className="mt-2 bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
+                            <span className="text-xs text-gray-500 font-medium">
+                              วันที่ติดต่อล่าสุด:
+                            </span>
+                            <p className="text-sm font-semibold text-gray-700 mt-1">
+                              {selectedContact.contactDate
+                                ? formatDate(selectedContact.contactDate)
+                                : "ยังไม่มีข้อมูล"}
+                            </p>
+                          </div>
+
+                          <input
+                            type="datetime-local"
+                            value={editedNextContactDate}
+                            onChange={(e) =>
+                              setEditedNextContactDate(e.target.value)
+                            }
+                            className="mt-3 w-full bg-white rounded-xl px-4 py-3 border-2 border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200 transition-all outline-none text-gray-900 font-medium"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {/* หมายเหตุ - แก้ไขได้ */}
                     <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -1116,13 +1307,40 @@ const ContactDashboard = () => {
                         </div>
                         <div className="flex-1">
                           <label className="text-sm font-semibold text-gray-600 uppercase tracking-wide">
-                            หมายเหตุ
+                            หมายเหตุ (แก้ไขได้)
                           </label>
-                          <div className="mt-2 bg-white rounded-xl p-4 border border-gray-200 max-h-60 overflow-y-auto">
-                            <p className="text-gray-900 leading-relaxed whitespace-pre-wrap">
-                              {selectedContact.remarks || "ไม่มีหมายเหตุ"}
-                            </p>
-                          </div>
+                          <textarea
+                            value={editedRemarks}
+                            onChange={(e) => setEditedRemarks(e.target.value)}
+                            placeholder="กรอกหมายเหตุ..."
+                            rows={6}
+                            className="mt-2 w-full bg-white rounded-xl p-4 border-2 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-200 transition-all outline-none text-gray-900 leading-relaxed resize-none"
+                          />
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleSaveAll}
+                            disabled={
+                              isSavingRemarks ||
+                              isSavingNextContact ||
+                              (editedRemarks === selectedContact.remarks &&
+                                editedNextContactDate ===
+                                  selectedContact.nextContactDate)
+                            }
+                            className="mt-3 w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 shadow-xl disabled:cursor-not-allowed"
+                          >
+                            {isSavingRemarks || isSavingNextContact ? (
+                              <>
+                                <RefreshCw className="w-6 h-6 animate-spin" />
+                                กำลังบันทึก...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-6 h-6" />
+                                💾 บันทึกข้อมูลทั้งหมด
+                              </>
+                            )}
+                          </motion.button>
                         </div>
                       </div>
                     </motion.div>
@@ -1145,6 +1363,84 @@ const ContactDashboard = () => {
               </motion.div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className="fixed top-6 right-6 z-[100] max-w-md"
+          >
+            <div
+              className={`${
+                toastType === "success"
+                  ? "bg-gradient-to-r from-green-500 to-emerald-500"
+                  : "bg-gradient-to-r from-red-500 to-rose-500"
+              } text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-sm`}
+            >
+              <div className="flex-shrink-0">
+                {toastType === "success" ? (
+                  <motion.div
+                    initial={{ rotate: 0, scale: 0 }}
+                    animate={{ rotate: 360, scale: 1 }}
+                    transition={{ type: "spring", duration: 0.6 }}
+                    className="bg-white/20 p-2 rounded-full"
+                  >
+                    <CheckCircle2 className="w-6 h-6" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ rotate: 0, scale: 0 }}
+                    animate={{ rotate: 360, scale: 1 }}
+                    transition={{ type: "spring", duration: 0.6 }}
+                    className="bg-white/20 p-2 rounded-full"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </motion.div>
+                )}
+              </div>
+              <div className="flex-1">
+                <p className="font-bold text-lg">{toastMessage}</p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowToast(false)}
+                className="flex-shrink-0 hover:bg-white/20 p-1 rounded-lg transition-colors"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </motion.button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
