@@ -869,7 +869,7 @@ export default function PerformanceSurgerySchedule() {
       )}
 
       {/* Table - วันที่ได้นัดผ่า P */}
-      <div className="table-section">
+      <div className="table-section ">
         <div className="table-wrapper">
           <table className="schedule-table">
             <thead>
