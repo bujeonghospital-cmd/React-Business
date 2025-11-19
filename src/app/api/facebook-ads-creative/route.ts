@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json();
-    let creativeData = data.creative || null;
+    const creativeData = data.creative || null;
 
     // Try to get image from effective_object_story_id if creative doesn't have thumbnail
     if (
