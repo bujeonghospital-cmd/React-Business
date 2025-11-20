@@ -1,6 +1,5 @@
 import ScaledCanvas from "../../components/ScaledCanvas";
 import GoGreenSection from "./GoGreenSection";
-
 export default function Page() {
   return (
     <ScaledCanvas>
@@ -12,4 +11,4 @@ export default function Page() {
       />
     </ScaledCanvas>
   );
-}
+}

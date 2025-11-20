@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
-
 export async function POST(request: NextRequest) {
   const client = await pool.connect();
-
   try {
     const body = await request.json();
     const {
@@ -17,7 +15,6 @@ export async function POST(request: NextRequest) {
       department,
       position,
     } = body;
-
     // Validate required fields
     if (!name || !lname || !email || !username || !password) {
       return NextResponse.json(
@@ -28,7 +25,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -40,7 +36,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Validate username format
     const usernameRegex = /^[a-zA-Z0-9_]+$/;
     if (!usernameRegex.test(username)) {
@@ -52,7 +47,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Validate password length
     if (password.length < 6) {
       return NextResponse.json(
@@ -63,7 +57,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Check if email already exists
     const emailCheckQuery = `
       SELECT id FROM "BJH-Server"."user" 
@@ -71,7 +64,6 @@ export async function POST(request: NextRequest) {
       LIMIT 1
     `;
     const emailCheck = await client.query(emailCheckQuery, [email]);
-
     if (emailCheck.rows.length > 0) {
       return NextResponse.json(
         {
@@ -81,7 +73,6 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-
     // Check if username already exists
     const usernameCheckQuery = `
       SELECT id FROM "BJH-Server"."user" 
@@ -89,7 +80,6 @@ export async function POST(request: NextRequest) {
       LIMIT 1
     `;
     const usernameCheck = await client.query(usernameCheckQuery, [username]);
-
     if (usernameCheck.rows.length > 0) {
       return NextResponse.json(
         {
@@ -99,10 +89,8 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
     // Get default role (user role)
     const roleQuery = `
       SELECT id_role FROM "BJH-Server".roles 
@@ -111,7 +99,6 @@ export async function POST(request: NextRequest) {
     `;
     const roleResult = await client.query(roleQuery);
     const defaultRoleId = roleResult.rows[0]?.id_role || null;
-
     console.log("📝 Preparing to insert user with data:", {
       name,
       lname,
@@ -122,7 +109,6 @@ export async function POST(request: NextRequest) {
       position: position || null,
       defaultRoleId,
     });
-
     // Insert new user
     const insertUserQuery = `
       INSERT INTO "BJH-Server"."user" (
@@ -142,7 +128,6 @@ export async function POST(request: NextRequest) {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP)
       RETURNING id, name, lname, email, username, phone, id_dep, position
     `;
-
     console.log("🔍 Insert query:", insertUserQuery);
     console.log("🔍 Query parameters:", [
       name,
@@ -157,7 +142,6 @@ export async function POST(request: NextRequest) {
       "user",
       false,
     ]);
-
     const userResult = await client.query(insertUserQuery, [
       name,
       lname,
@@ -171,11 +155,8 @@ export async function POST(request: NextRequest) {
       "user", // status_rank
       false, // admin
     ]);
-
     const newUser = userResult.rows[0];
-
     console.log("✅ New user registered:", newUser.username);
-
     return NextResponse.json({
       success: true,
       message: `สมัครสมาชิกสำเร็จ! ยินดีต้อนรับ ${name}`,
@@ -195,7 +176,6 @@ export async function POST(request: NextRequest) {
       detail: error.detail,
       stack: error.stack,
     });
-
     return NextResponse.json(
       {
         success: false,
@@ -208,4 +188,4 @@ export async function POST(request: NextRequest) {
   } finally {
     client.release();
   }
-}
+}

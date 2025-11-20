@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Search,
@@ -12,7 +11,6 @@ import {
 } from "lucide-react";
 import { EditCustomerModal } from "@/components/EditCustomerModal";
 import UserMenu from "@/components/UserMenu";
-
 // Add custom styles for scrollbar (horizontal and vertical)
 const customScrollbarStyle = `
   .custom-scrollbar::-webkit-scrollbar {
@@ -46,14 +44,12 @@ const customScrollbarStyle = `
     background: linear-gradient(to right, #0284c7, #0891b2);
   }
 `;
-
 interface TableData {
   tableNumber: number;
   headers: string[];
   rowCount: number;
   data: Record<string, any>[];
 }
-
 interface ApiResponse {
   success: boolean;
   error?: string;
@@ -64,7 +60,6 @@ interface ApiResponse {
     totalColumns: number;
   };
 }
-
 const CustomerAllDataPage = () => {
   const [tableData, setTableData] = useState<TableData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -115,14 +110,12 @@ const CustomerAllDataPage = () => {
   const [statusOptions, setStatusOptions] = useState<
     Array<{ value: string; label: string; color: string }>
   >([]);
-
   const fetchData = async () => {
     try {
       setIsLoading(true);
       // ใช้ API endpoint ที่เชื่อมกับ n8n database
       const response = await fetch("/api/customer-data");
       const result = await response.json();
-
       if (
         !result.success ||
         !result.columns ||
@@ -131,13 +124,11 @@ const CustomerAllDataPage = () => {
       ) {
         return;
       }
-
       // API ตอนนี้ return format: { success: true, columns: [...], data: [{...}, {...}], ... }
       // ข้อมูลเป็น array of objects แล้ว ไม่ต้องแปลง
       // เอา 'id' ออกจาก headers เพราะไม่ต้องแสดงในตาราง
       const headers = result.columns.filter((col: string) => col !== "id");
       const formattedData = result.data;
-
       const tables = [
         {
           tableNumber: 1,
@@ -146,7 +137,6 @@ const CustomerAllDataPage = () => {
           data: formattedData,
         },
       ];
-
       if (tables && tables.length > 0) {
         const sanitizedTables = tables.map((table: TableData) => {
           // Trim whitespace so columns with stray spaces still render and match filters
@@ -193,10 +183,8 @@ const CustomerAllDataPage = () => {
           "Lat",
           "Long",
         ];
-
         const allHeadersSet = new Set<string>();
         const allHeaders: string[] = [];
-
         // First add headers in the desired order
         columnOrder.forEach((header) => {
           sanitizedTables.forEach((table) => {
@@ -206,7 +194,6 @@ const CustomerAllDataPage = () => {
             }
           });
         });
-
         // Then add any remaining headers not in the columnOrder
         sanitizedTables.forEach((table: TableData) => {
           table.headers.forEach((header: string) => {
@@ -216,7 +203,6 @@ const CustomerAllDataPage = () => {
             }
           });
         });
-
         const filteredHeaders = allHeaders.filter((header: string) => {
           return sanitizedTables.some((table: TableData) => {
             return table.data.some(
@@ -254,12 +240,10 @@ const CustomerAllDataPage = () => {
       setIsLoading(false);
     }
   };
-
   const fetchStatusOptions = async () => {
     try {
       const response = await fetch("/api/status-options");
       const result = await response.json();
-
       if (result.success && result.data) {
         setStatusOptions(result.data);
       } else {
@@ -281,7 +265,6 @@ const CustomerAllDataPage = () => {
       ]);
     }
   };
-
   useEffect(() => {
     // Check authentication and get user data
     const checkAuth = () => {
@@ -293,12 +276,10 @@ const CustomerAllDataPage = () => {
       const user = JSON.parse(userStr);
       setCurrentUser(user);
     };
-
     checkAuth();
     fetchData();
     fetchStatusOptions();
   }, []);
-
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
@@ -307,12 +288,10 @@ const CustomerAllDataPage = () => {
       setSortDirection("asc");
     }
   };
-
   const handleEditRow = (row: Record<string, any>) => {
     setSelectedRow(row);
     setEditedRow({ ...row });
   };
-
   const handleFieldChange = (fieldName: string, value: any) => {
     if (editedRow) {
       setEditedRow({
@@ -321,13 +300,11 @@ const CustomerAllDataPage = () => {
       });
     }
   };
-
   const handleSaveRow = () => {
     if (editedRow) {
       alert("ข้อมูลถูกบันทึกสำเร็จ (เพิ่มแอป API สำหรับบันทึกลงฐานข้อมูล)");
     }
   };
-
   const exportToCSV = () => {
     if (tableData.length === 0) return;
     const table = tableData[0];
@@ -357,7 +334,6 @@ const CustomerAllDataPage = () => {
     link.click();
     document.body.removeChild(link);
   };
-
   const exportToExcel = () => {
     if (tableData.length === 0) return;
     const table = tableData[0];
@@ -392,12 +368,10 @@ const CustomerAllDataPage = () => {
     link.click();
     document.body.removeChild(link);
   };
-
   const handleEditCustomer = (row: Record<string, any>) => {
     setEditingCustomer(row);
     setIsEditModalOpen(true);
   };
-
   const handleSaveCustomer = async (updatedData: Record<string, any>) => {
     try {
       const response = await fetch("/api/customer-data", {
@@ -410,9 +384,7 @@ const CustomerAllDataPage = () => {
           data: updatedData,
         }),
       });
-
       const result = await response.json();
-
       if (result.success) {
         alert("บันทึกข้อมูลสำเร็จ");
         setIsEditModalOpen(false);
@@ -425,11 +397,9 @@ const CustomerAllDataPage = () => {
       alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
-
   const filteredAndSortedData = useMemo(() => {
     if (tableData.length === 0) return [];
     let filtered = [...tableData[0].data];
-
     // Filter by current user if not superadmin or admin
     if (
       currentUser &&
@@ -451,7 +421,6 @@ const CustomerAllDataPage = () => {
         });
       }
     }
-
     if (statusFilter !== "all") {
       const statusColumnIndex = tableData[0].headers.findIndex(
         (h) =>
@@ -466,7 +435,6 @@ const CustomerAllDataPage = () => {
         });
       }
     }
-
     if (productFilter !== "all") {
       const productColumnIndex = tableData[0].headers.findIndex(
         (h) =>
@@ -488,7 +456,6 @@ const CustomerAllDataPage = () => {
         });
       }
     }
-
     if (contactFilter !== "all") {
       const contactColumnIndex = tableData[0].headers.findIndex(
         (h) =>
@@ -504,7 +471,6 @@ const CustomerAllDataPage = () => {
         });
       }
     }
-
     const filterByDateRange = (
       columnName: string,
       startDate: string,
@@ -546,7 +512,6 @@ const CustomerAllDataPage = () => {
         });
       }
     };
-
     filterByDateRange(
       "วันที่ติดตามครั้งล่าสุด",
       followUpLastStart,
@@ -570,7 +535,6 @@ const CustomerAllDataPage = () => {
       getSurgeryApptStart,
       getSurgeryApptEnd
     );
-
     if (searchTerm) {
       filtered = filtered.filter((row) => {
         if (filterColumn === "all") {
@@ -590,7 +554,6 @@ const CustomerAllDataPage = () => {
         }
       });
     }
-
     if (sortColumn) {
       filtered.sort((a, b) => {
         const aVal = a[sortColumn] || "";
@@ -602,7 +565,6 @@ const CustomerAllDataPage = () => {
         return 0;
       });
     }
-
     return filtered;
   }, [
     tableData,
@@ -629,15 +591,12 @@ const CustomerAllDataPage = () => {
     getSurgeryApptStart,
     getSurgeryApptEnd,
   ]);
-
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     return filteredAndSortedData.slice(startIndex, endIndex);
   }, [filteredAndSortedData, currentPage, itemsPerPage]);
-
   const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
-
   const contactOptions = [
     { value: "all", label: "ทั้งหมด" },
     { value: "สา", label: "สา" },
@@ -648,7 +607,6 @@ const CustomerAllDataPage = () => {
     { value: "มุก", label: "มุก" },
     { value: "ตั้งโอ๋", label: "ตั้งโอ๋" },
   ];
-
   const productOptions = [
     { value: "all", label: "ทั้งหมด" },
     { value: "ตีตัวไล่ตัว", label: "ตีตัวไล่ตัว" },
@@ -662,7 +620,6 @@ const CustomerAllDataPage = () => {
     { value: "Skin", label: "Skin" },
     { value: "ตื่อ", label: "ตื่อ" },
   ];
-
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -686,7 +643,6 @@ const CustomerAllDataPage = () => {
     getSurgeryApptStart,
     getSurgeryApptEnd,
   ]);
-
   if (isLoading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-white">
@@ -694,7 +650,6 @@ const CustomerAllDataPage = () => {
       </div>
     );
   }
-
   return (
     <>
       <style>{customScrollbarStyle}</style>
@@ -715,7 +670,6 @@ const CustomerAllDataPage = () => {
           </div>
           <UserMenu />
         </div>
-
         {/* Control Bar */}
         <div className="bg-white rounded-lg shadow-md p-4 mb-4">
           <div className="flex flex-wrap items-center gap-4">
@@ -729,7 +683,6 @@ const CustomerAllDataPage = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
-
             {/* Filter Column */}
             <div className="relative group">
               <button
@@ -784,7 +737,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Status Filter */}
             <div className="relative group">
               <button
@@ -836,7 +788,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Product Filter */}
             <div className="relative group">
               <button
@@ -888,7 +839,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Contact Filter - Only show for superadmin and admin */}
             {currentUser &&
               (currentUser.role_tag === "superadmin" ||
@@ -943,7 +893,6 @@ const CustomerAllDataPage = () => {
                   )}
                 </div>
               )}
-
             {/* Date Filter 1: Follow Up Last */}
             <div className="relative group">
               <button
@@ -1009,7 +958,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Date Filter 2: Follow Up Next */}
             <div className="relative group">
               <button
@@ -1075,7 +1023,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Date Filter 3: Consult */}
             <div className="relative group">
               <button
@@ -1141,7 +1088,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Date Filter 4: Surgery */}
             <div className="relative group">
               <button
@@ -1207,7 +1153,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Date Filter 5: Get Name */}
             <div className="relative group">
               <button
@@ -1273,7 +1218,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Date Filter 6: Get Consult Appt */}
             <div className="relative group">
               <button
@@ -1341,7 +1285,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Date Filter 7: Get Surgery Appt */}
             <div className="relative group">
               <button
@@ -1409,7 +1352,6 @@ const CustomerAllDataPage = () => {
                 </div>
               )}
             </div>
-
             {/* Pagination */}
             <select
               value={itemsPerPage}
@@ -1423,7 +1365,6 @@ const CustomerAllDataPage = () => {
               <option value="2000">2000 แถว</option>
               <option value="3000">3000 แถว</option>
             </select>
-
             {/* Refresh */}
             <button
               onClick={fetchData}
@@ -1435,7 +1376,6 @@ const CustomerAllDataPage = () => {
               />
               รีเฟรช
             </button>
-
             {/* Export */}
             <div className="flex gap-2">
               <button
@@ -1454,7 +1394,6 @@ const CustomerAllDataPage = () => {
               </button>
             </div>
           </div>
-
           {/* Active Filters Display */}
           {tableData.length > 0 && (
             <div className="mt-4 space-y-2">
@@ -1511,7 +1450,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {statusFilter !== "all" && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-cyan-300 rounded-full text-xs font-medium text-cyan-700 shadow-sm">
                         <span className="font-semibold">สถานะ:</span>
@@ -1526,7 +1464,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {productFilter !== "all" && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-indigo-300 rounded-full text-xs font-medium text-indigo-700 shadow-sm">
                         <span className="font-semibold">สินค้า:</span>
@@ -1541,7 +1478,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {contactFilter !== "all" && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-rose-300 rounded-full text-xs font-medium text-rose-700 shadow-sm">
                         <span className="font-semibold">ผู้ติดต่อ:</span>
@@ -1554,7 +1490,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(followUpLastStart || followUpLastEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-emerald-300 rounded-full text-xs font-medium text-emerald-700 shadow-sm">
                         <span className="font-semibold">วันติดตาม-ล่าสุด:</span>
@@ -1573,7 +1508,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(followUpNextStart || followUpNextEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-violet-300 rounded-full text-xs font-medium text-violet-700 shadow-sm">
                         <span className="font-semibold">วันติดตาม-ถัดไป:</span>
@@ -1592,7 +1526,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(consultStart || consultEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-fuchsia-300 rounded-full text-xs font-medium text-fuchsia-700 shadow-sm">
                         <span className="font-semibold">วันที่ Consult:</span>
@@ -1610,7 +1543,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(surgeryStart || surgeryEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 rounded-full text-xs font-medium text-orange-700 shadow-sm">
                         <span className="font-semibold">วันที่ผ่าตัด:</span>
@@ -1628,7 +1560,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(getNameStart || getNameEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-300 rounded-full text-xs font-medium text-blue-700 shadow-sm">
                         <span className="font-semibold">วันได้ชื่อ:</span>
@@ -1646,7 +1577,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(getConsultApptStart || getConsultApptEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-300 rounded-full text-xs font-medium text-purple-700 shadow-sm">
                         <span className="font-semibold">
@@ -1667,7 +1597,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {(getSurgeryApptStart || getSurgeryApptEnd) && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-pink-300 rounded-full text-xs font-medium text-pink-700 shadow-sm">
                         <span className="font-semibold">วันได้นัด ผ่าตัด:</span>
@@ -1686,7 +1615,6 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-
                     {/* Clear All Button */}
                     <button
                       onClick={() => {
@@ -1717,7 +1645,6 @@ const CustomerAllDataPage = () => {
                   </div>
                 </div>
               )}
-
               {/* Results Info */}
               <div className="text-sm text-gray-600">
                 แสดง {(currentPage - 1) * itemsPerPage + 1}-
@@ -1748,7 +1675,6 @@ const CustomerAllDataPage = () => {
               </div>
             </div>
           )}
-
           {/* Pagination Controls */}
           {tableData.length > 0 && totalPages > 1 && (
             <div className="mt-4 flex items-center justify-center gap-2">
@@ -1773,7 +1699,6 @@ const CustomerAllDataPage = () => {
                   />
                 </svg>
               </button>
-
               {/* Previous Page */}
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
@@ -1782,7 +1707,6 @@ const CustomerAllDataPage = () => {
               >
                 ← ก่อนหน้า
               </button>
-
               {/* Page Numbers */}
               <div className="flex items-center gap-1">
                 {/* Show first page if not near it */}
@@ -1799,7 +1723,6 @@ const CustomerAllDataPage = () => {
                     )}
                   </>
                 )}
-
                 {/* Pages around current page */}
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter((page) => {
@@ -1824,7 +1747,6 @@ const CustomerAllDataPage = () => {
                       {page}
                     </button>
                   ))}
-
                 {/* Show last page if not near it */}
                 {currentPage < totalPages - 2 && (
                   <>
@@ -1840,7 +1762,6 @@ const CustomerAllDataPage = () => {
                   </>
                 )}
               </div>
-
               {/* Next Page */}
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
@@ -1849,7 +1770,6 @@ const CustomerAllDataPage = () => {
               >
                 ถัดไป →
               </button>
-
               {/* Last Page */}
               <button
                 onClick={() => setCurrentPage(totalPages)}
@@ -1874,7 +1794,6 @@ const CustomerAllDataPage = () => {
             </div>
           )}
         </div>
-
         {tableData.length > 0 && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4 flex-1 flex flex-col">
             <div
@@ -1910,7 +1829,6 @@ const CustomerAllDataPage = () => {
                       (currentPage - 1) * itemsPerPage + rowIndex;
                     const patternIndex = absoluteIndex % 4;
                     const isSelected = selectedRow === row;
-
                     // Pattern: white (0) → pink (1) → white (2) → purple-light (3)
                     let bgColor = "bg-white";
                     if (patternIndex === 1) {
@@ -1918,7 +1836,6 @@ const CustomerAllDataPage = () => {
                     } else if (patternIndex === 3) {
                       bgColor = "bg-purple-200";
                     }
-
                     return (
                       <tr
                         key={rowIndex}
@@ -1967,5 +1884,4 @@ const CustomerAllDataPage = () => {
     </>
   );
 };
-
-export default CustomerAllDataPage;
+export default CustomerAllDataPage;

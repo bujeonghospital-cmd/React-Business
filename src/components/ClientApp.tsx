@@ -7,10 +7,8 @@ import Dedicated from "@/components/Home/Detail";
 import Insta from "@/components/Home/News";
 import InvestorRelations from "@/components/InvestorRelations";
 import GoGreenVideo from "@/app/go-green/page";
-
 export default function ClientApp() {
   const [isLoading, setIsLoading] = useState(true);
-
   return (
     <ScaledCanvas>
       <main
@@ -20,9 +18,7 @@ export default function ClientApp() {
           overflow-x-hidden"
       >
         <Video setIsLoading={setIsLoading} />
-
         <div className="h-[16px]" aria-hidden />
-
         <div className="flex flex-col gap-[16px] [&>*]:!my-0">
           <Aboutus />
           <GoGreenVideo />
@@ -37,4 +33,4 @@ export default function ClientApp() {
       </main>
     </ScaledCanvas>
   );
-}
+}

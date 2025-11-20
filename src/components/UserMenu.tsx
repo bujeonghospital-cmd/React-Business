@@ -1,9 +1,7 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, LogOut, Shield } from "lucide-react";
-
 interface UserData {
   id: number;
   name: string;
@@ -14,34 +12,27 @@ interface UserData {
   position_name?: string;
   avatar?: string;
 }
-
 export default function UserMenu() {
   const router = useRouter();
   const [user, setUser] = useState<UserData | null>(null);
   const [showMenu, setShowMenu] = useState(false);
-
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     if (userStr) {
       setUser(JSON.parse(userStr));
     }
   }, []);
-
   const handleLogout = () => {
     // Clear localStorage
     localStorage.removeItem("user");
     localStorage.removeItem("authToken");
-
     // Clear cookie
     document.cookie =
       "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-
     // Redirect to login
     router.push("/login");
   };
-
   if (!user) return null;
-
   const getRoleBadgeColor = (roleTag: string) => {
     switch (roleTag) {
       case "dev":
@@ -55,7 +46,6 @@ export default function UserMenu() {
         return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
-
   const getRoleLabel = (roleTag: string) => {
     const labels: Record<string, string> = {
       dev: "Developer",
@@ -66,7 +56,6 @@ export default function UserMenu() {
     };
     return labels[roleTag] || roleTag;
   };
-
   return (
     <div className="relative">
       <button
@@ -96,7 +85,6 @@ export default function UserMenu() {
           />
         </svg>
       </button>
-
       {showMenu && (
         <>
           <div
@@ -115,7 +103,6 @@ export default function UserMenu() {
                   <div className="text-sm text-gray-600">{user.email}</div>
                 </div>
               </div>
-
               {/* Role Badge */}
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-red-600" />
@@ -127,7 +114,6 @@ export default function UserMenu() {
                   {getRoleLabel(user.role_tag)}
                 </span>
               </div>
-
               {/* Additional Info */}
               {(user.department_name || user.position_name) && (
                 <div className="mt-3 pt-3 border-t border-red-200 text-sm">
@@ -142,7 +128,6 @@ export default function UserMenu() {
                 </div>
               )}
             </div>
-
             {/* Menu Items */}
             <div className="p-2">
               <button
@@ -158,4 +143,4 @@ export default function UserMenu() {
       )}
     </div>
   );
-}
+}

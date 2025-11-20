@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * GET /api/yalecom/contacts
  * ดึงข้อมูลการติดต่อจาก Yalecom API
@@ -9,10 +8,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
     const search = searchParams.get("search");
-
     // TODO: เชื่อมต่อกับ Yalecom API จริง
     // ตอนนี้ใช้ Mock Data ก่อน
-
     const mockContacts = [
       {
         id: "1",
@@ -60,13 +57,11 @@ export async function GET(request: NextRequest) {
         company: "ร้านค้าปลีก 123",
       },
     ];
-
     // Filter by status if provided
     let filteredContacts = mockContacts;
     if (status && status !== "all") {
       filteredContacts = filteredContacts.filter((c) => c.status === status);
     }
-
     // Filter by search if provided
     if (search) {
       const searchLower = search.toLowerCase();
@@ -77,7 +72,6 @@ export async function GET(request: NextRequest) {
           c.remarks.toLowerCase().includes(searchLower)
       );
     }
-
     return NextResponse.json({
       success: true,
       data: filteredContacts,
@@ -95,7 +89,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 /**
  * POST /api/yalecom/contacts
  * สร้างรายการติดต่อใหม่
@@ -103,7 +96,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
     // Validate required fields
     if (!body.customerName || !body.phoneNumber) {
       return NextResponse.json(
@@ -115,10 +107,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // TODO: บันทึกข้อมูลลง Database หรือ Yalecom API
     // ตอนนี้ส่งกลับข้อมูลที่ได้รับมา
-
     const newContact = {
       id: Date.now().toString(),
       customerName: body.customerName,
@@ -129,7 +119,6 @@ export async function POST(request: NextRequest) {
       company: body.company,
       email: body.email,
     };
-
     return NextResponse.json({
       success: true,
       data: newContact,
@@ -146,4 +135,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

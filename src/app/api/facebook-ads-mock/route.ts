@@ -1,11 +1,9 @@
 // src/app/api/facebook-ads-mock/route.ts
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * Facebook Ads Mock API
  * ใช้ข้อมูล Mock สวยงามสำหรับ Demo
  */
-
 interface FacebookAdsCampaign {
   id: string;
   name: string;
@@ -20,7 +18,6 @@ interface FacebookAdsCampaign {
   conversions: number;
   costPerConversion: number;
 }
-
 interface FacebookAdsResponse {
   campaigns: FacebookAdsCampaign[];
   summary: {
@@ -37,15 +34,12 @@ interface FacebookAdsResponse {
     endDate: string;
   };
 }
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get("startDate") || "2025-01-01";
     const endDate = searchParams.get("endDate") || "2025-04-04";
-
     console.log("✅ Using Facebook Ads Mock Data for demo");
-
     // ข้อมูล Mock ที่สวยงาม
     const campaignData: FacebookAdsCampaign[] = [
       {
@@ -189,7 +183,6 @@ export async function GET(request: NextRequest) {
         costPerConversion: 25.53,
       },
     ];
-
     // คำนวณ summary
     const summary = {
       totalImpressions: campaignData.reduce((sum, c) => sum + c.impressions, 0),
@@ -212,7 +205,6 @@ export async function GET(request: NextRequest) {
           : 0,
       totalConversions: campaignData.reduce((sum, c) => sum + c.conversions, 0),
     };
-
     const response: FacebookAdsResponse = {
       campaigns: campaignData,
       summary,
@@ -221,7 +213,6 @@ export async function GET(request: NextRequest) {
         endDate,
       },
     };
-
     return NextResponse.json(response);
   } catch (error) {
     console.error("❌ Unexpected error:", error);
@@ -233,4 +224,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

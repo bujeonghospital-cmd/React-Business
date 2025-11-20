@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,7 +14,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { validateEmail } from "@/utils/validateEmail";
 import type { LoginFormData, LoginResponse } from "@/types/auth";
-
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
@@ -31,11 +29,9 @@ export default function LoginPage() {
     general?: string;
   }>({});
   const [successMessage, setSuccessMessage] = useState("");
-
   // Real-time validation
   const validateField = (field: "email" | "password", value: string) => {
     const newErrors = { ...errors };
-
     if (field === "email") {
       if (!value) {
         newErrors.email = "กรุณากรอกอีเมลหรือชื่อผู้ใช้";
@@ -44,7 +40,6 @@ export default function LoginPage() {
         delete newErrors.email;
       }
     }
-
     if (field === "password") {
       if (!value) {
         newErrors.password = "กรุณากรอกรหัสผ่าน";
@@ -54,10 +49,8 @@ export default function LoginPage() {
         delete newErrors.password;
       }
     }
-
     setErrors(newErrors);
   };
-
   const handleInputChange = (field: "email" | "password", value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     validateField(field, value);
@@ -69,32 +62,25 @@ export default function LoginPage() {
       });
     }
   };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
     setSuccessMessage("");
-
     // Validate all fields
     const newErrors: { email?: string; password?: string } = {};
-
     if (!formData.email) {
       newErrors.email = "กรุณากรอกอีเมลหรือชื่อผู้ใช้";
     }
-
     if (!formData.password) {
       newErrors.password = "กรุณากรอกรหัสผ่าน";
     } else if (formData.password.length < 6) {
       newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
     }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
     setIsLoading(true);
-
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -103,27 +89,21 @@ export default function LoginPage() {
         },
         body: JSON.stringify(formData),
       });
-
       const data: LoginResponse = await response.json();
-
       if (data.success) {
         setSuccessMessage(data.message);
-
         // Store token if remember me is checked
         if (formData.rememberMe && data.token) {
           localStorage.setItem("authToken", data.token);
         }
-
         // Store user data
         if (data.user) {
           localStorage.setItem("user", JSON.stringify(data.user));
         }
-
         // Set cookie for middleware
         document.cookie = `authToken=${data.token}; path=/; max-age=${
           formData.rememberMe ? 2592000 : 604800
         }`;
-
         // Redirect after 1.5 seconds
         setTimeout(() => {
           router.push("/customer-all-data");
@@ -140,12 +120,10 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
-
   const handleSocialLogin = (provider: "google" | "facebook") => {
     // Placeholder for social login
     alert(`Social login with ${provider} - ฟีเจอร์นี้จะพัฒนาในอนาคต`);
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-red-50 via-white to-red-50">
       <motion.div
@@ -167,7 +145,6 @@ export default function LoginPage() {
             </h1>
           </Link>
         </motion.div>
-
         {/* Login Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -184,7 +161,6 @@ export default function LoginPage() {
               ยินดีต้อนรับกลับมา! กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ
             </p>
           </div>
-
           {/* Success Message */}
           <AnimatePresence>
             {successMessage && (
@@ -199,7 +175,6 @@ export default function LoginPage() {
               </motion.div>
             )}
           </AnimatePresence>
-
           {/* General Error Message */}
           <AnimatePresence>
             {errors.general && (
@@ -214,7 +189,6 @@ export default function LoginPage() {
               </motion.div>
             )}
           </AnimatePresence>
-
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email/Username Input */}
@@ -258,7 +232,6 @@ export default function LoginPage() {
                 )}
               </AnimatePresence>
             </div>
-
             {/* Password Input */}
             <div>
               <label
@@ -314,7 +287,6 @@ export default function LoginPage() {
                 )}
               </AnimatePresence>
             </div>
-
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <label className="flex items-center cursor-pointer group">
@@ -341,7 +313,6 @@ export default function LoginPage() {
                 ลืมรหัสผ่าน?
               </Link>
             </div>
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -358,7 +329,6 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
           {/* Divider */}
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
@@ -368,7 +338,6 @@ export default function LoginPage() {
               <span className="px-4 bg-white text-gray-500">หรือ</span>
             </div>
           </div>
-
           {/* Register Button */}
           <Link
             href="/register"
@@ -376,7 +345,6 @@ export default function LoginPage() {
           >
             สมัครสมาชิกใหม่
           </Link>
-
           {/* Social Login Section */}
           <div className="mt-8">
             <div className="relative mb-6">
@@ -389,7 +357,6 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -418,7 +385,6 @@ export default function LoginPage() {
                   Google
                 </span>
               </button>
-
               <button
                 type="button"
                 onClick={() => handleSocialLogin("facebook")}
@@ -434,7 +400,6 @@ export default function LoginPage() {
             </div>
           </div>
         </motion.div>
-
         {/* Footer Text */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -460,4 +425,4 @@ export default function LoginPage() {
       </motion.div>
     </div>
   );
-}
+}

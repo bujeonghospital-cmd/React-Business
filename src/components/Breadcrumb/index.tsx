@@ -1,10 +1,8 @@
 import React, { FC } from 'react';
 import Link from 'next/link';
-
 interface BreadcrumbProps {
     links: { href: string; text: string }[];    
 }
-
 const Breadcrumb: FC<BreadcrumbProps> = ({ links }) => {
     const lastIndex = links.length - 1;
     return (
@@ -23,5 +21,4 @@ const Breadcrumb: FC<BreadcrumbProps> = ({ links }) => {
         </div>
     );
 };
-
 export default Breadcrumb;

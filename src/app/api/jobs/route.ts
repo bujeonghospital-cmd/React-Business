@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-
 // ข้อมูลตำแหน่งงานจาก JobThai (Company ID: 135063)
 // หมายเหตุ: JobThai ไม่มี Public API ที่เปิดให้ใช้งานโดยตรง
 // วิธีการที่แนะนำคือ:
@@ -7,10 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 // 2. ใช้ Web Scraping (ต้องระวังเรื่อง Terms of Service)
 // 3. ติดต่อ JobThai เพื่อขอ API Access
 // 4. Manual Update ผ่าน Admin Panel
-
 // สำหรับตัวอย่างนี้ เราจะใช้ข้อมูลแบบ hardcoded ที่ดึงมาจาก JobThai
 // คุณควรอัพเดทข้อมูลนี้เป็นระยะๆ หรือใช้ CMS/Admin Panel
-
 interface Job {
   id: string;
   title: string;
@@ -24,7 +21,6 @@ interface Job {
   jobthaiUrl: string;
   description?: string;
 }
-
 // ข้อมูลตำแหน่งงานที่ดึงมาจาก JobThai
 // อัพเดทล่าสุด: 14 ตุลาคม 2568
 const JOBS_DATA: Job[] = [
@@ -228,20 +224,16 @@ const JOBS_DATA: Job[] = [
     description: "บริหารจัดการงานบัญชี จัดทำรายงานทางการเงิน ควบคุมงบประมาณ",
   },
 ];
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get("category");
     const search = searchParams.get("search");
-
     let filteredJobs = [...JOBS_DATA];
-
     // Filter by category
     if (category && category !== "all") {
       filteredJobs = filteredJobs.filter((job) => job.category === category);
     }
-
     // Filter by search term
     if (search) {
       const searchLower = search.toLowerCase();
@@ -251,7 +243,6 @@ export async function GET(request: NextRequest) {
           job.description?.toLowerCase().includes(searchLower)
       );
     }
-
     return NextResponse.json({
       success: true,
       jobs: filteredJobs,
@@ -272,13 +263,11 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // POST endpoint สำหรับอัพเดทข้อมูลงาน (สำหรับ Admin Panel ในอนาคต)
 export async function POST(request: NextRequest) {
   try {
     // TODO: Implement authentication and authorization
     // TODO: Implement job data update logic
-
     return NextResponse.json(
       {
         success: false,
@@ -296,4 +285,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

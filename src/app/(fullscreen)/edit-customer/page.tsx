@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import {
   ChevronLeft,
@@ -18,22 +17,18 @@ import {
   Car,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
 interface CustomerData {
   [key: string]: any;
 }
-
 const EditCustomerPage = () => {
   const router = useRouter();
   const [customerData, setCustomerData] = useState<CustomerData>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-
   useEffect(() => {
     // ดึงข้อมูลจาก URL params หรือ localStorage
     const params = new URLSearchParams(window.location.search);
     const customerId = params.get("id");
-
     if (customerId) {
       // ในอนาคต: ดึงข้อมูลจาก API
       const savedData = localStorage.getItem(`customer_${customerId}`);
@@ -43,14 +38,12 @@ const EditCustomerPage = () => {
     }
     setIsLoading(false);
   }, []);
-
   const handleFieldChange = (fieldName: string, value: any) => {
     setCustomerData({
       ...customerData,
       [fieldName]: value,
     });
   };
-
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -67,7 +60,6 @@ const EditCustomerPage = () => {
       setIsSaving(false);
     }
   };
-
   if (isLoading) {
     return (
       <div className="w-full h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -78,7 +70,6 @@ const EditCustomerPage = () => {
       </div>
     );
   }
-
   return (
     <div className="w-full min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -102,7 +93,6 @@ const EditCustomerPage = () => {
             </div>
           </div>
         </div>
-
         {/* Main Content */}
         <div className="space-y-6">
           {/* Section 1: ข้อมูลพื้นฐาน */}
@@ -159,7 +149,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
           </div>
-
           {/* Section 2: ข้อมูลติดต่อ */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-200 hover:shadow-xl">
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
@@ -261,7 +250,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
           </div>
-
           {/* Section 3: สถานะ Consult */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-200 hover:shadow-xl">
             <div className="bg-gradient-to-r from-purple-500 to-pink-600 px-6 py-4">
@@ -332,7 +320,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
           </div>
-
           {/* Section 4: สถานะผ่าตัด */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-200 hover:shadow-xl">
             <div className="bg-gradient-to-r from-red-500 to-orange-600 px-6 py-4">
@@ -401,7 +388,6 @@ const EditCustomerPage = () => {
               </div>
             </div>
           </div>
-
           {/* Section 5: หมายเหตุ */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-200 hover:shadow-xl">
             <div className="bg-gradient-to-r from-amber-500 to-yellow-600 px-6 py-4">
@@ -419,7 +405,6 @@ const EditCustomerPage = () => {
               />
             </div>
           </div>
-
           {/* Action Buttons - Fixed at bottom */}
           <div className="sticky bottom-4 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 flex justify-end gap-4">
             <button
@@ -452,5 +437,4 @@ const EditCustomerPage = () => {
     </div>
   );
 };
-
-export default EditCustomerPage;
+export default EditCustomerPage;

@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-
 const items = [
   {
     title: "สินเชื่อซื้อขายรถบรรทุกมือสอง",
@@ -34,7 +33,6 @@ const items = [
     href: "/product/insurance-broker",
   },
 ];
-
 export default function ProductsServices() {
   return (
     <section>
@@ -86,4 +84,4 @@ export default function ProductsServices() {
       </div>
     </section>
   );
-}
+}

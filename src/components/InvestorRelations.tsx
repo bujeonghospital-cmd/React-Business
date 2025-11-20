@@ -3,7 +3,6 @@ import ScaledCanvas from "./ScaledCanvas";
 import React, { useEffect, useRef } from "react";
 import "animate.css";
 import Link from "next/link";
-
 const data = [
   {
     title: "ข้อมูลทางการเงิน",
@@ -30,14 +29,11 @@ const data = [
     href: "",
   },
 ];
-
 export default function InvestorRelations() {
   const sectionRef = useRef<HTMLElement | null>(null);
-
   useEffect(() => {
     const root = sectionRef.current;
     if (!root) return;
-
     const normalizeAni = (ani: string) => {
       const tokens = ani.trim().split(/\s+/).filter(Boolean);
       const out: string[] = [];
@@ -69,12 +65,10 @@ export default function InvestorRelations() {
         out.push("animate__animated");
       return out;
     };
-
     const els = root.querySelectorAll<HTMLElement>("[data-ani]");
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
     if (prefersReduced || !("IntersectionObserver" in window)) {
       els.forEach((el) => {
         const classes = normalizeAni(el.dataset.ani || "");
@@ -84,26 +78,21 @@ export default function InvestorRelations() {
       });
       return;
     }
-
     // ตรวจสอบว่าเป็นมือถือหรือไม่
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const el = entry.target as HTMLElement;
           const classes = normalizeAni(el.dataset.ani || "");
           const hasPlayed = el.dataset.aniPlayed === "true";
-
           if (entry.isIntersecting) {
             // ถ้าเป็นมือถือและเล่นไปแล้ว ไม่เล่นอีก
             if (isMobile && hasPlayed) return;
-
             el.classList.remove(...classes);
             void el.offsetWidth; // restart
             el.classList.add(...classes);
             el.classList.remove("opacity-0");
-
             // ทำเครื่องหมายว่าเล่นแล้ว (สำหรับมือถือ)
             if (isMobile) {
               el.dataset.aniPlayed = "true";
@@ -120,27 +109,22 @@ export default function InvestorRelations() {
       // เริ่มก่อนถึงขอบล่างนิดหน่อย ให้การเคลื่อนไหวจบพอดีตอนผู้ใช้เลื่อนมาเห็น
       { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
     );
-
     els.forEach((el) => {
       el.classList.add("opacity-0");
       io.observe(el);
     });
-
     // cleanup: disconnect observer
     return () => {
       io.disconnect();
     };
   }, []);
-
   // ——— ปรับให้ช้าและนุ่มขึ้น ———
   const motionVars = {
     ["--animate-duration" as any]: "0.7s",
     ["--animate-delay" as any]: "0s",
   } as React.CSSProperties;
-
   const baseDelay = 150;
   const step = 120;
-
   return (
     <ScaledCanvas>
       <section
@@ -153,9 +137,7 @@ export default function InvestorRelations() {
           <h2 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
             นักลงทุนสัมพันธ์
           </h2>
-
           <div className="mt-6 md:mt-8" />
-
           <div className="grid justify-center gap-3 grid-cols-[repeat(auto-fit,minmax(320px,320px))]">
             {data.map((item, i) => (
               <div
@@ -171,7 +153,6 @@ export default function InvestorRelations() {
                     aria-hidden="true"
                   />
                 )}
-
                 <div
                   className={`absolute inset-0 bg-center bg-cover z-10 transition-opacity duration-500 ${
                     item.animatedImg ? "md:group-hover:opacity-0" : ""
@@ -192,7 +173,6 @@ export default function InvestorRelations() {
                   data-ani="fadeIn slow"
                   style={{ animationDelay: `${baseDelay + i * step + 120}ms` }}
                 />
-
                 <p
                   className="absolute bottom-0 left-0 m-3 text-white text-2xl md:text-3xl font-extrabold drop-shadow-lg z-30 opacity-0"
                   data-ani="fadeInUp slow"
@@ -207,12 +187,10 @@ export default function InvestorRelations() {
                 >
                   {item.title}
                 </p>
-
                 <div className="absolute inset-0 transition-transform duration-500 group-hover:-translate-y-0.5" />
               </div>
             ))}
           </div>
-
           <div className="flex justify-center mt-6 ">
             <a
               href="/investor-financials"
@@ -227,4 +205,4 @@ export default function InvestorRelations() {
       </section>
     </ScaledCanvas>
   );
-}
+}

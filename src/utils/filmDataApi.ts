@@ -2,7 +2,6 @@
 const PYTHON_API_URL =
   process.env.NEXT_PUBLIC_PYTHON_API_URL ||
   "https://believable-ambition-production.up.railway.app";
-
 export interface FilmDataContactsResponse {
   success: boolean;
   error?: string;
@@ -40,12 +39,10 @@ export interface FilmDataContactsResponse {
     type?: string;
   };
 }
-
 export interface FilmDataCountsByAgent {
   consultCounts: Record<string, number>; // จำนวน consult แต่ละ agent
   surgeryCounts: Record<string, number>; // จำนวนนัดผ่าตัดแต่ละ agent
 }
-
 /**
  * ดึงข้อมูล Film Data Contacts พร้อมจำนวน consult และนัดผ่าตัด
  * @param date - วันที่ในรูปแบบ YYYY-MM-DD (optional)
@@ -62,20 +59,16 @@ export async function fetchFilmDataContacts(
     if (date) params.append("date", date);
     if (count) params.append("count", "true");
     if (today) params.append("today", "true");
-
     const url = `${PYTHON_API_URL}/api/film-data-contacts?${params.toString()}`;
-
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     });
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
     return data;
   } catch (error) {
@@ -83,7 +76,6 @@ export async function fetchFilmDataContacts(
     throw error;
   }
 }
-
 /**
  * แปลงข้อมูล Film Data เป็นจำนวนแยกตาม Agent
  * รองรับทั้ง field ภาษาไทยและอังกฤษ
@@ -94,7 +86,6 @@ export function transformFilmDataToAgentCounts(
 ): FilmDataCountsByAgent {
   const consultCounts: Record<string, number> = {};
   const surgeryCounts: Record<string, number> = {};
-
   // Map ชื่อเซลล์ไปเป็น Agent ID
   const agentNameMap: Record<string, string> = {
     สา: "101",
@@ -106,7 +97,6 @@ export function transformFilmDataToAgentCounts(
     เอ้: "107",
     อ้อม: "108",
   };
-
   // นับจากข้อมูลแต่ละแถว
   data.data.forEach((row) => {
     // รองรับทั้ง field ภาษาอังกฤษและไทย
@@ -114,42 +104,35 @@ export function transformFilmDataToAgentCounts(
     const consultDate = row.consult_date || row["วันที่ได้นัด consult"] || "";
     const surgeryDate =
       row.surgery_appointment_date || row["วันที่ได้นัดผ่าตัด"] || "";
-
     // ดึง Agent ID จากชื่อผู้ติดต่อ
     const contactName = contact.trim();
     const agentId = agentNameMap[contactName];
-
     if (!agentId) {
       // ถ้าไม่เจอใน map ลองดึงจากตัวเลข 3 หลัก
       const agentMatch = contactName.match(/^(\d{3})/);
       if (!agentMatch) return;
       const extractedId = agentMatch[1];
-
       // นับ consult ถ้ามีวันที่
       if (consultDate && consultDate.trim() !== "") {
         consultCounts[extractedId] = (consultCounts[extractedId] || 0) + 1;
       }
-
       // นับนัดผ่าตัดถ้ามีวันที่
       if (surgeryDate && surgeryDate.trim() !== "") {
         surgeryCounts[extractedId] = (surgeryCounts[extractedId] || 0) + 1;
       }
       return;
     }
-
     // นับ consult ถ้ามีวันที่
     if (consultDate && consultDate.trim() !== "") {
       consultCounts[agentId] = (consultCounts[agentId] || 0) + 1;
     }
-
     // นับนัดผ่าตัดถ้ามีวันที่
     if (surgeryDate && surgeryDate.trim() !== "") {
       surgeryCounts[agentId] = (surgeryCounts[agentId] || 0) + 1;
     }
   });
-
   return {
     consultCounts,
     surgeryCounts,
   };
-}
+}

@@ -1,20 +1,16 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from "react";
 import { CheckCircle } from "lucide-react";
-
 const QCEquipmentDashboard = () => {
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const [animateIn, setAnimateIn] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
-
   useEffect(() => {
     setAnimateIn(true);
   }, []);
-
   const handleImageError = (itemName: string) => {
     setImageErrors((prev) => ({ ...prev, [itemName]: true }));
   };
-
   const sections = [
     {
       title: "การควบคุมคุณภาพขาเข้า",
@@ -99,7 +95,6 @@ const QCEquipmentDashboard = () => {
       ],
     },
   ];
-
   return (
     <div className="min-h-screen bg-white p-8 pt-[1.5in]">
       {/* Header */}
@@ -108,7 +103,6 @@ const QCEquipmentDashboard = () => {
           การควบคุมคุณภาพ
         </div>
       </div>
-
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {sections.map((section, sectionIndex) => (
@@ -126,7 +120,6 @@ const QCEquipmentDashboard = () => {
                 {section.title}
               </h2>
             </div>
-
             {/* Dotted Border */}
             <div className="border-2 border-dashed border-gray-300 rounded-b-lg p-6 bg-gradient-to-b from-gray-50 to-white">
               {/* Equipment Cards */}
@@ -187,7 +180,6 @@ const QCEquipmentDashboard = () => {
                           />
                         )}
                       </div>
-
                       {/* Content */}
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-800 text-base mb-1">
@@ -197,7 +189,6 @@ const QCEquipmentDashboard = () => {
                           {item.description}
                         </p>
                       </div>
-
                       {/* Status Indicator */}
                       <div
                         className={`
@@ -205,7 +196,6 @@ const QCEquipmentDashboard = () => {
                         animate-pulse shadow-lg shadow-green-400/50
                       `}></div>
                     </div>
-
                     {/* Hover Effect Accent */}
                     <div
                       className={`
@@ -221,7 +211,6 @@ const QCEquipmentDashboard = () => {
                 ))}
               </div>
             </div>
-
             {/* Decorative Element */}
             <div
               className="absolute -top-2 -right-2 w-8 h-8 bg-red-100 rounded-full opacity-50 animate-bounce"
@@ -229,7 +218,6 @@ const QCEquipmentDashboard = () => {
           </div>
         ))}
       </div>
-
       {/* CSS Animations */}
       <style jsx>{`
         @keyframes slideInTop {
@@ -242,7 +230,6 @@ const QCEquipmentDashboard = () => {
             transform: translateY(0);
           }
         }
-
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -257,5 +244,4 @@ const QCEquipmentDashboard = () => {
     </div>
   );
 };
-
-export default QCEquipmentDashboard;
+export default QCEquipmentDashboard;

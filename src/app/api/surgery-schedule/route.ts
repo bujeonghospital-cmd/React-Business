@@ -1,24 +1,20 @@
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
-
 // Disable caching for this route
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
-
 export async function GET(request: Request) {
   try {
     // Get the month and year from query parameters
     const { searchParams } = new URL(request.url);
     const month = searchParams.get("month");
     const year = searchParams.get("year");
-
     // Get credentials from environment variables
     const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY
       ? process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n")
       : undefined;
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-
     if (!privateKey || !clientEmail || !spreadsheetId) {
       return NextResponse.json(
         {
@@ -28,7 +24,6 @@ export async function GET(request: Request) {
         { status: 500 }
       );
     }
-
     // Authenticate with Google Sheets API
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -37,17 +32,13 @@ export async function GET(request: Request) {
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
-
     const sheets = google.sheets({ version: "v4", auth });
-
     // Fetch data from the sheet - get all columns like Python API
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: "Film data!A:AZ", // Extended range to match Python API
     });
-
     const rows = response.data.values;
-
     if (!rows || rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -56,15 +47,12 @@ export async function GET(request: Request) {
         message: "No data found in Film data sheet",
       });
     }
-
     // First row contains headers
     const headers = rows[0];
     const dataRows = rows.slice(1);
-
     console.log("\n=== GOOGLE SHEETS - Film data (Surgery Schedule) ===");
     console.log(`Total columns: ${headers.length}`);
     console.log(`Total data rows: ${dataRows.length}`);
-
     // Case-insensitive column finder (like Python API)
     const findColumnIndex = (headerName: string): number => {
       for (let idx = 0; idx < headers.length; idx++) {
@@ -78,7 +66,6 @@ export async function GET(request: Request) {
       }
       return -1;
     };
-
     // Find indexes for surgery-related columns
     const doctorIdx = findColumnIndex("หมอ");
     const contactPersonIdx = findColumnIndex("ผู้ติดต่อ");
@@ -89,7 +76,6 @@ export async function GET(request: Request) {
     const amountIdx = findColumnIndex("ยอดนำเสนอ");
     const surgeryDateIdx = findColumnIndex("วันที่ผ่าตัด");
     const dateConsultScheduledIdx = findColumnIndex("วันที่ได้นัด consult");
-
     console.log("\n=== MAPPING COLUMNS ===");
     console.log(
       `หมอ (index ${doctorIdx}): '${
@@ -134,22 +120,17 @@ export async function GET(request: Request) {
         dateConsultScheduledIdx >= 0 ? headers[dateConsultScheduledIdx] : "N/A"
       }'`
     );
-
     // Process data rows (like Python API - include all records)
     const scheduleData = [];
-
     for (let idx = 0; idx < dataRows.length; idx++) {
       const row = dataRows[idx];
-
       if (!row || row.length === 0) {
         continue;
       }
-
       // Get values safely (like Python API)
       const getValue = (colIdx: number): string => {
         return (row[colIdx] && row[colIdx].toString().trim()) || "";
       };
-
       const doctor = getValue(doctorIdx);
       const contactPerson = getValue(contactPersonIdx);
       const name = getValue(nameIdx);
@@ -159,7 +140,6 @@ export async function GET(request: Request) {
       const amount = getValue(amountIdx);
       const surgeryDate = getValue(surgeryDateIdx);
       const dateConsultScheduled = getValue(dateConsultScheduledIdx);
-
       // Add record (include all records, frontend will filter)
       scheduleData.push({
         id: `film-${idx + 2}`,
@@ -177,10 +157,8 @@ export async function GET(request: Request) {
         surgery_date: surgeryDate,
       });
     }
-
     console.log("\n=== RESULTS ===");
     console.log(`Total records processed: ${scheduleData.length}`);
-
     // Sample first 3 rows for debugging
     console.log("📊 ตัวอย่างข้อมูล 3 รายการแรก:");
     scheduleData.slice(0, 3).forEach((item: any, idx: number) => {
@@ -192,7 +170,6 @@ export async function GET(request: Request) {
         }"`
       );
     });
-
     return NextResponse.json(
       {
         success: true,
@@ -232,4 +209,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+}

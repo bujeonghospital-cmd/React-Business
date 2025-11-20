@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 // In-memory cache
 const cache = new Map<
   string,
   { data: any; timestamp: number; expiresAt: number }
 >();
 const CACHE_DURATION = 30000; // 30 seconds
-
 /**
  * GET /api/n-clinic-db
  * ดึงข้อมูลรายรับจาก n_saleIncentive + n_staff + bjh_all_leads (sale_date <= วันนี้)
@@ -19,14 +17,12 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month"); // 1-12
     const year = searchParams.get("year");
     const contactPerson = searchParams.get("contact_person");
-
     // Check cache first
     const cacheKey = `n-clinic-db-${month || "all"}-${year || "all"}-${
       contactPerson || "all"
     }`;
     const cached = cache.get(cacheKey);
     const now = Date.now();
-
     if (cached && now < cached.expiresAt) {
       console.log(`✅ Returning cached n_clinic data from database`);
       return NextResponse.json(cached.data, {
@@ -38,11 +34,9 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     console.log(
       `📡 Fetching n_clinic data from n_saleIncentive + n_staff + bjh_all_leads (sale_date <= today)...`
     );
-
     // SQL query - ใช้ sale_date แทน surgery_date
     let query = `
       SELECT 
@@ -65,10 +59,8 @@ export async function GET(request: NextRequest) {
       WHERE DATE(s.sale_date) <= DATE(NOW())
         AND bl.proposed_amount IS NOT NULL
     `;
-
     const params: any[] = [];
     let paramIndex = 1;
-
     // Filter by month and year if provided (ใช้ sale_date)
     if (month && year) {
       query += ` AND EXTRACT(MONTH FROM s.sale_date::date) = $${paramIndex++}`;
@@ -79,25 +71,20 @@ export async function GET(request: NextRequest) {
       query += ` AND EXTRACT(YEAR FROM s.sale_date::date) = $${paramIndex++}`;
       params.push(parseInt(year));
     }
-
     // Filter by contact person if provided (ใช้ nickname)
     if (contactPerson && contactPerson !== "all") {
       query += ` AND n.nickname = $${paramIndex++}`;
       params.push(contactPerson);
     }
-
     // Order by sale_date
     query += ` ORDER BY s.sale_date::date ASC`;
-
     // Execute query
     const client = await pool.connect();
     try {
       const result = await client.query(query, params);
-
       console.log(
         `✅ Successfully fetched ${result.rows.length} n_clinic records from database`
       );
-
       // Transform data to match expected format
       const transformedData = {
         success: true,
@@ -114,21 +101,18 @@ export async function GET(request: NextRequest) {
           },
         },
       };
-
       // Update cache with expiration time
       cache.set(cacheKey, {
         data: transformedData,
         timestamp: now,
         expiresAt: now + CACHE_DURATION,
       });
-
       // Clean old cache entries
       for (const [key, value] of cache.entries()) {
         if (now > value.expiresAt + 60000) {
           cache.delete(key);
         }
       }
-
       return NextResponse.json(transformedData, {
         status: 200,
         headers: {
@@ -142,7 +126,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error: any) {
     console.error("Error fetching n_clinic data from database:", error);
-
     // Return cached data if available even if expired
     const cached = cache.get("n-clinic-db");
     if (cached) {
@@ -155,7 +138,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -171,7 +153,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // Handle OPTIONS request for CORS
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -182,4 +163,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-}
+}

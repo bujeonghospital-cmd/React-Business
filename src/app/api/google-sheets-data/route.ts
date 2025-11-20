@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const datePreset = searchParams.get("date_preset") || "today";
     const timeRange = searchParams.get("time_range");
     const daily = searchParams.get("daily") === "true"; // ถ้า daily=true จะให้ข้อมูลแยกรายวัน
-
     // ตรวจสอบว่ามี environment variables ครบหรือไม่
     if (
       !process.env.GOOGLE_SA_CLIENT_EMAIL ||
@@ -22,7 +20,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // สร้าง auth client ด้วย Service Account
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -31,18 +28,14 @@ export async function GET(request: NextRequest) {
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
-
     const sheets = google.sheets({ version: "v4", auth });
-
     // ดึงข้อมูลจาก Google Sheets
     // ชีทชื่อ "เคสได้ชื่อเบอร์" และดึงคอลัมน์ "ได้ชื่อได้เบอร์" พร้อมวันที่
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SHEET_ID,
       range: "เคสได้ชื่อเบอร์!A:Z", // ดึงข้อมูลทั้งหมดจากชีท
     });
-
     const rows = response.data.values;
-
     if (!rows || rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -50,41 +43,34 @@ export async function GET(request: NextRequest) {
         data: [],
       });
     }
-
     // สมมติว่าแถวแรกเป็น header
     const headers = rows[0];
     const dataRows = rows.slice(1);
-
     console.log("=== HEADERS ANALYSIS ===");
     console.log("Total columns:", headers.length);
     console.log("All headers with index:");
     headers.forEach((h: string, idx: number) => {
       console.log(`  [${idx}]: "${h}"`);
     });
-
     // ตรวจสอบ 5 แถวแรกของข้อมูลเพื่อดูโครงสร้าง
     console.log("\n=== SAMPLE DATA (first 3 rows) ===");
     dataRows.slice(0, 3).forEach((row: any[], idx: number) => {
       console.log(`Row ${idx + 2}:`, row.slice(0, 5)); // แสดง 5 คอลัมน์แรก
     });
-
     // จากภาพ: คอลัมน์ A ชื่อ "ได้ชื่อได้เบอร์" แต่ข้อมูลเป็นวันที่ 05/11/2025
     // ดังนั้นให้ใช้คอลัมน์ A เป็นคอลัมน์วันที่สำหรับกรองและนับ
     const namePhoneColIndex = 0; // คอลัมน์ A
     const dateColIndex = 0; // คอลัมน์เดียวกัน
-
     console.log("\n=== COLUMN DETECTION RESULT ===");
     console.log(
       `Using column A (index 0) for both date filtering and counting`
     );
     console.log(`Column header: "${headers[namePhoneColIndex]}"`);
     console.log(`Sample data: "${dataRows[0]?.[0]}"`);
-
     // กรองข้อมูลตาม date range
     let filteredRows = dataRows;
     let startDate: Date | null = null;
     let endDate: Date | null = null;
-
     // คำนวณวันที่ตาม date_preset หรือ time_range
     if (timeRange) {
       try {
@@ -98,7 +84,6 @@ export async function GET(request: NextRequest) {
     } else {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
       switch (datePreset) {
         case "today":
           startDate = today;
@@ -138,7 +123,6 @@ export async function GET(request: NextRequest) {
           break;
       }
     }
-
     // กรองข้อมูลตามวันที่ (ถ้ามีคอลัมน์วันที่และมีการระบุช่วงเวลา)
     if (dateColIndex >= 0 && startDate && endDate) {
       console.log("=== DATE FILTERING START ===");
@@ -148,24 +132,19 @@ export async function GET(request: NextRequest) {
         startLocal: startDate.toLocaleDateString("th-TH"),
         endLocal: endDate.toLocaleDateString("th-TH"),
       });
-
       let matchCount = 0;
       let skipCount = 0;
-
       filteredRows = dataRows.filter((row: any[], rowIndex: number) => {
         const dateValue = row[dateColIndex];
         const namePhoneValue = row[namePhoneColIndex];
-
         if (!dateValue) {
           console.log(`Row ${rowIndex + 2}: No date value`);
           skipCount++;
           return false;
         }
-
         // พยายาม parse วันที่จากหลายรูปแบบ
         let rowDate: Date | null = null;
         const dateStr = dateValue.toString().trim();
-
         // รูปแบบ ISO (YYYY-MM-DD)
         if (/^\d{4}-\d{1,2}-\d{1,2}/.test(dateStr)) {
           rowDate = new Date(dateStr);
@@ -207,7 +186,6 @@ export async function GET(request: NextRequest) {
         else {
           rowDate = new Date(dateStr);
         }
-
         if (!rowDate || isNaN(rowDate.getTime())) {
           console.log(
             `Row ${rowIndex + 2}: Failed to parse date: "${dateValue}"`
@@ -215,12 +193,9 @@ export async function GET(request: NextRequest) {
           skipCount++;
           return false;
         }
-
         // ตั้งเวลาเป็นเที่ยงคืนเพื่อเปรียบเทียบแค่วันที่
         rowDate.setHours(0, 0, 0, 0);
-
         const isInRange = rowDate >= startDate! && rowDate <= endDate!;
-
         if (isInRange) {
           matchCount++;
           console.log(
@@ -240,10 +215,8 @@ export async function GET(request: NextRequest) {
           );
           skipCount++;
         }
-
         return isInRange;
       });
-
       console.log(`=== DATE FILTERING RESULT ===`);
       console.log(`Total rows: ${dataRows.length}`);
       console.log(`Matched: ${matchCount}`);
@@ -258,44 +231,33 @@ export async function GET(request: NextRequest) {
         console.log("Reason: Date range not specified");
       }
     }
-
     // นับจำนวนแถวที่มีค่าในคอลัมน์ "ได้ชื่อได้เบอร์"
     console.log(`=== COUNTING VALID DATA ===`);
     console.log(`Checking column index: ${namePhoneColIndex}`);
-
     const validRows = filteredRows.filter((row: any[], index: number) => {
       const value = row[namePhoneColIndex];
       const hasValue = value && value.toString().trim() !== "";
-
       if (hasValue) {
         console.log(`✓ Row has data: "${value}"`);
       } else {
         console.log(`✗ Row empty or invalid: "${value}"`);
       }
-
       return hasValue;
     });
-
     const count = validRows.length;
-
     console.log(`=== FINAL COUNT ===`);
     console.log(`Valid rows with data in "ได้ชื่อได้เบอร์" column: ${count}`);
-
     // ถ้าต้องการข้อมูลรายวัน
     if (daily && dateColIndex >= 0) {
       console.log(`=== GROUPING BY DATE ===`);
-
       // จัดกลุ่มข้อมูลตามวันที่
       const dailyDataMap = new Map<string, number>();
-
       validRows.forEach((row: any[]) => {
         const dateValue = row[dateColIndex];
         if (!dateValue) return;
-
         // แปลงวันที่เป็นรูปแบบ YYYY-MM-DD
         let dateStr = "";
         const rawDateStr = dateValue.toString().trim();
-
         // รูปแบบ ISO (YYYY-MM-DD)
         if (/^\d{4}-\d{1,2}-\d{1,2}/.test(rawDateStr)) {
           dateStr = rawDateStr.split(" ")[0]; // เอาแค่ส่วนวันที่
@@ -324,25 +286,21 @@ export async function GET(request: NextRequest) {
           const day = parts[2].padStart(2, "0");
           dateStr = `${year}-${month}-${day}`;
         }
-
         if (dateStr) {
           const currentCount = dailyDataMap.get(dateStr) || 0;
           dailyDataMap.set(dateStr, currentCount + 1);
         }
       });
-
       // แปลงเป็น array และเรียงตามวันที่
       const dailyData = Array.from(dailyDataMap.entries())
         .map(([date, count]) => ({ date, count }))
         .sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
-
       console.log(`✅ Daily breakdown: ${dailyData.length} days`);
       dailyData.forEach((d) => {
         console.log(`  ${d.date}: ${d.count} records`);
       });
-
       return NextResponse.json({
         success: true,
         dailyData: dailyData,
@@ -353,7 +311,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     return NextResponse.json({
       success: true,
       total: count,
@@ -381,4 +338,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

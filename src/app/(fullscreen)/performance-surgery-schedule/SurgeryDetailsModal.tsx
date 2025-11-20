@@ -1,7 +1,6 @@
 import React from "react";
 import { SurgeryScheduleData } from "@/utils/googleSheets";
 import "./SurgeryDetailsModal.css";
-
 interface SurgeryDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,7 +11,6 @@ interface SurgeryDetailsModalProps {
   contactPerson: string;
   tableType?: "P" | "L"; // P = วันที่ได้นัดผ่าตัด, L = วันที่ผ่าตัด
 }
-
 export default function SurgeryDetailsModal({
   isOpen,
   onClose,
@@ -24,7 +22,6 @@ export default function SurgeryDetailsModal({
   tableType = "P",
 }: SurgeryDetailsModalProps) {
   if (!isOpen) return null;
-
   const monthNames = [
     "มกราคม",
     "กุมภาพันธ์",
@@ -39,10 +36,8 @@ export default function SurgeryDetailsModal({
     "พฤศจิกายน",
     "ธันวาคม",
   ];
-
   const tableTitle =
     tableType === "P" ? "รายละเอียดนัดผ่าตัด" : "รายละเอียดผ่าตัดจริง";
-
   const formatCurrency = (amount: string) => {
     if (!amount) return "-";
     const num = parseFloat(amount.replace(/,/g, ""));
@@ -52,7 +47,6 @@ export default function SurgeryDetailsModal({
       maximumFractionDigits: 0,
     });
   };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -62,7 +56,6 @@ export default function SurgeryDetailsModal({
             ✕
           </button>
         </div>
-
         <div className="modal-info">
           <div className="info-row">
             <span className="info-label">วันที่:</span>
@@ -81,7 +74,6 @@ export default function SurgeryDetailsModal({
             </span>
           </div>
         </div>
-
         <div className="surgeries-list">
           {surgeries.map((surgery, index) => (
             <div key={index} className="surgery-card">
@@ -89,14 +81,12 @@ export default function SurgeryDetailsModal({
                 <span className="card-number">#{index + 1}</span>
                 <span className="card-name">{surgery.ชื่อ}</span>
               </div>
-
               <div className="card-body">
                 <div className="detail-row">
                   <span className="detail-icon">👨‍⚕️</span>
                   <span className="detail-label">หมอ:</span>
                   <span className="detail-value">{surgery.หมอ || "-"}</span>
                 </div>
-
                 <div className="detail-row">
                   <span className="detail-icon">👤</span>
                   <span className="detail-label">ผู้ติดต่อ:</span>
@@ -104,7 +94,6 @@ export default function SurgeryDetailsModal({
                     {surgery.ผู้ติดต่อ || "-"}
                   </span>
                 </div>
-
                 <div className="detail-row">
                   <span className="detail-icon">📞</span>
                   <span className="detail-label">เบอร์โทร:</span>
@@ -112,7 +101,6 @@ export default function SurgeryDetailsModal({
                     {surgery.เบอร์โทร || "-"}
                   </span>
                 </div>
-
                 <div className="detail-row">
                   <span className="detail-icon">📅</span>
                   <span className="detail-label">
@@ -124,7 +112,6 @@ export default function SurgeryDetailsModal({
                       : surgery.วันที่ผ่าตัด || "-"}
                   </span>
                 </div>
-
                 <div className="detail-row">
                   <span className="detail-icon">🕐</span>
                   <span className="detail-label">เวลาที่นัด:</span>
@@ -132,7 +119,6 @@ export default function SurgeryDetailsModal({
                     {surgery.เวลาที่นัด || "-"}
                   </span>
                 </div>
-
                 <div className="detail-row highlight-row">
                   <span className="detail-icon">💰</span>
                   <span className="detail-label">ยอดนำเสนอ:</span>
@@ -146,7 +132,6 @@ export default function SurgeryDetailsModal({
             </div>
           ))}
         </div>
-
         <div className="modal-footer">
           <button className="close-footer-button" onClick={onClose}>
             ปิด
@@ -155,4 +140,4 @@ export default function SurgeryDetailsModal({
       </div>
     </div>
   );
-}
+}

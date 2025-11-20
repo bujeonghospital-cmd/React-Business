@@ -21,7 +21,6 @@ export const ProductType: { id: number; section: string; link: string[] }[] = [
     link: ["Styleguide", "Changelog"],
   },
 ];
-
 export const Aboutdata: {
   heading: string;
   imgSrc: string;
@@ -50,7 +49,6 @@ export const Aboutdata: {
     link: "Learn more",
   },
 ];
-
 export const DataType: { profession: string; name: string; imgSrc: string }[] =
   [
     {
@@ -84,7 +82,6 @@ export const DataType: { profession: string; name: string; imgSrc: string }[] =
       imgSrc: "/images/wework/avatar4.svg",
     },
   ];
-
 export const postData: { heading: string; imgSrc: string }[] = [
   {
     heading: "Brand design for a computer brand.",
@@ -103,7 +100,6 @@ export const postData: { heading: string; imgSrc: string }[] = [
     imgSrc: "/images/featured/feat2.jpg",
   },
 ];
-
 export const Testimonials: {
   profession: string;
   comment: string;
@@ -160,7 +156,6 @@ export const Testimonials: {
     rating: 4,
   },
 ];
-
 export const Article: {
   time: string;
   heading: string;
@@ -217,4 +212,4 @@ export const Article: {
     date: "August 19, 2021",
     imgSrc: "/images/articles/article3.png",
   },
-];
+];

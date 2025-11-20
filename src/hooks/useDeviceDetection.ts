@@ -1,7 +1,5 @@
 "use client";
-
 import { useState, useEffect } from "react";
-
 interface DeviceInfo {
   isMobile: boolean;
   isTablet: boolean;
@@ -11,7 +9,6 @@ interface DeviceInfo {
   orientation: "portrait" | "landscape";
   touchSupport: boolean;
 }
-
 export function useDeviceDetection(): DeviceInfo {
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>({
     isMobile: false,
@@ -22,7 +19,6 @@ export function useDeviceDetection(): DeviceInfo {
     orientation: "landscape",
     touchSupport: false,
   });
-
   useEffect(() => {
     const detectDevice = () => {
       const width = window.innerWidth;
@@ -35,7 +31,6 @@ export function useDeviceDetection(): DeviceInfo {
         "ontouchstart" in window ||
         navigator.maxTouchPoints > 0 ||
         (navigator as any).msMaxTouchPoints > 0;
-
       setDeviceInfo({
         isMobile,
         isTablet,
@@ -46,38 +41,30 @@ export function useDeviceDetection(): DeviceInfo {
         touchSupport,
       });
     };
-
     // Initial detection
     detectDevice();
-
     // Listen for resize and orientation changes
     window.addEventListener("resize", detectDevice);
     window.addEventListener("orientationchange", detectDevice);
-
     return () => {
       window.removeEventListener("resize", detectDevice);
       window.removeEventListener("orientationchange", detectDevice);
     };
   }, []);
-
   return deviceInfo;
 }
-
 export function isMobileDevice(): boolean {
   if (typeof window === "undefined") return false;
   return window.innerWidth <= 768;
 }
-
 export function isTabletDevice(): boolean {
   if (typeof window === "undefined") return false;
   return window.innerWidth > 768 && window.innerWidth <= 1024;
 }
-
 export function isDesktopDevice(): boolean {
   if (typeof window === "undefined") return true;
   return window.innerWidth > 1024;
 }
-
 export function getTouchSupport(): boolean {
   if (typeof window === "undefined") return false;
   return (
@@ -85,4 +72,4 @@ export function getTouchSupport(): boolean {
     navigator.maxTouchPoints > 0 ||
     (navigator as any).msMaxTouchPoints > 0
   );
-}
+}

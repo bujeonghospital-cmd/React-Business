@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 /**
  * API Endpoint สำหรับตรวจสอบ Environment Variables
  * ใช้ดูว่าตั้งค่าครบถ้วนหรือไม่
@@ -13,7 +12,6 @@ export async function GET() {
     FACEBOOK_ACCESS_TOKEN: process.env.FACEBOOK_ACCESS_TOKEN,
     FACEBOOK_AD_ACCOUNT_ID: process.env.FACEBOOK_AD_ACCOUNT_ID,
   };
-
   const optionalVars = {
     GOOGLE_ADS_CLIENT_ID: process.env.GOOGLE_ADS_CLIENT_ID,
     GOOGLE_ADS_CLIENT_SECRET: process.env.GOOGLE_ADS_CLIENT_SECRET,
@@ -24,19 +22,15 @@ export async function GET() {
     GOOGLE_SA_PRIVATE_KEY: process.env.GOOGLE_SA_PRIVATE_KEY,
     GOOGLE_SHEET_ID: process.env.GOOGLE_SHEET_ID,
   };
-
   // ตรวจสอบ required variables
   const missingRequired = Object.entries(requiredVars)
     .filter(([_, value]) => !value)
     .map(([key]) => key);
-
   // ตรวจสอบ optional variables
   const missingOptional = Object.entries(optionalVars)
     .filter(([_, value]) => !value)
     .map(([key]) => key);
-
   const allRequired = missingRequired.length === 0;
-
   // สร้าง response โดยแสดงเฉพาะ 10 ตัวอักษรแรกของ token
   const maskedRequired = Object.entries(requiredVars).reduce(
     (acc, [key, value]) => {
@@ -62,7 +56,6 @@ export async function GET() {
       { exists: boolean; preview: string | null; length: number }
     >
   );
-
   const maskedOptional = Object.entries(optionalVars).reduce(
     (acc, [key, value]) => {
       if (value) {
@@ -86,7 +79,6 @@ export async function GET() {
       { exists: boolean; preview: string | null; length: number }
     >
   );
-
   return NextResponse.json({
     environment: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
@@ -122,4 +114,4 @@ export async function GET() {
       facebookSetup: "/FACEBOOK_ADS_SETUP.md",
     },
   });
-}
+}

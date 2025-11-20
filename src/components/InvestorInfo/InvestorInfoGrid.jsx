@@ -1,7 +1,6 @@
 // components/InvestorInfo/InvestorInfoGrid.jsx
 "use client";
 import React from "react";
-
 const items = [
   {
     label: "ราคาหลักทรัพย์",
@@ -61,7 +60,6 @@ const items = [
     ),
   },
 ];
-
 export default function InvestorInfoGrid() {
   return (
     <div className="investor-bg">
@@ -78,4 +76,4 @@ export default function InvestorInfoGrid() {
       </div>
     </div>
   );
-}
+}

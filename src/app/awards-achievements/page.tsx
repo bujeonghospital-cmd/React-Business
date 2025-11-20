@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useEffect, useState, useRef } from "react";
 import {
   Award,
@@ -11,7 +10,6 @@ import {
   Heart,
   Leaf,
 } from "lucide-react";
-
 // Define type for refs
 interface RefsType {
   header?: HTMLDivElement | null;
@@ -19,7 +17,6 @@ interface RefsType {
   achievements?: HTMLDivElement | null;
   gallery?: HTMLDivElement | null;
 }
-
 // Define type for isVisible state
 interface IsVisibleType {
   header?: boolean;
@@ -27,7 +24,6 @@ interface IsVisibleType {
   achievements?: boolean;
   gallery?: boolean;
 }
-
 const AwardsPage = () => {
   const [isVisible, setIsVisible] = useState<IsVisibleType>({});
   const [countingStarted, setCountingStarted] = useState(false);
@@ -38,7 +34,6 @@ const AwardsPage = () => {
     standards: 0,
   });
   const refs = useRef<RefsType>({});
-
   // Intersection Observer for scroll animations
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -54,17 +49,14 @@ const AwardsPage = () => {
       },
       { threshold: 0.1 }
     );
-
     Object.keys(refs.current).forEach((key) => {
       const refKey = key as keyof RefsType;
       if (refs.current[refKey]) {
         observer.observe(refs.current[refKey] as Element);
       }
     });
-
     return () => observer.disconnect();
   }, []);
-
   // Counter animation for stats
   useEffect(() => {
     const statsObserver = new IntersectionObserver(
@@ -78,40 +70,33 @@ const AwardsPage = () => {
       },
       { threshold: 0.5 }
     );
-
     const statsSection = document.getElementById("stats-section");
     if (statsSection) {
       statsObserver.observe(statsSection);
     }
-
     return () => statsObserver.disconnect();
   }, [countingStarted]);
-
   const animateCounters = () => {
     const targets = { years: 25, awards: 50, customers: 100, standards: 5 };
     const duration = 2000;
     const steps = 60;
     const stepDuration = duration / steps;
-
     let currentStep = 0;
     const interval = setInterval(() => {
       currentStep++;
       const progress = currentStep / steps;
-
       setCounts({
         years: Math.floor(targets.years * progress),
         awards: Math.floor(targets.awards * progress),
         customers: Math.floor(targets.customers * progress),
         standards: Math.floor(targets.standards * progress),
       });
-
       if (currentStep >= steps) {
         clearInterval(interval);
         setCounts(targets);
       }
     }, stepDuration);
   };
-
   const awards = [
     {
       icon: <Trophy className="w-8 h-8 text-amber-600" />,
@@ -150,7 +135,6 @@ const AwardsPage = () => {
       description: "สถานที่ทำงานที่มีความสุข",
     },
   ];
-
   // Add CSS animations
   useEffect(() => {
     const style = document.createElement("style");
@@ -175,7 +159,6 @@ const AwardsPage = () => {
       document.head.removeChild(style);
     };
   }, []);
-
   return (
     <div className="min-h-screen bg-white overflow-hidden">
       {/* Header Section with Fade In */}
@@ -212,7 +195,6 @@ const AwardsPage = () => {
           </p>
         </div>
       </div>
-
       {/* Awards Gallery Section with Animation */}
       <div
         ref={(el) => {
@@ -228,7 +210,6 @@ const AwardsPage = () => {
               isVisible.gallery ? "opacity-100" : "opacity-0"
             }`}
           ></div>
-
           {/* Certificates Image Display */}
           <div
             className={`relative w-full h-64 sm:h-72 md:h-80 lg:h-96 xl:h-[30rem] pt-4 sm:pt-6 overflow-hidden rounded-xl shadow-2xl transition-all duration-1000 ${
@@ -254,5 +235,4 @@ const AwardsPage = () => {
     </div>
   );
 };
-
-export default AwardsPage;
+export default AwardsPage;

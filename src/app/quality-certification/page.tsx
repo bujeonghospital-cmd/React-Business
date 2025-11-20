@@ -1,8 +1,6 @@
 "use client";
 import ScaledCanvas from "../../components/ScaledCanvas";
-
 import React, { useEffect, useState } from "react";
-
 type Badge = {
   id: string;
   title: string;
@@ -10,11 +8,9 @@ type Badge = {
   src: string;
   box?: [number, number];
 };
-
 function publicUrl(p: string) {
   return p.startsWith("/") ? p : `/${p}`;
 }
-
 const BADGES: Badge[] = [
   {
     id: "iso9001-ukas",
@@ -73,12 +69,10 @@ const BADGES: Badge[] = [
     box: [400, 400],
   },
 ];
-
 export default function QualityBadgesAnimatedPage() {
   const [isVisible, setIsVisible] = useState(false);
   const [hoveredBadge, setHoveredBadge] = useState<string | null>(null);
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
-
   // avoid accessing `window` during SSR — measure width on client
   const [clientWidth, setClientWidth] = useState<number | null>(null);
   useEffect(() => {
@@ -88,15 +82,12 @@ export default function QualityBadgesAnimatedPage() {
     window.addEventListener("resize", setWidth);
     return () => window.removeEventListener("resize", setWidth);
   }, []);
-
   useEffect(() => {
     setIsVisible(true);
   }, []);
-
   const handleImageLoad = (badgeId: string) => {
     setLoadedImages((prev) => new Set([...prev, badgeId]));
   };
-
   return (
     <ScaledCanvas>
       <main className="min-h-screen bg-gradient-to-b from-white via-blue-50/30 to-white pt-10 md:pt-12 flex flex-col overflow-hidden">
@@ -106,7 +97,6 @@ export default function QualityBadgesAnimatedPage() {
           <div className="absolute top-40 right-10 w-96 h-96 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-2000"></div>
           <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse animation-delay-4000"></div>
         </div>
-
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-16">
           {/* Header with fade-in animation */}
           <header
@@ -121,7 +111,6 @@ export default function QualityBadgesAnimatedPage() {
                 มาตรฐานระดับสากล
               </span>
             </h1>
-
             {/* Main description with stagger animation */}
             <div
               className={`max-w-4xl mx-auto space-y-4 transition-all duration-1000 delay-300 transform ${
@@ -140,7 +129,6 @@ export default function QualityBadgesAnimatedPage() {
               </p>
             </div>
           </header>
-
           {/* Badges grid with improved responsive layout */}
           <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
             {BADGES.map((b, index) => (
@@ -158,7 +146,6 @@ export default function QualityBadgesAnimatedPage() {
                 onMouseLeave={() => setHoveredBadge(null)}>
                 {/* Gradient overlay on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-
                 {/* Badge container with natural sizing */}
                 <div
                   className={`relative mx-auto w-full bg-gradient-to-br from-white to-gray-50 rounded-xl ring-1 ring-neutral-200 overflow-hidden transition-transform duration-500 flex items-center justify-center ${
@@ -174,7 +161,6 @@ export default function QualityBadgesAnimatedPage() {
                       <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
                     </div>
                   )}
-
                   <img
                     src={publicUrl(b.src)}
                     alt={b.title}
@@ -199,11 +185,9 @@ export default function QualityBadgesAnimatedPage() {
                           : "200px",
                     }}
                   />
-
                   {/* Shine effect on hover */}
                   <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 transform -translate-x-full group-hover:translate-x-full"></div>
                 </div>
-
                 {/* Caption with enhanced typography */}
                 <figcaption className="relative mt-3 md:mt-4 text-center">
                   <div className="font-bold text-neutral-900 text-xs sm:text-sm lg:text-base group-hover:text-blue-600 transition-colors duration-300 leading-tight">
@@ -215,7 +199,6 @@ export default function QualityBadgesAnimatedPage() {
                     </div>
                   )}
                 </figcaption>
-
                 {/* Badge indicator */}
                 <div className="absolute top-2 md:top-3 right-2 md:right-3 w-2 h-2 bg-green-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500">
                   <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping"></span>
@@ -224,7 +207,6 @@ export default function QualityBadgesAnimatedPage() {
             ))}
           </div>
         </section>
-
         <style jsx>{`
           @keyframes pulse {
             0%,
@@ -235,28 +217,23 @@ export default function QualityBadgesAnimatedPage() {
               opacity: 0.3;
             }
           }
-
           .animation-delay-2000 {
             animation-delay: 2s;
           }
-
           .animation-delay-4000 {
             animation-delay: 4s;
           }
-
           /* Responsive image sizing */
           @media (max-width: 640px) {
             .badge-image {
               max-height: 120px;
             }
           }
-
           @media (min-width: 641px) and (max-width: 1024px) {
             .badge-image {
               max-height: 150px;
             }
           }
-
           @media (min-width: 1025px) {
             .badge-image {
               max-height: 180px;
@@ -266,4 +243,4 @@ export default function QualityBadgesAnimatedPage() {
       </main>
     </ScaledCanvas>
   );
-}
+}

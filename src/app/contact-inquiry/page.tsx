@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -16,13 +15,11 @@ import {
 import Container from "@/components/Container";
 import Image from "next/image";
 import GoogleMapComponent from "@/components/GoogleMap";
-
 // Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
-
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -32,7 +29,6 @@ const staggerContainer = {
     },
   },
 };
-
 // Company Information
 const COMPANY_INFO = {
   name: "บริษัท ไทยบรรจุภัณฑ์และการพิมพ์ จำกัด (มหาชน)",
@@ -61,7 +57,6 @@ const COMPANY_INFO = {
     sunday: "วันอาทิตย์และวันหยุดนักขัตฤกษ์: ปิดทำการ",
   },
 };
-
 // Form Component
 interface FormData {
   name: string;
@@ -71,7 +66,6 @@ interface FormData {
   subject: string;
   message: string;
 }
-
 const ContactInquiryPage = () => {
   const [activeTab, setActiveTab] = useState<"headquarters" | "factory">(
     "headquarters"
@@ -89,19 +83,16 @@ const ContactInquiryPage = () => {
     type: "success" | "error" | null;
     message: string;
   }>({ type: null, message: "" });
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus({ type: null, message: "" });
-
     try {
       // เรียก API เพื่อส่งข้อมูล
       const response = await fetch("/api/contact", {
@@ -111,19 +102,15 @@ const ContactInquiryPage = () => {
         },
         body: JSON.stringify(formData),
       });
-
       const result = await response.json();
-
       if (!response.ok || !result.success) {
         throw new Error(result.error || "Failed to send message");
       }
-
       setSubmitStatus({
         type: "success",
         message:
           result.message || "ส่งข้อความสำเร็จ! เราจะติดต่อกลับโดยเร็วที่สุด",
       });
-
       // Reset form
       setFormData({
         name: "",
@@ -145,12 +132,10 @@ const ContactInquiryPage = () => {
       setIsSubmitting(false);
     }
   };
-
   const currentLocation =
     activeTab === "headquarters"
       ? COMPANY_INFO.headquarters
       : COMPANY_INFO.factory;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50">
       {/* Hero Section */}
@@ -182,7 +167,6 @@ const ContactInquiryPage = () => {
           </motion.div>
         </Container>
       </div>
-
       <Container className="py-16">
         <motion.div
           initial="hidden"
@@ -204,7 +188,6 @@ const ContactInquiryPage = () => {
                     {COMPANY_INFO.shortName}
                   </p>
                 </div>
-
                 {/* Contact Information */}
                 <div className="space-y-4">
                   <div className="flex items-start gap-4 group">
@@ -220,7 +203,6 @@ const ContactInquiryPage = () => {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start gap-4 group">
                     <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Phone className="w-6 h-6 text-red-600" />
@@ -235,7 +217,6 @@ const ContactInquiryPage = () => {
                       </p>
                     </div>
                   </div>
-
                   <div className="flex items-start gap-4 group">
                     <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Mail className="w-6 h-6 text-red-600" />
@@ -252,7 +233,6 @@ const ContactInquiryPage = () => {
                       </a>
                     </div>
                   </div>
-
                   <div className="flex items-start gap-4 group">
                     <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                       <Clock className="w-6 h-6 text-red-600" />
@@ -273,7 +253,6 @@ const ContactInquiryPage = () => {
                 </div>
               </div>
             </div>
-
             {/* Google Map */}
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
               <div className="aspect-video relative">
@@ -297,7 +276,6 @@ const ContactInquiryPage = () => {
               </div>
             </div>
           </motion.div>
-
           {/* Right Column - Contact Form */}
           <motion.div variants={fadeInUp}>
             <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 sticky top-24">
@@ -309,7 +287,6 @@ const ContactInquiryPage = () => {
                   กรอกข้อมูลด้านล่างและเราจะติดต่อกลับโดยเร็วที่สุด
                 </p>
               </div>
-
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Name */}
                 <div>
@@ -333,7 +310,6 @@ const ContactInquiryPage = () => {
                     />
                   </div>
                 </div>
-
                 {/* Company */}
                 <div>
                   <label
@@ -355,7 +331,6 @@ const ContactInquiryPage = () => {
                     />
                   </div>
                 </div>
-
                 {/* Email */}
                 <div>
                   <label
@@ -378,7 +353,6 @@ const ContactInquiryPage = () => {
                     />
                   </div>
                 </div>
-
                 {/* Phone */}
                 <div>
                   <label
@@ -401,7 +375,6 @@ const ContactInquiryPage = () => {
                     />
                   </div>
                 </div>
-
                 {/* Subject */}
                 <div>
                   <label
@@ -424,7 +397,6 @@ const ContactInquiryPage = () => {
                     />
                   </div>
                 </div>
-
                 {/* Message */}
                 <div>
                   <label
@@ -444,7 +416,6 @@ const ContactInquiryPage = () => {
                     placeholder="รายละเอียดที่ต้องการสอบถามหรือติดต่อ"
                   />
                 </div>
-
                 {/* Submit Status */}
                 {submitStatus.type && (
                   <motion.div
@@ -459,7 +430,6 @@ const ContactInquiryPage = () => {
                     {submitStatus.message}
                   </motion.div>
                 )}
-
                 {/* Submit Button */}
                 <motion.button
                   type="submit"
@@ -480,7 +450,6 @@ const ContactInquiryPage = () => {
                     </>
                   )}
                 </motion.button>
-
                 <p className="text-sm text-gray-500 text-center">
                   เราจะตอบกลับภายใน 1-2 วันทำการ
                 </p>
@@ -488,7 +457,6 @@ const ContactInquiryPage = () => {
             </div>
           </motion.div>
         </motion.div>
-
         {/* Additional Information Banner */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -527,5 +495,4 @@ const ContactInquiryPage = () => {
     </div>
   );
 };
-
-export default ContactInquiryPage;
+export default ContactInquiryPage;

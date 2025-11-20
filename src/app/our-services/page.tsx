@@ -1,10 +1,8 @@
 "use client";
 import ScaledCanvas from "../../components/ScaledCanvas";
-
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-
 /* =========================================================
    🎛️ TUNING KNOBS – จูนค่าตามใจคุณ
    ========================================================= */
@@ -17,7 +15,6 @@ const CAROUSEL = {
   scaleInactive: 0.96, // สเกลภาพสไลด์ข้างเคียง
   aspect: "aspect-[16/10]", // อัตราส่วนภาพ
 };
-
 /* =========================================================
    Smooth anchor scrolling with header offset (เดิม)
    ========================================================= */
@@ -53,7 +50,6 @@ function scrollToCentered(target: HTMLElement) {
     window.scrollTo({ top: y, behavior: "smooth" });
   }
 }
-
 /* =========================================================
    Utilities
    ========================================================= */
@@ -68,7 +64,6 @@ function usePrefersReducedMotion() {
   }, []);
   return reduced;
 }
-
 /* =========================================================
    🔥 Advanced Carousel (Vanilla, no libs) – ลื่น เท่ ปรับแต่งได้
    ========================================================= */
@@ -78,10 +73,8 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
   const [hover, setHover] = React.useState(false);
   const [drag, setDrag] = React.useState({ active: false, startX: 0, dx: 0 });
   const reduced = usePrefersReducedMotion();
-
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [inView, setInView] = React.useState(true);
-
   // หยุดเล่นเมื่อเลื่อนพ้นหน้าจอ
   React.useEffect(() => {
     const el = containerRef.current;
@@ -93,7 +86,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
-
   // Autoplay (ไม่มี progress bar แล้ว จึงใช้ setInterval แบบเบาๆ)
   const playing = inView && len > 1 && !drag.active && !hover && !reduced;
   React.useEffect(() => {
@@ -104,7 +96,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
     );
     return () => clearInterval(t);
   }, [playing, len]);
-
   // Drag/Swipe
   const onPointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -124,13 +115,11 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
     setIndex(((next % len) + len) % len);
     setDrag({ active: false, startX: 0, dx: 0 });
   };
-
   // Keyboard nav
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft") setIndex((i) => (i - 1 + len) % len);
     if (e.key === "ArrowRight") setIndex((i) => (i + 1) % len);
   };
-
   // ตำแหน่งแทร็ค + เอฟเฟกต์ parallax/scale
   const width = containerRef.current?.clientWidth || 1;
   const offsetPct = drag.active ? (drag.dx / width) * 100 : 0;
@@ -139,7 +128,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
     transition: drag.active ? "none" : `transform 700ms ${CAROUSEL.ease}`,
     willChange: "transform",
   };
-
   // ปุ่มลูกศรแบบ chevron gradient
   const ArrowBtn = ({
     dir,
@@ -172,7 +160,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
       </svg>
     </button>
   );
-
   return (
     <div
       ref={containerRef}
@@ -226,7 +213,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
           })}
         </div>
       </div>
-
       {/* ลูกศรนำทาง */}
       {len > 1 && (
         <>
@@ -240,7 +226,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
           />
         </>
       )}
-
       {/* จุดบอกตำแหน่ง (Bullets) */}
       {len > 1 && (
         <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
@@ -263,7 +248,6 @@ function Carousel({ images, alt }: { images: string[]; alt: string }) {
     </div>
   );
 }
-
 /* =============================
    CONFIG – Replace image paths
    ============================= */
@@ -289,7 +273,6 @@ const FEATURES = [
     href: "#postpress",
   },
 ] as const;
-
 // === Multiple images per section (carousel-ready) ===
 const SECTIONS: {
   id: string;
@@ -367,7 +350,6 @@ const SECTIONS: {
     ),
   },
 ];
-
 /* ===============
    UI Subcomponents
    =============== */
@@ -382,7 +364,6 @@ function SectionHeading({ label, id }: { label: string; id?: string }) {
     </h2>
   );
 }
-
 function FeatureTile({
   title,
   img,
@@ -425,7 +406,6 @@ function FeatureTile({
     </a>
   );
 }
-
 function ProcessSection({
   id,
   title,
@@ -445,7 +425,6 @@ function ProcessSection({
           <div className="relative md:col-span-6">
             <Carousel images={images} alt={title} />
           </div>
-
           {/* Content */}
           <div className="md:col-span-6">
             <SectionHeading label={title} id={id} />
@@ -458,7 +437,6 @@ function ProcessSection({
     </section>
   );
 }
-
 /* ======
    PAGE
    ====== */
@@ -475,7 +453,6 @@ export default function ProcessPage() {
                 <FeatureTile key={f.title} {...f} />
               ))}
             </div>
-
             {/* Intro paragraph */}
             <div className="mt-8 md:mt-10">
               <p className="text-neutral-700 leading-7 md:text-[17px]">
@@ -489,12 +466,10 @@ export default function ProcessPage() {
             </div>
           </div>
         </section>
-
         {/* ===== Process sections ===== */}
         {SECTIONS.map((s) => (
           <ProcessSection key={s.id} {...s} />
         ))}
-
         {/* ===== CTA / Footer band (optional) ===== */}
         <section className="bg-neutral-50">
           <div className="mx-auto max-w-7xl px-4 py-12 md:py-16">
@@ -527,4 +502,4 @@ export default function ProcessPage() {
       )
     </ScaledCanvas>
   );
-}
+}

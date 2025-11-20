@@ -16,16 +16,12 @@ async function generateThumbnails() {
     .readdirSync(pdfDir)
     .filter((file) => file.endsWith(".pdf"));
 
-  console.log(`Found ${pdfFiles.length} PDF files to process...`);
-
-  for (const pdfFile of pdfFiles) {
+    for (const pdfFile of pdfFiles) {
     try {
       const pdfPath = path.join(pdfDir, pdfFile);
       const outputName = path.basename(pdfFile, ".pdf");
 
-      console.log(`Processing ${pdfFile}...`);
-
-      const options = {
+            const options = {
         format: "jpeg",
         out_dir: thumbnailDir,
         out_prefix: outputName,
@@ -41,15 +37,12 @@ async function generateThumbnails() {
 
       if (fs.existsSync(generatedFile)) {
         fs.renameSync(generatedFile, finalFile);
-        console.log(`✓ Generated thumbnail for ${pdfFile}`);
-      }
+              }
     } catch (error) {
-      console.error(`✗ Error processing ${pdfFile}:`, error.message);
-    }
+          }
   }
 
-  console.log("Thumbnail generation complete!");
-}
+  }
 
 // Run the function
 generateThumbnails().catch(console.error);

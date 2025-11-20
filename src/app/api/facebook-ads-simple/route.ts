@@ -1,12 +1,10 @@
 // src/app/api/facebook-ads-simple/route.ts
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * Facebook Marketing API Route (ใช้ Graph API โดยตรง)
  *
  * ไม่ต้องติดตั้ง SDK ใช้ fetch API เรียก Graph API โดยตรง
  */
-
 interface FacebookAdsCampaign {
   id: string;
   name: string;
@@ -21,7 +19,6 @@ interface FacebookAdsCampaign {
   conversions: number;
   costPerConversion: number;
 }
-
 interface FacebookAdsResponse {
   campaigns: FacebookAdsCampaign[];
   summary: {
@@ -38,17 +35,14 @@ interface FacebookAdsResponse {
     endDate: string;
   };
 }
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get("startDate") || "2025-01-01";
     const endDate = searchParams.get("endDate") || "2025-04-04";
-
     // เอาเฉพาะ Access Token และ Ad Account ID
     const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
     const adAccountId = process.env.FACEBOOK_AD_ACCOUNT_ID;
-
     if (!accessToken || !adAccountId) {
       return NextResponse.json(
         {
@@ -72,11 +66,9 @@ export async function GET(request: NextRequest) {
         { status: 503 }
       );
     }
-
     console.log(
       "✅ Credentials available. Connecting to Facebook Graph API..."
     );
-
     try {
       // Fetch campaigns จาก Graph API
       const campaignsUrl = `https://graph.facebook.com/v21.0/${adAccountId}/campaigns`;
@@ -84,23 +76,17 @@ export async function GET(request: NextRequest) {
         access_token: accessToken,
         fields: "id,name,status,objective",
       });
-
       const campaignsResponse = await fetch(
         `${campaignsUrl}?${campaignsParams}`
       );
-
       if (!campaignsResponse.ok) {
         const error = await campaignsResponse.json();
         throw new Error(error.error?.message || "Failed to fetch campaigns");
       }
-
       const campaignsResult = await campaignsResponse.json();
       const campaigns = campaignsResult.data || [];
-
       console.log(`✅ Retrieved ${campaigns.length} campaigns`);
-
       const campaignData: FacebookAdsCampaign[] = [];
-
       // Fetch insights for each campaign
       for (const campaign of campaigns) {
         try {
@@ -113,22 +99,17 @@ export async function GET(request: NextRequest) {
             }),
             fields: "impressions,clicks,spend,cpm,cpc,ctr,actions",
           });
-
           const insightsResponse = await fetch(
             `${insightsUrl}?${insightsParams}`
           );
-
           if (insightsResponse.ok) {
             const insightsResult = await insightsResponse.json();
             const insights = insightsResult.data || [];
-
             if (insights.length > 0) {
               const insight = insights[0];
-
               // หา conversions จาก actions
               let conversions = 0;
               let costPerConversion = 0;
-
               if (insight.actions && Array.isArray(insight.actions)) {
                 const conversionAction = insight.actions.find(
                   (action: any) =>
@@ -141,11 +122,9 @@ export async function GET(request: NextRequest) {
                   ? parseFloat(conversionAction.value)
                   : 0;
               }
-
               if (conversions > 0 && insight.spend) {
                 costPerConversion = parseFloat(insight.spend) / conversions;
               }
-
               campaignData.push({
                 id: campaign.id,
                 name: campaign.name,
@@ -169,11 +148,9 @@ export async function GET(request: NextRequest) {
           );
         }
       }
-
       console.log(
         `✅ Retrieved ${campaignData.length} campaigns with insights`
       );
-
       // คำนวณ summary
       const summary = {
         totalImpressions: campaignData.reduce(
@@ -202,7 +179,6 @@ export async function GET(request: NextRequest) {
           0
         ),
       };
-
       const response: FacebookAdsResponse = {
         campaigns: campaignData,
         summary,
@@ -211,14 +187,11 @@ export async function GET(request: NextRequest) {
           endDate,
         },
       };
-
       return NextResponse.json(response);
     } catch (apiError: any) {
       console.error("❌ Facebook Graph API Error:", apiError);
-
       let errorMessage = "เกิดข้อผิดพลาดในการเชื่อมต่อ Facebook Ads API";
       let errorDetails = apiError.message || "Unknown error";
-
       if (errorDetails.includes("access") || errorDetails.includes("token")) {
         errorMessage = "Access Token ไม่ถูกต้องหรือหมดอายุ";
         errorDetails =
@@ -237,7 +210,6 @@ export async function GET(request: NextRequest) {
         errorMessage = "ไม่พบ Ad Account";
         errorDetails = `Ad Account ID ${adAccountId} ไม่ถูกต้อง กรุณาตรวจสอบที่ Business Manager`;
       }
-
       return NextResponse.json(
         {
           error: errorMessage,
@@ -257,4 +229,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

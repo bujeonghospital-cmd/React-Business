@@ -9,19 +9,16 @@ import { headerData } from "@/components/Navigation/menuData";
 import { usePathname } from "next/navigation";
 import DrawerMenu from "@/components/Navigation/DrawerMenu";
 import LanguageSwitch from "@/components/Header/LanguageSwitch";
-
 const Header = () => {
   const [navbarOpen, setNavbarOpen] = useState(false);
   const [submenuOpenId, setSubmenuOpenId] = useState<number | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const path = usePathname();
-
   useEffect(() => {
     setSubmenuOpenId(null);
     setNavbarOpen(false);
   }, [path]);
-
   // Shadow on scroll
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 2);
@@ -29,7 +26,6 @@ const Header = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (!navbarOpen) return;
@@ -52,7 +48,6 @@ const Header = () => {
       document.removeEventListener("keydown", onKey);
     };
   }, [navbarOpen]);
-
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = navbarOpen ? "hidden" : prev || "";
@@ -60,10 +55,8 @@ const Header = () => {
       document.body.style.overflow = prev || "";
     };
   }, [navbarOpen]);
-
   const menu1 = headerData.slice(0, 4);
   const menu2 = headerData.slice(4);
-
   return (
     <header
       data-site-header
@@ -93,7 +86,6 @@ const Header = () => {
             </div>
           </div>
         </div>
-
         {/* Main Navigation Container */}
         <div className="max-w-screen-2xl mx-auto">
           <div className="flex items-center h-12 md:h-14 lg:h-16 px-3 md:px-4 lg:px-6">
@@ -110,12 +102,10 @@ const Header = () => {
                 />
               ))}
             </nav>
-
             {/* Logo - Always visible, size responsive */}
             <div className="logo-wrapper flex-1 xl:flex-none flex items-center xl:px-4 2xl:px-8">
               <Logo className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] xl:w-[190px] h-auto" />
             </div>
-
             {/* Desktop Right Navigation - Hidden on mobile/tablet */}
             <nav className="hidden xl:flex flex-1 justify-start gap-1 xl:gap-2 2xl:gap-3 min-w-0 items-center">
               {menu2.map((item, i) => {
@@ -132,7 +122,6 @@ const Header = () => {
                 );
               })}
             </nav>
-
             {/* Mobile/Tablet Hamburger Menu */}
             <button
               className="flex xl:hidden p-2 -mr-1"
@@ -144,7 +133,6 @@ const Header = () => {
           </div>
         </div>
       </div>
-
       {/* Mobile Drawer Menu */}
       <DrawerMenu
         ref={mobileMenuRef}
@@ -155,5 +143,4 @@ const Header = () => {
     </header>
   );
 };
-
-export default Header;
+export default Header;

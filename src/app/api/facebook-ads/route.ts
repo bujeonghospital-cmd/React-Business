@@ -1,12 +1,10 @@
 // src/app/api/facebook-ads/route.ts
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * Facebook Marketing API Route
  *
  * ดึงข้อมูลแคมเปญจาก Facebook Ads
  */
-
 interface FacebookAdsCampaign {
   id: string;
   name: string;
@@ -21,7 +19,6 @@ interface FacebookAdsCampaign {
   conversions: number;
   costPerConversion: number;
 }
-
 interface FacebookAdsResponse {
   campaigns: FacebookAdsCampaign[];
   summary: {
@@ -38,13 +35,11 @@ interface FacebookAdsResponse {
     endDate: string;
   };
 }
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const startDate = searchParams.get("startDate") || "2025-01-01";
     const endDate = searchParams.get("endDate") || "2025-04-04";
-
     // ตรวจสอบ credentials
     const credentials = {
       appId: process.env.FACEBOOK_APP_ID,
@@ -52,7 +47,6 @@ export async function GET(request: NextRequest) {
       accessToken: process.env.FACEBOOK_ACCESS_TOKEN,
       adAccountId: process.env.FACEBOOK_AD_ACCOUNT_ID,
     };
-
     const missingCredentials = [];
     if (!credentials.appId) missingCredentials.push("FACEBOOK_APP_ID");
     if (!credentials.appSecret) missingCredentials.push("FACEBOOK_APP_SECRET");
@@ -60,7 +54,6 @@ export async function GET(request: NextRequest) {
       missingCredentials.push("FACEBOOK_ACCESS_TOKEN");
     if (!credentials.adAccountId)
       missingCredentials.push("FACEBOOK_AD_ACCOUNT_ID");
-
     if (missingCredentials.length > 0) {
       console.error("❌ Missing Facebook Ads credentials:", missingCredentials);
       return NextResponse.json(
@@ -102,27 +95,20 @@ export async function GET(request: NextRequest) {
         { status: 503 }
       );
     }
-
     console.log("✅ All Facebook credentials available. Connecting to API...");
-
     try {
       // Dynamic import to avoid require()
       // @ts-expect-error - no types available for facebook-nodejs-business-sdk
       const bizSdk = await import("facebook-nodejs-business-sdk");
       const AdAccount = bizSdk.AdAccount;
       const Campaign = bizSdk.Campaign;
-
       // Initialize Facebook Ads API
       const api = bizSdk.FacebookAdsApi.init(credentials.accessToken);
-
       if (credentials.appSecret) {
         api.setDebug(false);
       }
-
       const account = new AdAccount(credentials.adAccountId);
-
       console.log("🔍 Fetching campaigns from Facebook Ads API...");
-
       // Fetch campaigns with insights
       const campaigns = await account.getCampaigns(
         [
@@ -138,9 +124,7 @@ export async function GET(request: NextRequest) {
           },
         }
       );
-
       const campaignData: FacebookAdsCampaign[] = [];
-
       // Fetch insights for each campaign
       for (const campaign of campaigns) {
         try {
@@ -153,14 +137,11 @@ export async function GET(request: NextRequest) {
               },
             }
           );
-
           if (insights && insights.length > 0) {
             const insight = insights[0];
-
             // หา conversions จาก actions
             let conversions = 0;
             let costPerConversion = 0;
-
             if (insight.actions) {
               const conversionAction = insight.actions.find(
                 (action: any) =>
@@ -170,11 +151,9 @@ export async function GET(request: NextRequest) {
                 ? parseFloat(conversionAction.value)
                 : 0;
             }
-
             if (conversions > 0 && insight.spend) {
               costPerConversion = parseFloat(insight.spend) / conversions;
             }
-
             campaignData.push({
               id: campaign.id,
               name: campaign.name,
@@ -197,11 +176,9 @@ export async function GET(request: NextRequest) {
           );
         }
       }
-
       console.log(
         `✅ Retrieved ${campaignData.length} campaigns with insights`
       );
-
       // คำนวณ summary
       const summary = {
         totalImpressions: campaignData.reduce(
@@ -230,7 +207,6 @@ export async function GET(request: NextRequest) {
           0
         ),
       };
-
       const response: FacebookAdsResponse = {
         campaigns: campaignData,
         summary,
@@ -239,14 +215,11 @@ export async function GET(request: NextRequest) {
           endDate,
         },
       };
-
       return NextResponse.json(response);
     } catch (apiError: any) {
       console.error("❌ Facebook Ads API Error:", apiError);
-
       let errorMessage = "เกิดข้อผิดพลาดในการเชื่อมต่อ Facebook Ads API";
       let errorDetails = apiError.message || "Unknown error";
-
       if (errorDetails.includes("access token")) {
         errorMessage = "Access Token ไม่ถูกต้องหรือหมดอายุ";
         errorDetails =
@@ -259,7 +232,6 @@ export async function GET(request: NextRequest) {
         errorMessage = "ไม่พบ Ad Account";
         errorDetails = `Ad Account ID ${credentials.adAccountId} ไม่ถูกต้อง กรุณาตรวจสอบใน Business Manager`;
       }
-
       return NextResponse.json(
         {
           error: errorMessage,
@@ -282,4 +254,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

@@ -1,6 +1,5 @@
 "use client";
 import ScaledCanvas from "../../components/ScaledCanvas";
-
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
@@ -15,7 +14,6 @@ import {
   Package,
   Boxes,
 } from "lucide-react";
-
 // ===== mock data (replace with real data or API) =====
 const slides = [
   {
@@ -34,7 +32,6 @@ const slides = [
     alt: "Banner – Pakku Packaging 3",
   },
 ];
-
 const sidebar = [
   {
     title: "HOT ITEM",
@@ -62,28 +59,23 @@ const sidebar = [
       "FOOD TRAY",
       "SNACK BOX",
       "CUP NOODLES",
-
       // กล่องเบเกอรี่และเค้ก
       "BAKERY BOX",
       "กล่องเค้กสามเหลี่ยม",
       "กล่องเค้กลิ้นชัก",
       "กล่องเค้กหูหิ้ว",
-
       // อุปกรณ์เสริมสำหรับเครื่องดื่ม
       "CUP SLEEVE",
       "ถาดใส่แก้วกาแฟ",
-
       // กระดาษและวัสดุบรรจุภัณฑ์
       "กระดาษลูกฟูก E-B",
       "กระดาษเอนกประสงค์",
       "ซองเครป",
-
       // กล่องเอนกประสงค์
       "กล่องเอนกประสงค์",
     ],
   },
 ];
-
 const features = [
   {
     title: "สินค้าดี",
@@ -101,7 +93,6 @@ const features = [
     img: "/images/pakku-packaging/pakku-Box_3.png",
   },
 ];
-
 // const products = Array.from({ length: 9 }).map((_, i) => ({
 //   id: String(i + 1),
 //   sku: `FIC${800000 + i}`,
@@ -242,7 +233,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
     </h3>
   );
 }
-
 function SidebarSection({
   title,
   icon,
@@ -311,7 +301,6 @@ function SidebarSection({
     </div>
   );
 }
-
 function FeatureTile({ t }: { t: (typeof features)[number] }) {
   return (
     <a
@@ -334,7 +323,6 @@ function FeatureTile({ t }: { t: (typeof features)[number] }) {
     </a>
   );
 }
-
 function ProductCard({ p }: { p: (typeof products)[number] }) {
   return (
     <Link
@@ -365,7 +353,6 @@ function ProductCard({ p }: { p: (typeof products)[number] }) {
     </Link>
   );
 }
-
 function Breadcrumb({ selectedCategory }: { selectedCategory: string | null }) {
   return (
     <nav
@@ -386,12 +373,10 @@ function Breadcrumb({ selectedCategory }: { selectedCategory: string | null }) {
     </nav>
   );
 }
-
 export default function PakkuCatalogPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
   useEffect(() => {
     const id = setInterval(
       () => setIndex((i) => (i + 1) % slides.length),
@@ -399,13 +384,11 @@ export default function PakkuCatalogPage() {
     );
     return () => clearInterval(id);
   }, []);
-
   // กรองสินค้าตามหมวดหมู่ที่เลือก
   const filteredProducts = useMemo(() => {
     if (!selectedCategory) return products;
     return products.filter((p) => p.sku === selectedCategory);
   }, [selectedCategory]);
-
   return (
     <ScaledCanvas>
       <div className="min-h-screen bg-neutral-50 text-slate-900 py-5">
@@ -421,7 +404,6 @@ export default function PakkuCatalogPage() {
                 }`}
               />
             ))}
-
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/70 px-2 py-1">
               <div className="flex items-center gap-1.5">
                 {slides.map((_, i) => (
@@ -438,7 +420,6 @@ export default function PakkuCatalogPage() {
             </div>
           </div>
         </section>
-
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 px-4 py-6 md:grid-cols-[280px_1fr]">
           <aside className="hidden md:block">
             <div className="sticky top-[88px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -469,14 +450,12 @@ export default function PakkuCatalogPage() {
               </div>
             </div>
           </aside>
-
           <main>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((f) => (
                 <FeatureTile key={f.title} t={f} />
               ))}
             </div>
-
             <div className="mt-8 flex items-center justify-between gap-4">
               <Breadcrumb selectedCategory={selectedCategory} />
               <div className="hidden text-sm text-slate-500 md:block">
@@ -488,7 +467,6 @@ export default function PakkuCatalogPage() {
                 )}
               </div>
             </div>
-
             {selectedCategory && (
               <div className="mt-4 flex items-center gap-2 flex-wrap">
                 <span className="text-sm text-slate-600">กรองตาม:</span>
@@ -503,7 +481,6 @@ export default function PakkuCatalogPage() {
                 </span>
               </div>
             )}
-
             <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((p) => <ProductCard key={p.id} p={p} />)
@@ -522,7 +499,6 @@ export default function PakkuCatalogPage() {
             </div>
           </main>
         </div>
-
         {sidebarOpen && (
           <div
             className="fixed inset-0 z-50 md:hidden"
@@ -576,4 +552,4 @@ export default function PakkuCatalogPage() {
       </div>
     </ScaledCanvas>
   );
-}
+}

@@ -1,9 +1,7 @@
 "use client";
-
 import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { ChevronRight, Award, Users, TrendingUp } from "lucide-react";
-
 // Type definitions
 interface CustomerLogo {
   name: string;
@@ -13,7 +11,6 @@ interface CustomerLogo {
   originalWidth: number;
   originalHeight: number;
 }
-
 interface LogoCardProps {
   name: string;
   logo: string;
@@ -21,7 +18,6 @@ interface LogoCardProps {
   width?: number;
   height?: number;
 }
-
 const OurCustomers: React.FC = () => {
   const [counters, setCounters] = useState({
     customers: 0,
@@ -30,7 +26,6 @@ const OurCustomers: React.FC = () => {
   });
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
-
   // Helper function to calculate optimal dimensions
   const calculateOptimalDimensions = (
     originalWidth: number,
@@ -39,18 +34,14 @@ const OurCustomers: React.FC = () => {
     maxHeight: number = 80
   ) => {
     const aspectRatio = originalWidth / originalHeight;
-
     let width = maxWidth;
     let height = maxWidth / aspectRatio;
-
     if (height > maxHeight) {
       height = maxHeight;
       width = maxHeight * aspectRatio;
     }
-
     return { width: Math.round(width), height: Math.round(height) };
   };
-
   // Customer logos data with optimized dimensions
   const customerLogos: CustomerLogo[] = [
     {
@@ -565,36 +556,29 @@ const OurCustomers: React.FC = () => {
       ...calculateOptimalDimensions(74, 94, 80, 100),
     },
   ];
-
   // Counter animation
   useEffect(() => {
     const timer = setTimeout(() => {
       const duration = 2000;
       const steps = 60;
       const stepDuration = duration / steps;
-
       let currentStep = 0;
       const interval = setInterval(() => {
         currentStep++;
         const progress = currentStep / steps;
-
         setCounters({
           customers: Math.round(100 * progress),
           years: Math.round(42 * progress),
           satisfaction: Math.round(98 * progress),
         });
-
         if (currentStep >= steps) {
           clearInterval(interval);
         }
       }, stepDuration);
-
       return () => clearInterval(interval);
     }, 500);
-
     return () => clearTimeout(timer);
   }, []);
-
   // Intersection Observer for animations
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -610,17 +594,14 @@ const OurCustomers: React.FC = () => {
       },
       { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }
     );
-
     const elements = document.querySelectorAll(".observe-animation");
     elements.forEach((el) => observerRef.current?.observe(el));
-
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
   }, []);
-
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
       {/* Hero Section */}
@@ -634,7 +615,6 @@ const OurCustomers: React.FC = () => {
               ด้วยความไว้วางใจจากองค์กรชั้นนำทั่วประเทศ
               เราภูมิใจที่ได้เป็นส่วนหนึ่งในความสำเร็จของลูกค้ามากกว่า 20 ปี
             </p>
-
             {/* Stats */}
             {/* <div className="flex flex-wrap justify-center gap-6 md:gap-12 mt-6 mb-8">
               <div className="bg-white rounded-2xl shadow-lg p-6 min-w-[180px] transform hover:scale-105 transition-transform duration-300">
@@ -646,7 +626,6 @@ const OurCustomers: React.FC = () => {
                 </div>
                 <div className="text-gray-600 mt-2">ลูกค้าที่ไว้วางใจ</div>
               </div>
-
               <div className="bg-white rounded-2xl shadow-lg p-6 min-w-[180px] transform hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-center mb-4">
                   <Award className="w-8 h-8 text-green-600" />
@@ -656,7 +635,6 @@ const OurCustomers: React.FC = () => {
                 </div>
                 <div className="text-gray-600 mt-2">ปีประสบการณ์</div>
               </div>
-
               <div className="bg-white rounded-2xl shadow-lg p-6 min-w-[180px] transform hover:scale-105 transition-transform duration-300">
                 <div className="flex items-center justify-center mb-4">
                   <TrendingUp className="w-8 h-8 text-red-600" />
@@ -670,14 +648,12 @@ const OurCustomers: React.FC = () => {
           </div>
         </div>
       </section>
-
       {/* Customers Grid */}
       <section className="py-4 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* <h2 className="text-3xl font-semibold text-center text-gray-900 mb-12">
             ลูกค้าที่ไว้วางใจเรา
           </h2> */}
-
           <div
             id="logo-grid"
             className="observe-animation bg-white rounded-3xl border border-gray-200 shadow-xl p-4 md:p-6"
@@ -695,7 +671,6 @@ const OurCustomers: React.FC = () => {
               ))}
             </div>
           </div>
-
           {/* Trust Badge */}
           {/* <div className="mt-16 text-center bg-gray-50 rounded-2xl p-8">
             <h3 className="text-2xl font-semibold text-gray-900 mb-4">
@@ -711,7 +686,6 @@ const OurCustomers: React.FC = () => {
           </div> */}
         </div>
       </section>
-
       <style jsx>{`
         @keyframes fade-in {
           from {
@@ -723,7 +697,6 @@ const OurCustomers: React.FC = () => {
             transform: translateY(0);
           }
         }
-
         @keyframes float {
           0%,
           100% {
@@ -733,7 +706,6 @@ const OurCustomers: React.FC = () => {
             transform: translateY(-8px);
           }
         }
-
         @keyframes shine {
           0% {
             transform: translateX(-100%);
@@ -742,15 +714,12 @@ const OurCustomers: React.FC = () => {
             transform: translateX(100%);
           }
         }
-
         .animate-fade-in {
           animation: fade-in 0.8s ease-out;
         }
-
         .logo-float {
           animation: float 6s ease-in-out infinite;
         }
-
         .title-underline::after {
           content: "";
           position: absolute;
@@ -761,7 +730,6 @@ const OurCustomers: React.FC = () => {
           border-radius: 9999px;
           background-image: linear-gradient(to right, #2563eb, #ef4444);
         }
-
         /* Add space for the underline and a 5px gap below it */
         .title-underline {
           padding-bottom: 9px; /* 4px line + 5px gap */
@@ -770,7 +738,6 @@ const OurCustomers: React.FC = () => {
     </div>
   );
 };
-
 // Logo Card Component with TypeScript
 const LogoCard: React.FC<LogoCardProps> = ({
   name,
@@ -781,11 +748,9 @@ const LogoCard: React.FC<LogoCardProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [imageError, setImageError] = useState(false);
-
   // Use provided dimensions or defaults
   const finalWidth = width || 150;
   const finalHeight = height || 80;
-
   return (
     <div
       className={`
@@ -805,7 +770,6 @@ const LogoCard: React.FC<LogoCardProps> = ({
     >
       {/* Hover Gradient Effect */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
       {/* Shine Effect */}
       {isHovered && (
         <div
@@ -817,7 +781,6 @@ const LogoCard: React.FC<LogoCardProps> = ({
           }}
         />
       )}
-
       {/* Logo Image */}
       <div className="relative z-10 transition-all duration-300 group-hover:scale-105">
         {!imageError ? (
@@ -843,7 +806,6 @@ const LogoCard: React.FC<LogoCardProps> = ({
           </div>
         )}
       </div>
-
       <style jsx>{`
         @keyframes shine {
           0% {
@@ -857,5 +819,4 @@ const LogoCard: React.FC<LogoCardProps> = ({
     </div>
   );
 };
-
-export default OurCustomers;
+export default OurCustomers;

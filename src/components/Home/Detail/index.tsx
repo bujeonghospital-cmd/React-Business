@@ -3,7 +3,6 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import ScaledCanvas from "../../ScaledCanvas";
 import "animate.css";
-
 // ====== Data ======
 const cards = [
   {
@@ -31,21 +30,17 @@ const cards = [
     href: "our-services",
   },
 ];
-
 // ====== Component ======
 export default function Dedicated() {
   const sectionRef = useRef<HTMLElement | null>(null);
-
   useEffect(() => {
     const root = sectionRef.current;
     if (!root) return;
-
     // --- เติม prefix animate__ อัตโนมัติ ---
     const normalizeAni = (ani: string) => {
       const tokens = ani.trim().split(/\s+/).filter(Boolean);
       const out: string[] = [];
       let usesAnimate = false;
-
       tokens.forEach((t) => {
         if (t.startsWith("animate__")) {
           out.push(t);
@@ -69,18 +64,15 @@ export default function Dedicated() {
           out.push(t);
         }
       });
-
       if (usesAnimate && !out.includes("animate__animated")) {
         out.push("animate__animated");
       }
       return out;
     };
-
     const els = root.querySelectorAll<HTMLElement>("[data-ani]");
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
     if (prefersReduced || !("IntersectionObserver" in window)) {
       els.forEach((el) => {
         const classes = normalizeAni(el.dataset.ani || "");
@@ -90,26 +82,21 @@ export default function Dedicated() {
       });
       return;
     }
-
     // ตรวจสอบว่าเป็นมือถือหรือไม่
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const el = entry.target as HTMLElement;
           const classes = normalizeAni(el.dataset.ani || "");
           const hasPlayed = el.dataset.aniPlayed === "true";
-
           if (entry.isIntersecting) {
             // ถ้าเป็นมือถือและเล่นไปแล้ว ไม่เล่นอีก
             if (isMobile && hasPlayed) return;
-
             el.classList.remove(...classes);
             void el.offsetWidth; // restart
             el.classList.add(...classes);
             el.classList.remove("opacity-0");
-
             // ทำเครื่องหมายว่าเล่นแล้ว (สำหรับมือถือ)
             if (isMobile) {
               el.dataset.aniPlayed = "true";
@@ -125,27 +112,22 @@ export default function Dedicated() {
       },
       { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
     );
-
     els.forEach((el) => {
       el.classList.add("opacity-0");
       io.observe(el);
     });
-
     return () => {
       io.disconnect();
     };
   }, []);
-
   // ——— ปรับความนุ่มและความช้าแบบรวม ———
   const motionVars = {
     ["--animate-duration" as any]: "0.7s",
     ["--animate-delay" as any]: "0s",
   } as React.CSSProperties;
-
   // สเต็ปหน่วงให้ค่อย ๆ ทยอยโผล่
   const baseDelay = 150;
   const step = 120;
-
   return (
     <ScaledCanvas>
       <section
@@ -156,15 +138,12 @@ export default function Dedicated() {
       >
         <div className="awe-parallax awe-static" />
         <div className="overlay-color-1" />
-
         <div className="mx-auto w-full max-w-[1400px] px-4">
           {/* หัวข้อ: ช้าลงและนุ่ม */}
           <h4 className="tpp-section-title opacity-0" data-ani="fadeInUp slow">
             สินค้าและบริการของเรา
           </h4>
-
           <div className="mt-6 md:mt-8" />
-
           {/* การ์ด: เคลื่อนช้า เนียน และสเต็ปชัด */}
           <div
             className="
@@ -193,7 +172,6 @@ export default function Dedicated() {
                     aria-hidden="true"
                   />
                 )}
-
                 {/* static image as overlay background (covers fully, fades on hover) */}
                 <div
                   className={`
@@ -205,7 +183,6 @@ export default function Dedicated() {
                   role="img"
                   aria-label={item.title}
                 />
-
                 <Link
                   href={item.href}
                   className="absolute inset-0 z-40"
@@ -213,13 +190,11 @@ export default function Dedicated() {
                 >
                   <span className="sr-only">{item.title}</span>
                 </Link>
-
                 <div
                   className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent z-20 opacity-0"
                   data-ani="fadeIn slow"
                   style={{ animationDelay: `${baseDelay + i * step + 120}ms` }}
                 />
-
                 <p
                   className="
                     absolute bottom-0 left-0 m-3
@@ -238,7 +213,6 @@ export default function Dedicated() {
                 >
                   {item.title}
                 </p>
-
                 <div className="absolute inset-0 transition-transform duration-500 ease-[cubic-bezier(.22,.61,.36,1)] group-hover:-translate-y-0.5" />
               </div>
             ))}
@@ -247,4 +221,4 @@ export default function Dedicated() {
       </section>
     </ScaledCanvas>
   );
-}
+}

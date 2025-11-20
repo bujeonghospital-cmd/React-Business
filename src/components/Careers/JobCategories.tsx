@@ -1,7 +1,5 @@
 "use client";
-
 import React, { useState } from "react";
-
 const categories = [
   { id: "all", name: "ทั้งหมด", count: 15, icon: "📋" },
   { id: "management", name: "บริหารจัดการ", count: 2, icon: "👔" },
@@ -11,10 +9,8 @@ const categories = [
   { id: "hr", name: "ทรัพยากรบุคคล", count: 2, icon: "👥" },
   { id: "other", name: "อื่นๆ", count: 1, icon: "📌" },
 ];
-
 const JobCategories = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
-
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {categories.map((category) => (
@@ -58,7 +54,6 @@ const JobCategories = () => {
               </p>
             </div>
           </div>
-
           {selectedCategory === category.id && (
             <div className="absolute inset-0 rounded-xl border-2 border-blue-600 animate-pulse pointer-events-none" />
           )}
@@ -67,5 +62,4 @@ const JobCategories = () => {
     </div>
   );
 };
-
-export default JobCategories;
+export default JobCategories;

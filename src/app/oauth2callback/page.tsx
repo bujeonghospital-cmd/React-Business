@@ -1,14 +1,11 @@
 // src/app/oauth2callback/page.tsx
 "use client";
-
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-
 function OAuthCallbackContent() {
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
   const error = searchParams.get("error");
-
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center p-6">
@@ -30,7 +27,6 @@ function OAuthCallbackContent() {
       </div>
     );
   }
-
   if (code) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-6">
@@ -39,12 +35,10 @@ function OAuthCallbackContent() {
             <div className="text-6xl mb-4">✅</div>
             <h1 className="text-2xl font-bold text-green-600 mb-4">สำเร็จ!</h1>
             <p className="text-gray-600 mb-6">ได้รับ Authorization Code แล้ว</p>
-
             <div className="bg-gray-900 rounded-lg p-4 mb-6 text-left overflow-x-auto">
               <p className="text-xs text-gray-400 mb-2">Authorization Code:</p>
               <code className="text-sm text-green-400 break-all">{code}</code>
             </div>
-
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 text-left">
               <h3 className="font-bold text-blue-900 mb-2">📋 ขั้นตอนต่อไป:</h3>
               <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
@@ -55,7 +49,6 @@ function OAuthCallbackContent() {
                 <li>นำ Refresh Token ไปใส่ใน .env.local</li>
               </ol>
             </div>
-
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => {
@@ -78,7 +71,6 @@ function OAuthCallbackContent() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-6">
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full">
@@ -91,7 +83,6 @@ function OAuthCallbackContent() {
     </div>
   );
 }
-
 export default function OAuthCallbackPage() {
   return (
     <Suspense
@@ -107,4 +98,4 @@ export default function OAuthCallbackPage() {
       <OAuthCallbackContent />
     </Suspense>
   );
-}
+}

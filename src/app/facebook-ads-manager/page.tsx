@@ -1,8 +1,6 @@
 "use client";
-
 import React, { useState, useEffect, useCallback } from "react";
 import { FacebookProvider, EmbeddedVideo, EmbeddedPost } from "react-facebook";
-
 // Declare Facebook SDK types
 declare global {
   interface Window {
@@ -10,7 +8,6 @@ declare global {
     fbAsyncInit: () => void;
   }
 }
-
 // Facebook SDK Initialization
 if (typeof window !== "undefined") {
   // Load Facebook SDK
@@ -22,7 +19,6 @@ if (typeof window !== "undefined") {
       });
     }
   };
-
   // Load SDK script
   if (!document.getElementById("facebook-jssdk")) {
     const script = document.createElement("script");
@@ -34,7 +30,6 @@ if (typeof window !== "undefined") {
     document.head.appendChild(script);
   }
 }
-
 // ปิด root layout และเพิ่ม CSS สำหรับ modal
 if (typeof document !== "undefined") {
   const style = document.createElement("style");
@@ -51,14 +46,12 @@ if (typeof document !== "undefined") {
       padding: 0 !important;
       margin: 0 !important;
     }
-    
     /* Mobile Responsive Styles */
     @media (max-width: 640px) {
       .min-h-screen {
         min-height: 100vh !important;
       }
     }
-    
     @media (max-width: 768px) {
       /* Make tables scrollable on mobile */
       .overflow-x-auto {
@@ -139,12 +132,10 @@ if (typeof document !== "undefined") {
   `;
   document.head.appendChild(style);
 }
-
 interface Action {
   action_type: string;
   value: string;
 }
-
 interface AdCreative {
   id: string;
   thumbnail_url?: string;
@@ -153,7 +144,6 @@ interface AdCreative {
   object_story_spec?: any;
   effective_object_story_id?: string;
 }
-
 interface AdInsight {
   ad_id: string;
   ad_name: string;
@@ -176,16 +166,13 @@ interface AdInsight {
   cost_per_action_type?: { action_type: string; value: string }[];
   creative?: AdCreative;
 }
-
 interface ApiResponse {
   success: boolean;
   data: AdInsight[];
   error?: string;
   details?: any;
 }
-
 type ViewMode = "campaigns" | "adsets" | "ads";
-
 export default function FacebookAdsManagerPage() {
   const [insights, setInsights] = useState<AdInsight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -220,13 +207,11 @@ export default function FacebookAdsManagerPage() {
     Map<string, { [date: string]: number }>
   >(new Map());
   const [phoneLeadsLoading, setPhoneLeadsLoading] = useState(false);
-
   // Helper function to check if local video exists
   const getLocalVideoPath = (videoId: string | undefined): string | null => {
     if (!videoId) return null;
     return `/images/video/${videoId}.mp4`;
   };
-
   // Re-parse Facebook SDK when modal opens
   useEffect(() => {
     if (showVideoModal && typeof window !== "undefined" && window.FB) {
@@ -234,77 +219,36 @@ export default function FacebookAdsManagerPage() {
       setTimeout(() => {
         if (window.FB) {
           window.FB.XFBML.parse();
-          console.log("🎬 [Facebook SDK] Parsed embedded video");
         }
       }, 100);
     }
   }, [showVideoModal, selectedAdForPreview]);
-
   const fetchAdCreatives = useCallback(async (adIds: string[]) => {
-    console.log(
-      "🎬 [fetchAdCreatives] Starting fetch for",
-      adIds.length,
-      "ads:",
-      adIds
-    );
     setCreativesLoading(true);
     try {
       const creativesMap = new Map<string, AdCreative>();
-
       for (const adId of adIds) {
         try {
-          console.log(
-            `📡 [fetchAdCreatives] Fetching creative for ad: ${adId}`
-          );
           // ใช้ Next.js API route แทน Railway API
           const response = await fetch(
             `/api/facebook-ads-creative?ad_id=${adId}`
           );
           const result = await response.json();
-          console.log(`✅ [fetchAdCreatives] Response for ${adId}:`, result);
-
           if (result.success && result.data) {
             creativesMap.set(adId, result.data);
-            console.log(`✅ [fetchAdCreatives] Saved creative for ${adId}:`, {
-              id: result.data.id,
-              has_thumbnail: !!result.data.thumbnail_url,
-              has_image: !!result.data.image_url,
-              has_video: !!result.data.video_id,
-              thumbnail_url:
-                result.data.thumbnail_url?.substring(0, 100) + "...",
-            });
-          } else {
-            console.warn(`⚠️ [fetchAdCreatives] No data for ${adId}:`, result);
           }
         } catch (error) {
-          console.error(
-            `❌ [fetchAdCreatives] Error fetching creative for ad ${adId}:`,
-            error
-          );
+          // Error fetching creative
         }
       }
-
-      console.log(
-        `🎉 [fetchAdCreatives] Setting creatives map with ${creativesMap.size} items`
-      );
       // Force re-render by creating a new Map instance
       setAdCreatives(new Map(creativesMap));
-      console.log("📊 [fetchAdCreatives] Final creatives map:", creativesMap);
-      creativesMap.forEach((creative, adId) => {
-        console.log(
-          `  - Ad ${adId}: thumbnail=${creative.thumbnail_url?.substring(
-            0,
-            50
-          )}...`
-        );
-      });
     } catch (error) {
-      console.error("❌ [fetchAdCreatives] Fatal error:", error);
+      // Fatal error
     } finally {
       setCreativesLoading(false);
     }
   }, []);
-
   const fetchInsights = useCallback(
     async (isBackgroundRefresh = false) => {
       try {
@@ -312,16 +256,13 @@ export default function FacebookAdsManagerPage() {
           setLoading(true);
         }
         setError(null);
-
         const levelParam =
           viewMode === "campaigns"
             ? "campaign"
             : viewMode === "adsets"
             ? "adset"
             : "ad";
-
         let url = `https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=${levelParam}`;
-
         const filtering = JSON.stringify([
           {
             field: "action_type",
@@ -334,7 +275,6 @@ export default function FacebookAdsManagerPage() {
         ]);
         url += `&filtering=${encodeURIComponent(filtering)}`;
         url += `&action_breakdowns=action_type`;
-
         if (dateRange === "custom" && customDateStart && customDateEnd) {
           const timeRange = JSON.stringify({
             since: customDateStart,
@@ -344,14 +284,11 @@ export default function FacebookAdsManagerPage() {
         } else {
           url += `&date_preset=${dateRange}`;
         }
-
         const response = await fetch(url);
         const result: ApiResponse = await response.json();
-
         if (!response.ok || !result.success) {
           throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
         }
-
         const uniqueData = new Map<string, AdInsight>();
         result.data.forEach((item) => {
           const key = item.ad_id || item.adset_id || item.campaign_id;
@@ -393,27 +330,16 @@ export default function FacebookAdsManagerPage() {
             uniqueData.set(key, { ...item });
           }
         });
-
         const insightsArray = Array.from(uniqueData.values());
         setInsights(insightsArray);
-
         // Fetch creatives for ALL ads
         const allAdIds = insightsArray
           .filter((item) => item.ad_id)
           .map((item) => item.ad_id);
-
         if (allAdIds.length > 0) {
-          console.log(
-            "🚀 [fetchInsights] Fetching creatives for ALL ads:",
-            allAdIds.length,
-            "ads"
-          );
           fetchAdCreatives(allAdIds);
-        } else {
-          console.log("ℹ️ [fetchInsights] No ads found to fetch creatives");
         }
       } catch (err) {
-        console.error("Error fetching insights:", err);
         setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
       } finally {
         if (!isBackgroundRefresh) {
@@ -423,13 +349,11 @@ export default function FacebookAdsManagerPage() {
     },
     [dateRange, viewMode, customDateStart, customDateEnd, fetchAdCreatives]
   );
-
   const fetchGoogleSheetsData = useCallback(async () => {
     try {
       setGoogleSheetsLoading(true);
       let url =
         "https://believable-ambition-production.up.railway.app/api/google-sheets-data";
-
       if (dateRange === "custom" && customDateStart && customDateEnd) {
         const timeRange = JSON.stringify({
           since: customDateStart,
@@ -439,37 +363,30 @@ export default function FacebookAdsManagerPage() {
       } else {
         url += `?date_preset=${dateRange}`;
       }
-
       const response = await fetch(url);
       const result = await response.json();
-
       if (!response.ok || !result.success) {
-        console.error("Google Sheets error:", result.error);
         setGoogleSheetsData(0);
       } else {
         setGoogleSheetsData(result.total || 0);
       }
     } catch (err) {
-      console.error("Error fetching Google Sheets data:", err);
       setGoogleSheetsData(0);
     } finally {
       setGoogleSheetsLoading(false);
     }
   }, [dateRange, customDateStart, customDateEnd]);
-
   const fetchGoogleAdsData = useCallback(async () => {
     try {
       setGoogleAdsLoading(true);
       let url =
         "https://believable-ambition-production.up.railway.app/api/google-ads";
-
       if (dateRange === "custom" && customDateStart && customDateEnd) {
         url += `?startDate=${customDateStart}&endDate=${customDateEnd}`;
       } else {
         const today = new Date();
         let startDate = "";
         let endDate = today.toISOString().split("T")[0];
-
         switch (dateRange) {
           case "today":
             startDate = endDate;
@@ -511,74 +428,59 @@ export default function FacebookAdsManagerPage() {
           default:
             startDate = endDate;
         }
-
         url += `?startDate=${startDate}&endDate=${endDate}`;
       }
-
       const response = await fetch(url);
       const result = await response.json();
-
       if (!response.ok || result.error) {
-        console.error("Google Ads error:", result.error);
         setGoogleAdsData(0);
       } else {
         const totalClicks = result.summary?.totalClicks || 0;
         setGoogleAdsData(totalClicks);
       }
     } catch (err) {
-      console.error("Error fetching Google Ads data:", err);
       setGoogleAdsData(0);
     } finally {
       setGoogleAdsLoading(false);
     }
   }, [dateRange, customDateStart, customDateEnd]);
-
   const fetchFacebookBalance = useCallback(async () => {
     try {
       setFacebookBalanceLoading(true);
       const response = await fetch("/api/facebook-ads-balance");
       const result = await response.json();
-
       if (!response.ok || !result.success) {
-        console.error("Facebook Balance error:", result.error);
         setFacebookBalance(0);
       } else {
         setFacebookBalance(result.data.available_balance || 0);
       }
     } catch (err) {
-      console.error("Error fetching Facebook balance:", err);
       setFacebookBalance(0);
     } finally {
       setFacebookBalanceLoading(false);
     }
   }, []);
-
   const fetchPhoneCount = useCallback(async () => {
     try {
       setPhoneCountLoading(true);
       const response = await fetch("/api/phone-count");
       const result = await response.json();
-
       if (!response.ok || !result.success) {
-        console.error("Phone Count error:", result.error);
         setPhoneCount(0);
       } else {
         setPhoneCount(result.count || 0);
       }
     } catch (err) {
-      console.error("Error fetching phone count:", err);
       setPhoneCount(0);
     } finally {
       setPhoneCountLoading(false);
     }
   }, []);
-
   const fetchPhoneLeadsData = useCallback(
     async (dates: string[], adIds: string[]) => {
       try {
         setPhoneLeadsLoading(true);
         const phoneLeadsMap = new Map<string, { [date: string]: number }>();
-
         // Fetch phone leads for each date
         for (const date of dates) {
           try {
@@ -587,7 +489,6 @@ export default function FacebookAdsManagerPage() {
               `/api/facebook-ads-phone-leads?date=${date}&ad_ids=${adIdsParam}`
             );
             const result = await response.json();
-
             if (result.success && result.data) {
               // Store phone leads count for each ad_id on this date
               Object.keys(result.data).forEach((adId) => {
@@ -598,17 +499,11 @@ export default function FacebookAdsManagerPage() {
               });
             }
           } catch (error) {
-            console.error(
-              `❌ Error fetching phone leads for date ${date}:`,
-              error
-            );
+            // Error fetching phone leads
           }
         }
-
         setPhoneLeadsData(new Map(phoneLeadsMap));
-        console.log("✅ [Phone Leads] Loaded data for", dates.length, "dates");
       } catch (err) {
-        console.error("Error fetching phone leads data:", err);
         setPhoneLeadsData(new Map());
       } finally {
         setPhoneLeadsLoading(false);
@@ -616,28 +511,17 @@ export default function FacebookAdsManagerPage() {
     },
     []
   );
-
   const fetchDailySummaryData = useCallback(async () => {
     try {
       setDailySummaryLoading(true);
-
       // Fetch last 30 days data from Facebook Ads API with daily breakdown
       const url = `https://believable-ambition-production.up.railway.app/api/facebook-ads-campaigns?level=ad&date_preset=last_30d&time_increment=1`;
-
       const response = await fetch(url);
       const result: ApiResponse = await response.json();
-
       if (!response.ok || !result.success) {
-        console.error("Daily Summary error:", result.error);
         setDailySummaryData([]);
       } else {
         setDailySummaryData(result.data || []);
-        console.log(
-          "✅ [Daily Summary] Loaded",
-          result.data?.length || 0,
-          "records"
-        );
-
         // Extract unique dates and ad_ids
         const uniqueDates = new Set<string>();
         const uniqueAdIds = new Set<string>();
@@ -645,29 +529,24 @@ export default function FacebookAdsManagerPage() {
           if (ad.date_start) uniqueDates.add(ad.date_start);
           if (ad.ad_id) uniqueAdIds.add(ad.ad_id);
         });
-
         const dates = Array.from(uniqueDates)
           .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
           .slice(0, 30);
         const adIds = Array.from(uniqueAdIds);
-
         // Fetch phone leads data
         if (dates.length > 0 && adIds.length > 0) {
           fetchPhoneLeadsData(dates, adIds);
         }
       }
     } catch (err) {
-      console.error("Error fetching daily summary data:", err);
       setDailySummaryData([]);
     } finally {
       setDailySummaryLoading(false);
     }
   }, [fetchPhoneLeadsData]);
-
   useEffect(() => {
     const loadAllData = async () => {
       try {
-        console.log("🚀 [useEffect] Starting data load...");
         await Promise.all([
           fetchInsights(),
           fetchGoogleSheetsData(),
@@ -676,18 +555,14 @@ export default function FacebookAdsManagerPage() {
           fetchPhoneCount(),
           fetchDailySummaryData(),
         ]);
-        console.log("✅ [useEffect] All data loaded successfully");
       } catch (error) {
-        console.error("❌ [useEffect] Error loading data:", error);
         setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
         setLoading(false);
       }
     };
     loadAllData();
-
     // Auto-refresh every 1 minute (60000ms) in background
     const refreshInterval = setInterval(() => {
-      console.log("🔄 [Auto-refresh] Refreshing data in background...");
       Promise.all([
         fetchInsights(true), // true = background refresh (ไม่แสดง loading state)
         fetchGoogleSheetsData(),
@@ -695,18 +570,10 @@ export default function FacebookAdsManagerPage() {
         fetchFacebookBalance(),
         fetchPhoneCount(),
         fetchDailySummaryData(),
-      ])
-        .then(() => {
-          console.log("✅ [Auto-refresh] Data refreshed successfully");
-        })
-        .catch((error) => {
-          console.error("❌ [Auto-refresh] Error refreshing data:", error);
-        });
+      ]);
     }, 60000); // 60000ms = 1 minute
-
     // Cleanup interval on unmount
     return () => {
-      console.log("🧹 [Cleanup] Clearing refresh interval");
       clearInterval(refreshInterval);
     };
   }, [
@@ -717,25 +584,16 @@ export default function FacebookAdsManagerPage() {
     fetchPhoneCount,
     fetchDailySummaryData,
   ]);
-
   // Monitor adCreatives changes
   useEffect(() => {
-    console.log("🔄 [useEffect] adCreatives changed! Size:", adCreatives.size);
-    adCreatives.forEach((creative, adId) => {
-      console.log(`  ✅ Ad ${adId} has creative:`, {
-        id: creative.id,
-        thumbnail: creative.thumbnail_url?.substring(0, 60) + "...",
-      });
-    });
+    // adCreatives updated
   }, [adCreatives]);
-
   const formatNumber = (value: string | number) => {
     const num = typeof value === "string" ? parseFloat(value) : value;
     return isNaN(num)
       ? "—"
       : num.toLocaleString("th-TH", { maximumFractionDigits: 2 });
   };
-
   const formatCurrency = (value: string | number) => {
     const num = typeof value === "string" ? parseFloat(value) : value;
     return isNaN(num)
@@ -745,7 +603,6 @@ export default function FacebookAdsManagerPage() {
           maximumFractionDigits: 2,
         })}`;
   };
-
   const formatPercentage = (value: string | number) => {
     const num = typeof value === "string" ? parseFloat(value) : value;
     return isNaN(num)
@@ -755,7 +612,6 @@ export default function FacebookAdsManagerPage() {
           maximumFractionDigits: 2,
         })}%`;
   };
-
   const getResultsByActionType = (
     actions: Action[] | undefined,
     actionType: string
@@ -764,7 +620,6 @@ export default function FacebookAdsManagerPage() {
     const action = actions.find((a) => a.action_type === actionType);
     return action ? parseInt(action.value || "0") : 0;
   };
-
   const getTotalResults = () => {
     let total = 0;
     insights.forEach((ad) => {
@@ -781,7 +636,6 @@ export default function FacebookAdsManagerPage() {
     });
     return total;
   };
-
   const getTotalMessagingConnection = () => {
     let total = 0;
     insights.forEach((ad) => {
@@ -799,7 +653,6 @@ export default function FacebookAdsManagerPage() {
     });
     return total;
   };
-
   const getTotalLeads = () => {
     let total = 0;
     insights.forEach((ad) => {
@@ -815,7 +668,6 @@ export default function FacebookAdsManagerPage() {
     });
     return total;
   };
-
   const handleDateRangeChange = (value: string) => {
     setDateRange(value);
     if (value === "custom") {
@@ -827,7 +679,6 @@ export default function FacebookAdsManagerPage() {
       setShowDatePicker(false);
     }
   };
-
   const applyCustomDateRange = () => {
     if (customDateStart && customDateEnd) {
       setShowDatePicker(false);
@@ -836,39 +687,13 @@ export default function FacebookAdsManagerPage() {
       }, 0);
     }
   };
-
   // Filter insights based on main date range (ใช้ช่วงเวลาจาก 📊 ช่องควบคุม)
   const getTopAdsFilteredInsights = useCallback(() => {
-    console.log(
-      "🔍 [getTopAdsFilteredInsights] Using main dateRange:",
-      dateRange
-    );
-    console.log(
-      "📊 [getTopAdsFilteredInsights] Total insights:",
-      insights.length
-    );
-
     // ใช้ช่วงเวลาเดียวกับ main dateRange (📊 ช่องควบคุม)
     return insights;
   }, [insights, dateRange]);
-
   const filteredInsights = insights;
-
-  // Debug logging
-  console.log("🔍 [Render] Component State:", {
-    loading,
-    error,
-    insightsCount: insights.length,
-    creativesCount: adCreatives.size,
-    facebookBalance,
-    googleSheetsData,
-    googleAdsData,
-    selectedPlatform,
-    dateRange,
-  });
-
   if (loading) {
-    console.log("⏳ [Render] Showing loading state");
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -881,9 +706,7 @@ export default function FacebookAdsManagerPage() {
       </div>
     );
   }
-
   if (error) {
-    console.error("❌ [Render] Showing error state:", error);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-lg p-8 max-w-2xl w-full">
@@ -908,14 +731,6 @@ export default function FacebookAdsManagerPage() {
       </div>
     );
   }
-
-  // Final render check
-  console.log(
-    "✅ [Render] Rendering main component with",
-    insights.length,
-    "insights"
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Top Navigation Bar with Date Range Tabs */}
@@ -1002,7 +817,6 @@ export default function FacebookAdsManagerPage() {
               </span>
             )}
           </div>
-
           {/* Mobile View: Dropdown */}
           <div className="md:hidden space-y-3">
             <div className="flex items-center gap-2">
@@ -1029,7 +843,6 @@ export default function FacebookAdsManagerPage() {
           </div>
         </div>
       </div>
-
       {/* Calendar Date Picker */}
       {showDatePicker && (
         <div
@@ -1055,7 +868,6 @@ export default function FacebookAdsManagerPage() {
                 ✕
               </button>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
               <div>
                 <label className="block text-base font-bold text-gray-700 mb-4">
@@ -1088,7 +900,6 @@ export default function FacebookAdsManagerPage() {
                 </div>
               </div>
             </div>
-
             <div className="flex space-x-4 justify-end">
               <button
                 onClick={() => setShowDatePicker(false)}
@@ -1106,7 +917,6 @@ export default function FacebookAdsManagerPage() {
           </div>
         </div>
       )}
-
       {/* Video Preview Modal */}
       {showVideoModal && selectedAdForPreview && (
         <div
@@ -1141,7 +951,6 @@ export default function FacebookAdsManagerPage() {
                 ✕
               </button>
             </div>
-
             <div className="p-6">
               {/* Video/Post Preview */}
               <div className="mb-6">
@@ -1155,17 +964,12 @@ export default function FacebookAdsManagerPage() {
                     creative?.thumbnail_url ||
                     creative?.object_story_spec?.video_data?.image_url ||
                     creative?.image_url;
-                  console.log("🎬 [Modal Render] Video ID:", videoId);
-                  console.log("📱 [Modal Render] Story ID:", effectiveStoryId);
-
                   // ถ้ามี effective_object_story_id ใช้ EmbeddedPost ก่อน
                   if (effectiveStoryId) {
                     const postUrl = `https://www.facebook.com/${effectiveStoryId.replace(
                       "_",
                       "/posts/"
                     )}`;
-                    console.log("📱 [Modal] Post URL:", postUrl);
-
                     return (
                       <div className="space-y-4">
                         {/* Facebook Embedded Post */}
@@ -1178,7 +982,6 @@ export default function FacebookAdsManagerPage() {
                             />
                           </FacebookProvider>
                         </div>
-
                         {/* Fallback: Open in Facebook Button */}
                         <div className="flex justify-center">
                           <a
@@ -1194,7 +997,6 @@ export default function FacebookAdsManagerPage() {
                       </div>
                     );
                   }
-
                   // ถ้ามี video_id แต่ไม่มี story_id - แสดง thumbnail และปุ่มเปิดใน Facebook
                   if (videoId && thumbnailUrl) {
                     return (
@@ -1206,7 +1008,6 @@ export default function FacebookAdsManagerPage() {
                             alt={selectedAdForPreview.ad_name}
                             className="w-full h-auto"
                             onError={(e) => {
-                              console.error("Modal image load error", e);
                               (e.target as HTMLImageElement).style.display =
                                 "none";
                             }}
@@ -1215,7 +1016,6 @@ export default function FacebookAdsManagerPage() {
                             <div className="text-white text-6xl">▶️</div>
                           </div>
                         </div>
-
                         {/* Open in Facebook Buttons */}
                         <div className="grid grid-cols-2 gap-3">
                           <a
@@ -1237,7 +1037,6 @@ export default function FacebookAdsManagerPage() {
                             <span>ดูเป็น Video</span>
                           </a>
                         </div>
-
                         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
                           <p className="text-blue-700 text-sm font-medium">
                             📹 Video ID: {videoId}
@@ -1249,7 +1048,6 @@ export default function FacebookAdsManagerPage() {
                       </div>
                     );
                   }
-
                   // ถ้ามีแค่รูปภาพ (ไม่มี video)
                   if (thumbnailUrl) {
                     return (
@@ -1259,7 +1057,6 @@ export default function FacebookAdsManagerPage() {
                           alt={selectedAdForPreview.ad_name}
                           className="w-full h-auto"
                           onError={(e) => {
-                            console.error("Modal image load error", e);
                             (e.target as HTMLImageElement).style.display =
                               "none";
                           }}
@@ -1267,7 +1064,6 @@ export default function FacebookAdsManagerPage() {
                       </div>
                     );
                   }
-
                   // ไม่มีข้อมูล
                   return (
                     <div className="aspect-video bg-gray-200 rounded-xl flex items-center justify-center">
@@ -1279,7 +1075,6 @@ export default function FacebookAdsManagerPage() {
                   );
                 })()}
               </div>
-
               {/* Ad Performance Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-blue-50 rounded-lg p-4">
@@ -1310,7 +1105,6 @@ export default function FacebookAdsManagerPage() {
                   </div>
                 </div>
               </div>
-
               {/* Ad Details */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-semibold text-gray-800 mb-3">Ad Details</h4>
@@ -1353,7 +1147,6 @@ export default function FacebookAdsManagerPage() {
           </div>
         </div>
       )}
-
       {/* Main Content Layout */}
       <div className="px-3 sm:px-6 py-3 sm:py-6">
         {/* Performance Cards + TOP Ads Section */}
@@ -1375,7 +1168,6 @@ export default function FacebookAdsManagerPage() {
                   )}
                 </div>
               </div>
-
               {/* New Inbox & Total Inbox */}
               <div className="bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-white shadow-2xl">
                 <div className="grid grid-cols-2 gap-2 sm:gap-4">
@@ -1397,7 +1189,6 @@ export default function FacebookAdsManagerPage() {
                   </div>
                 </div>
               </div>
-
               {/* เงินคงเหลือ */}
               <div className="bg-gradient-to-br from-emerald-500 via-emerald-600 to-green-600 rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-white shadow-2xl">
                 <div className="text-base sm:text-xl font-semibold mb-2 sm:mb-3 flex items-center gap-2 opacity-90">
@@ -1414,7 +1205,6 @@ export default function FacebookAdsManagerPage() {
                   )}
                 </div>
               </div>
-
               {/* ชื่อ - เบอร์ */}
               <div className="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600 rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-white shadow-2xl">
                 <div className="text-base sm:text-xl font-semibold mb-2 sm:mb-3 flex items-center gap-2 opacity-90">
@@ -1443,7 +1233,6 @@ export default function FacebookAdsManagerPage() {
                   </span>
                 </h2>
               </div>
-
               <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
                 <table className="w-full min-w-max">
                   <thead className="bg-gray-50 sticky top-0">
@@ -1487,7 +1276,6 @@ export default function FacebookAdsManagerPage() {
                             leads: number;
                           }
                         >();
-
                         dailySummaryData.forEach((ad) => {
                           const date = ad.date_start;
                           const existing = dailyData.get(date) || {
@@ -1496,7 +1284,6 @@ export default function FacebookAdsManagerPage() {
                             totalInbox: 0,
                             leads: 0,
                           };
-
                           existing.spend += parseFloat(ad.spend || "0");
                           existing.newInbox += getResultsByActionType(
                             ad.actions,
@@ -1510,19 +1297,15 @@ export default function FacebookAdsManagerPage() {
                             ad.actions,
                             "lead"
                           );
-
                           dailyData.set(date, existing);
                         });
-
                         // Sort by date descending
                         const sortedDates = Array.from(dailyData.keys()).sort(
                           (a, b) =>
                             new Date(b).getTime() - new Date(a).getTime()
                         );
-
                         // แสดงเฉพาะ 30 วันล่าสุด (ข้ามวันนี้)
                         const last30Days = sortedDates.slice(1, 31);
-
                         if (last30Days.length === 0) {
                           return (
                             <tr>
@@ -1535,10 +1318,8 @@ export default function FacebookAdsManagerPage() {
                             </tr>
                           );
                         }
-
                         return last30Days.map((date) => {
                           const data = dailyData.get(date)!;
-
                           // Calculate total phone leads for this date across all ads
                           let totalPhoneLeads = 0;
                           dailySummaryData.forEach((ad) => {
@@ -1549,7 +1330,6 @@ export default function FacebookAdsManagerPage() {
                               }
                             }
                           });
-
                           return (
                             <tr
                               key={date}
@@ -1590,7 +1370,6 @@ export default function FacebookAdsManagerPage() {
               </div>
             </div>
           </div>
-
           {/* Right Section - TOP 5 Ads Performance */}
           <div className="lg:col-span-6">
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 border border-gray-100">
@@ -1627,7 +1406,6 @@ export default function FacebookAdsManagerPage() {
                   </button>
                 </div>
               </div>
-
               <div className="overflow-x-auto">
                 {/* Loading State */}
                 {creativesLoading && adCreatives.size === 0 && (
@@ -1637,7 +1415,6 @@ export default function FacebookAdsManagerPage() {
                     </p>
                   </div>
                 )}
-
                 {/* Success State */}
                 {/* {!creativesLoading && adCreatives.size > 0 && (
                   <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-4 rounded">
@@ -1646,7 +1423,6 @@ export default function FacebookAdsManagerPage() {
                     </p>
                   </div>
                 )} */}
-
                 <table className="w-full" key={`table-${adCreatives.size}`}>
                   <thead>
                     <tr className="border-b-2 border-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
@@ -1766,7 +1542,6 @@ export default function FacebookAdsManagerPage() {
                                   const thumbnailUrl =
                                     creative?.thumbnail_url ||
                                     creative?.image_url;
-
                                   // แสดงวิดีโอจาก local ก่อน (ถ้ามี)
                                   if (localVideoPath) {
                                     return (
@@ -1815,7 +1590,6 @@ export default function FacebookAdsManagerPage() {
                                       </div>
                                     );
                                   }
-
                                   // ถ้าไม่มีวิดีโอ ให้แสดงรูปภาพ
                                   if (thumbnailUrl) {
                                     return (
@@ -1836,7 +1610,6 @@ export default function FacebookAdsManagerPage() {
                                       </div>
                                     );
                                   }
-
                                   // ถ้าไม่มีทั้งวิดีโอและรูปภาพ
                                   return (
                                     <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -1899,7 +1672,6 @@ export default function FacebookAdsManagerPage() {
             </div>
           </div>
         </div>
-
         {/* Report Ad Table */}
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mt-4 sm:mt-8">
           <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-4 sm:px-8 py-4 sm:py-8 relative overflow-hidden">
@@ -1911,7 +1683,6 @@ export default function FacebookAdsManagerPage() {
               </span>
             </h2>
           </div>
-
           {/* Table Controls */}
           <div className="hidden sm:block px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center space-x-2 sm:space-x-4 overflow-x-auto">
@@ -1932,7 +1703,6 @@ export default function FacebookAdsManagerPage() {
               </button>
             </div>
           </div>
-
           {/* View Mode Tabs + Date Range Selector */}
           <div className="px-3 sm:px-6 py-3 sm:py-4 bg-white border-b border-gray-200">
             <div className="flex items-center justify-between">
@@ -1971,7 +1741,6 @@ export default function FacebookAdsManagerPage() {
               </div>
             </div>
           </div>
-
           {/* Main Data Table */}
           <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
             <table className="w-full min-w-max">
@@ -2020,7 +1789,6 @@ export default function FacebookAdsManagerPage() {
                         cost.action_type ===
                         "onsite_conversion.total_messaging_connection"
                     );
-
                   return (
                     <tr
                       key={ad.ad_id}
@@ -2097,4 +1865,4 @@ export default function FacebookAdsManagerPage() {
       </div>
     </div>
   );
-}
+}

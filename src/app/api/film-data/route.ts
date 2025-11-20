@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 export async function GET() {
   try {
     const response = await fetch(
@@ -10,13 +9,10 @@ export async function GET() {
         },
       }
     );
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
     const data = await response.json();
-
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error fetching film data:", error);
@@ -25,4 +21,4 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+}

@@ -1,24 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-
 // In-memory cache
 const cache = new Map<
   string,
   { data: any; timestamp: number; expiresAt: number }
 >();
 const CACHE_DURATION = 30000; // 30 seconds
-
 export async function GET(request: NextRequest) {
   try {
     // Get Python API URL from environment or use default
     const pythonApiUrl = process.env.PYTHON_API_URL || "http://localhost:5000";
     const saleIncentiveEndpoint = `${pythonApiUrl}/N_SaleIncentive_data`;
     const filmDataEndpoint = `${pythonApiUrl}/api/film-data`;
-
     // Check cache first
     const cacheKey = "sale-incentive-python-combined";
     const cached = cache.get(cacheKey);
     const now = Date.now();
-
     if (cached && now < cached.expiresAt) {
       console.log(
         `✅ Returning cached N_SaleIncentive + Film Data from Python API`
@@ -32,9 +28,7 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     console.log(`📡 Fetching N_SaleIncentive + Film Data from Python API...`);
-
     // Fetch both APIs in parallel
     const [saleIncentiveResponse, filmDataResponse] = await Promise.all([
       fetch(saleIncentiveEndpoint, {
@@ -48,7 +42,6 @@ export async function GET(request: NextRequest) {
         signal: AbortSignal.timeout(30000),
       }),
     ]);
-
     // Process N_SaleIncentive data
     let saleIncentiveData: any[] = [];
     let saleIncentiveCount = 0;
@@ -64,7 +57,6 @@ export async function GET(request: NextRequest) {
         `⚠️ N_SaleIncentive API returned ${saleIncentiveResponse.status}`
       );
     }
-
     // Process Film Data (Surgery Schedule)
     let filmData: any[] = [];
     let filmDataCount = 0;
@@ -78,7 +70,6 @@ export async function GET(request: NextRequest) {
     } else {
       console.warn(`⚠️ Film Data API returned ${filmDataResponse.status}`);
     }
-
     // If both APIs failed and no cached data, return error
     if (saleIncentiveData.length === 0 && filmData.length === 0 && !cached) {
       return NextResponse.json(
@@ -92,7 +83,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Return cached data if both APIs failed
     if (saleIncentiveData.length === 0 && filmData.length === 0 && cached) {
       console.log("⚠️ Using expired cache due to API errors");
@@ -104,7 +94,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     // Combine both datasets
     const transformedData = {
       success: true,
@@ -117,25 +106,21 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       source: "Python API (Combined: N_SaleIncentive + Film Data)",
     };
-
     console.log(
       `✅ Combined data: ${saleIncentiveCount} sale incentive + ${filmDataCount} film data records`
     );
-
     // Update cache with expiration time
     cache.set(cacheKey, {
       data: transformedData,
       timestamp: now,
       expiresAt: now + CACHE_DURATION,
     });
-
     // Clean old cache entries
     for (const [key, value] of cache.entries()) {
       if (now > value.expiresAt + 60000) {
         cache.delete(key);
       }
     }
-
     return NextResponse.json(transformedData, {
       status: 200,
       headers: {
@@ -149,7 +134,6 @@ export async function GET(request: NextRequest) {
       "Error fetching N_SaleIncentive + Film Data from Python API:",
       error
     );
-
     // Return cached data if available even if expired
     const cached = cache.get("sale-incentive-python-combined");
     if (cached) {
@@ -162,7 +146,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -180,7 +163,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // Handle OPTIONS request for CORS
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -191,4 +173,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-}
+}

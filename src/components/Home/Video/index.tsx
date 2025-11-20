@@ -1,20 +1,16 @@
 "use client";
 import ScaledCanvas from "../../ScaledCanvas";
 import { useEffect, useRef, useState } from "react";
-
 interface VideoProps {
   setIsLoading?: (val: boolean) => void; // optional เผื่อบางหน้ายังไม่ได้ส่งมา
 }
-
 export default function Video({ setIsLoading }: VideoProps) {
   const [ready, setReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
   // เล่น/หยุดตามการมองเห็น
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-
     const io = new IntersectionObserver(
       ([entry]) => {
         if (!entry) return;
@@ -23,15 +19,12 @@ export default function Video({ setIsLoading }: VideoProps) {
       },
       { threshold: 0.25 }
     );
-
     io.observe(el);
     return () => io.disconnect();
   }, []);
-
   useEffect(() => {
     if (ready && setIsLoading) setIsLoading(false);
   }, [ready, setIsLoading]);
-
   return (
     <ScaledCanvas>
       <section
@@ -58,7 +51,6 @@ export default function Video({ setIsLoading }: VideoProps) {
           {/* <source src="/images/video/tpp-thanakon.webm" type="video/webm" /> */}
           <source src="/images/video/tpp-thanakon.mp4" type="video/mp4" />
         </video>
-
         {/* <img
           className="bg-fallback"
           src="/images/video/fixed-banner-poster.jpg"
@@ -68,4 +60,4 @@ export default function Video({ setIsLoading }: VideoProps) {
       </section>
     </ScaledCanvas>
   );
-}
+}

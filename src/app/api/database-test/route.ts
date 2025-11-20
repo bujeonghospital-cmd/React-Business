@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
-
 // Create PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,12 +8,10 @@ const pool = new Pool({
       ? { rejectUnauthorized: false }
       : false,
 });
-
 export async function GET(request: NextRequest) {
   try {
     // Test database connection and return diagnostic info
     console.log("🔍 Testing database connection...");
-
     if (!process.env.DATABASE_URL) {
       return NextResponse.json(
         {
@@ -28,13 +25,11 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Test basic connection
     const testQuery = await pool.query(
       "SELECT current_database(), current_schema()"
     );
     console.log("✅ Database connection OK:", testQuery.rows[0]);
-
     // Check available schemas
     const schemasQuery = await pool.query(`
       SELECT schema_name 
@@ -42,7 +37,6 @@ export async function GET(request: NextRequest) {
       WHERE schema_name IN ('BJH-Server', 'public', 'postgres')
     `);
     console.log("📁 Available schemas:", schemasQuery.rows);
-
     // Check if table exists in any schema
     const tablesQuery = await pool.query(`
       SELECT schemaname, tablename 
@@ -50,7 +44,6 @@ export async function GET(request: NextRequest) {
       WHERE tablename = 'status_options'
     `);
     console.log("📋 status_options table locations:", tablesQuery.rows);
-
     return NextResponse.json({
       success: true,
       diagnostics: {
@@ -78,4 +71,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

@@ -34,15 +34,7 @@ async function generateRefreshToken() {
     prompt: "consent", // Force to show consent screen to get refresh token
   });
 
-  console.log("\n=================================================");
-  console.log("Google Ads API - Refresh Token Generator");
-  console.log("=================================================\n");
-  console.log("📋 Step 1: Authorize this application");
-  console.log("Copy and paste this URL in your browser:\n");
-  console.log(authUrl);
-  console.log("\n");
-
-  const rl = readline.createInterface({
+                const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
@@ -53,28 +45,12 @@ async function generateRefreshToken() {
       rl.close();
 
       try {
-        console.log("\n🔄 Exchanging authorization code for tokens...\n");
+                const { tokens } = await oauth2Client.getToken(code);
 
-        const { tokens } = await oauth2Client.getToken(code);
-
-        console.log("✅ Success! Here are your tokens:\n");
-        console.log("=================================================");
-        console.log("Access Token (expires in 1 hour):");
-        console.log(tokens.access_token);
-        console.log("\n-------------------------------------------------");
-        console.log("🔑 Refresh Token (save this in .env.local):");
-        console.log(tokens.refresh_token);
-        console.log("=================================================\n");
-
-        console.log("📝 Add this to your .env.local file:\n");
-        console.log(`GOOGLE_ADS_CLIENT_ID=${CLIENT_ID}`);
-        console.log(`GOOGLE_ADS_CLIENT_SECRET=${CLIENT_SECRET}`);
-        console.log(`GOOGLE_ADS_REFRESH_TOKEN=${tokens.refresh_token}`);
-        console.log("GOOGLE_ADS_DEVELOPER_TOKEN=YOUR_DEVELOPER_TOKEN");
-        console.log("GOOGLE_ADS_CUSTOMER_ID=YOUR_CUSTOMER_ID\n");
-      } catch (error) {
-        console.error("❌ Error getting tokens:", error.message);
-      }
+                        :");
+                        :");
+                                                                      } catch (error) {
+              }
     }
   );
 }
@@ -84,13 +60,7 @@ if (
   CLIENT_ID === "YOUR_CLIENT_ID.apps.googleusercontent.com" ||
   CLIENT_SECRET === "YOUR_CLIENT_SECRET"
 ) {
-  console.error(
-    "\n❌ Error: Please set your CLIENT_ID and CLIENT_SECRET in this script first!\n"
-  );
-  console.log(
-    "Get your credentials from: https://console.cloud.google.com/apis/credentials\n"
-  );
-  process.exit(1);
+      process.exit(1);
 }
 
 generateRefreshToken();

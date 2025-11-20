@@ -1,9 +1,7 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { RefreshCw, Calendar, Phone, TrendingUp } from "lucide-react";
-
 interface AgentCallData {
   outgoing_calls: number;
   incoming_calls: number;
@@ -11,12 +9,10 @@ interface AgentCallData {
   total_duration_seconds: number;
   agent_name?: string;
 }
-
 interface CallMatrixRow {
   hour_slot: string;
   [key: string]: AgentCallData | string;
 }
-
 const CallMatrixTable = () => {
   const [matrixData, setMatrixData] = useState<CallMatrixRow[]>([]);
   const [totalsData, setTotalsData] = useState<CallMatrixRow | null>(null);
@@ -24,7 +20,6 @@ const CallMatrixTable = () => {
     new Date().toISOString().split("T")[0]
   );
   const [isLoading, setIsLoading] = useState(false);
-
   const agentIds = ["101", "102", "103", "104", "105", "106", "107", "108"];
   const agentNames: { [key: string]: string } = {
     "101": "สา",
@@ -36,36 +31,29 @@ const CallMatrixTable = () => {
     "107": "เจ",
     "108": "ว่าน",
   };
-
   useEffect(() => {
     fetchCallMatrix();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
-
   const fetchCallMatrix = async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/call-matrix?date=${selectedDate}`);
       const result = await response.json();
-
       if (result.success) {
         setMatrixData(result.tableData);
         setTotalsData(result.totals);
-      } else {
-        console.error("Failed to fetch call matrix:", result.error);
       }
     } catch (error) {
-      console.error("Error fetching call matrix:", error);
+      // Error fetching call matrix
     } finally {
       setIsLoading(false);
     }
   };
-
   const getCellValue = (row: CallMatrixRow, agentId: string): number => {
     const data = row[`agent_${agentId}`] as AgentCallData;
     return data?.outgoing_calls || 0;
   };
-
   const getCellColor = (value: number): string => {
     if (value === 0) return "bg-gray-50";
     if (value <= 2) return "bg-blue-100";
@@ -73,12 +61,10 @@ const CallMatrixTable = () => {
     if (value <= 10) return "bg-yellow-100";
     return "bg-red-100";
   };
-
   const formatDuration = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, "0")}:${secs
         .toString()
@@ -86,7 +72,6 @@ const CallMatrixTable = () => {
     }
     return `${minutes}:${secs.toString().padStart(2, "0")}`;
   };
-
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
       {/* Header */}
@@ -107,7 +92,6 @@ const CallMatrixTable = () => {
                 className="bg-transparent text-white font-semibold outline-none cursor-pointer"
               />
             </div>
-
             {/* Refresh Button */}
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -124,7 +108,6 @@ const CallMatrixTable = () => {
           </div>
         </div>
       </div>
-
       {/* Loading State */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
@@ -132,7 +115,6 @@ const CallMatrixTable = () => {
           <span className="ml-3 text-lg text-gray-600">กำลังโหลดข้อมูล...</span>
         </div>
       )}
-
       {/* Table */}
       {!isLoading && (
         <div className="overflow-x-auto">
@@ -166,7 +148,6 @@ const CallMatrixTable = () => {
                   (sum, agentId) => sum + getCellValue(row, agentId),
                   0
                 );
-
                 return (
                   <motion.tr
                     key={row.hour_slot}
@@ -179,12 +160,10 @@ const CallMatrixTable = () => {
                     <td className="px-4 py-3 font-semibold text-gray-800 border border-gray-200 whitespace-nowrap">
                       {row.hour_slot}:00 น.
                     </td>
-
                     {/* Agent Cells */}
                     {agentIds.map((agentId) => {
                       const value = getCellValue(row, agentId);
                       const cellColor = getCellColor(value);
-
                       return (
                         <td
                           key={agentId}
@@ -200,7 +179,6 @@ const CallMatrixTable = () => {
                         </td>
                       );
                     })}
-
                     {/* Hour Total */}
                     <td className="px-4 py-3 text-center font-bold text-purple-700 bg-purple-100 border border-gray-200">
                       {hourTotal}
@@ -208,7 +186,6 @@ const CallMatrixTable = () => {
                   </motion.tr>
                 );
               })}
-
               {/* Totals Row */}
               {totalsData && (
                 <tr className="bg-gradient-to-r from-purple-100 to-pink-100 font-bold">
@@ -220,7 +197,6 @@ const CallMatrixTable = () => {
                       `agent_${agentId}`
                     ] as AgentCallData;
                     const value = data?.outgoing_calls || 0;
-
                     return (
                       <td
                         key={agentId}
@@ -252,7 +228,6 @@ const CallMatrixTable = () => {
           </table>
         </div>
       )}
-
       {/* Legend */}
       <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm">
@@ -290,5 +265,4 @@ const CallMatrixTable = () => {
     </div>
   );
 };
-
 export default CallMatrixTable;

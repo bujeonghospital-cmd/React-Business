@@ -1,23 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-
 // In-memory cache
 const cache = new Map<
   string,
   { data: any; timestamp: number; expiresAt: number }
 >();
 const CACHE_DURATION = 30000; // 30 seconds
-
 export async function GET(request: NextRequest) {
   try {
     // Get Python API URL from environment or use default
     const pythonApiUrl = process.env.PYTHON_API_URL || "http://localhost:5000";
     const endpoint = `${pythonApiUrl}/api/film-data`;
-
     // Check cache first
     const cacheKey = "surgery-schedule-python";
     const cached = cache.get(cacheKey);
     const now = Date.now();
-
     if (cached && now < cached.expiresAt) {
       console.log(`✅ Returning cached surgery schedule from Python API`);
       return NextResponse.json(cached.data, {
@@ -29,9 +25,7 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     console.log(`📡 Fetching surgery schedule from Python API: ${endpoint}`);
-
     // Fetch data from Python API
     const response = await fetch(endpoint, {
       method: "GET",
@@ -41,11 +35,9 @@ export async function GET(request: NextRequest) {
       // Add timeout
       signal: AbortSignal.timeout(30000), // 30 second timeout
     });
-
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`❌ Python API error (${response.status}): ${errorText}`);
-
       // Return cached data if available even if expired
       if (cached) {
         console.log("⚠️ Using expired cache due to API error");
@@ -57,7 +49,6 @@ export async function GET(request: NextRequest) {
           },
         });
       }
-
       return NextResponse.json(
         {
           success: false,
@@ -68,9 +59,7 @@ export async function GET(request: NextRequest) {
         { status: response.status }
       );
     }
-
     const data = await response.json();
-
     if (!data.success) {
       console.error("❌ Python API returned unsuccessful response:", data);
       return NextResponse.json(
@@ -82,11 +71,9 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     console.log(
       `✅ Successfully fetched ${data.total || 0} records from Python API`
     );
-
     // Transform data to match expected format
     const transformedData = {
       success: true,
@@ -96,14 +83,12 @@ export async function GET(request: NextRequest) {
       source: "Python API (Google Sheets)",
       debug: data.debug || {},
     };
-
     // Update cache with expiration time
     cache.set(cacheKey, {
       data: transformedData,
       timestamp: now,
       expiresAt: now + CACHE_DURATION,
     });
-
     // Clean old cache entries
     for (const [key, value] of cache.entries()) {
       if (now > value.expiresAt + 60000) {
@@ -111,7 +96,6 @@ export async function GET(request: NextRequest) {
         cache.delete(key);
       }
     }
-
     return NextResponse.json(transformedData, {
       status: 200,
       headers: {
@@ -122,7 +106,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("Error fetching from Python API:", error);
-
     // Return cached data if available even if expired
     const cached = cache.get("surgery-schedule-python");
     if (cached) {
@@ -135,7 +118,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -151,7 +133,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // Handle OPTIONS request for CORS
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -162,4 +143,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-}
+}

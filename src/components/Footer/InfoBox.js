@@ -1,5 +1,4 @@
 import Link from "next/link";
-
 export default function FooterInfoBox() {
   return (
     <div className="w-full py-8">
@@ -49,4 +48,4 @@ export default function FooterInfoBox() {
       </div>
     </div>
   );
-}
+}

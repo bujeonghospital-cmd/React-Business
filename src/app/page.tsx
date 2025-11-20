@@ -15,14 +15,12 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-
 export const metadata: Metadata = {
   title: "THAI PACKAGING & PRINTING PCL",
   icons: {
     icon: "/TPP.ico",
   },
 };
-
 export default function Home() {
   return (
     <ScaledCanvas>
@@ -30,4 +28,4 @@ export default function Home() {
     </ScaledCanvas>
   );
 }
-// *ALL
+// *ALL

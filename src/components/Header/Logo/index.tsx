@@ -1,11 +1,9 @@
 import ScaledCanvas from "../../ScaledCanvas";
 import Link from "next/link";
-
 type LogoProps = {
   className?: string;
   style?: React.CSSProperties;
 };
-
 export default function Logo({ className = "", style }: LogoProps) {
   return (
     <ScaledCanvas>
@@ -18,13 +16,11 @@ export default function Logo({ className = "", style }: LogoProps) {
               media="(min-width: 1024px)"
               srcSet="/images/logo/LOGO-TPP-SIDE_9.png"
             />
-
             {/* Tablet: >=md (768px) ใช้โลโก้แนวตั้ง */}
             <source
               media="(min-width: 768px)"
               srcSet="/images/logo/LOGO-name-2.webp"
             />
-
             {/* Mobile & Fallback: <768px */}
             <img
               src="/images/logo/LOGO-name-2.webp"
@@ -52,4 +48,4 @@ export default function Logo({ className = "", style }: LogoProps) {
       )
     </ScaledCanvas>
   );
-}
+}

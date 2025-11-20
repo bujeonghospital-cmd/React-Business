@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-
 // In-memory cache
 let cachedData: any = null;
 let cacheTime: number = 0;
 const CACHE_DURATION = 20000; // 20 วินาที
-
 export async function GET(request: NextRequest) {
   try {
     // ตรวจสอบ cache ก่อน
@@ -20,7 +18,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     // ตรวจสอบว่ามี environment variables ครบหรือไม่
     if (
       !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
@@ -35,7 +32,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // สร้าง auth client ด้วย Service Account
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -47,17 +43,13 @@ export async function GET(request: NextRequest) {
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
-
     const sheets = google.sheets({ version: "v4", auth });
-
     // ดึงข้อมูลจากชีท "สรุป call_AI"
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: process.env.GOOGLE_SPREADSHEET_ID,
       range: "สรุป call_AI!A:Z", // ดึงข้อมูลทั้งหมดจากชีท
     });
-
     const rows = response.data.values;
-
     if (!rows || rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -65,35 +57,28 @@ export async function GET(request: NextRequest) {
         data: [],
       });
     }
-
     // สมมติว่าแถวแรกเป็น header
     const headers = rows[0];
     const dataRows = rows.slice(1);
-
     console.log("=== GOOGLE SHEETS - สรุป call_AI ===");
     console.log("Total columns:", headers.length);
     console.log("Headers:", headers);
     console.log("Total data rows:", dataRows.length);
-
     // แปลงข้อมูลเป็น array of objects
     const data = dataRows
       .filter((row) => row && row.length > 0) // กรองแถวว่าง
       .map((row, index) => {
         const rowData: any = { id: `row-${index + 1}` };
-
         // Map ค่าจากแต่ละคอลัมน์ตาม header
         headers.forEach((header: string, colIndex: number) => {
           const value = row[colIndex] || "";
           // ใช้ header เป็น key (ลบช่องว่างและแปลงเป็น camelCase ถ้าต้องการ)
           rowData[header] = value;
         });
-
         return rowData;
       });
-
     console.log("Processed data rows:", data.length);
     console.log("Sample first row:", data[0]);
-
     // อัพเดท cache
     const responseData = {
       success: true,
@@ -103,7 +88,6 @@ export async function GET(request: NextRequest) {
     };
     cachedData = responseData;
     cacheTime = Date.now();
-
     return NextResponse.json(responseData, {
       status: 200,
       headers: {
@@ -124,4 +108,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

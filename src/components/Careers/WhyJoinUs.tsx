@@ -1,7 +1,5 @@
 "use client";
-
 import React from "react";
-
 // SVG Icon Components
 const ChartBarIcon = ({ className }: { className?: string }) => (
   <svg
@@ -18,7 +16,6 @@ const ChartBarIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 const AcademicCapIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -46,7 +43,6 @@ const AcademicCapIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 const HeartIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -62,7 +58,6 @@ const HeartIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 const UsersIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -78,7 +73,6 @@ const UsersIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 const TrophyIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -94,7 +88,6 @@ const TrophyIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 const ShieldCheckIcon = ({ className }: { className?: string }) => (
   <svg
     className={className}
@@ -110,7 +103,6 @@ const ShieldCheckIcon = ({ className }: { className?: string }) => (
     />
   </svg>
 );
-
 const benefits = [
   {
     icon: ChartBarIcon,
@@ -155,7 +147,6 @@ const benefits = [
     bgColor: "bg-indigo-50",
   },
 ];
-
 const WhyJoinUs = () => {
   return (
     <section
@@ -174,7 +165,6 @@ const WhyJoinUs = () => {
             เราให้ความสำคัญกับการพัฒนาบุคลากรและสร้างสภาพแวดล้อมการทำงานที่ดีที่สุด
           </p>
         </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {benefits.map((benefit, index) => {
             const Icon = benefit.icon;
@@ -198,7 +188,6 @@ const WhyJoinUs = () => {
             );
           })}
         </div>
-
         {/* Additional Benefits Section */}
         <div className="mt-16 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-8 md:p-12 text-white">
           <h3 className="text-2xl md:text-3xl font-bold mb-6 text-center">
@@ -375,5 +364,4 @@ const WhyJoinUs = () => {
     </section>
   );
 };
-
-export default WhyJoinUs;
+export default WhyJoinUs;

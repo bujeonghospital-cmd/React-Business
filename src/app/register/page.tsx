@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,18 +16,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 interface Department {
   id: number;
   name: string;
   name_full_th: string;
 }
-
 interface Position {
   id: number;
   name_full_th: string;
 }
-
 interface RegisterFormData {
   name: string;
   lname: string;
@@ -40,7 +36,6 @@ interface RegisterFormData {
   department?: number;
   position?: number;
 }
-
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<RegisterFormData>({
@@ -64,34 +59,27 @@ export default function RegisterPage() {
     Partial<Record<keyof RegisterFormData | "general", string>>
   >({});
   const [successMessage, setSuccessMessage] = useState("");
-
   // Fetch departments and positions on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
         console.log("🔄 Fetching departments and positions...");
-
         const [deptResponse, posResponse] = await Promise.all([
           fetch("/api/departments"),
           fetch("/api/positions"),
         ]);
-
         console.log("📦 Departments response status:", deptResponse.status);
         console.log("📦 Positions response status:", posResponse.status);
-
         const deptData = await deptResponse.json();
         const posData = await posResponse.json();
-
         console.log("📊 Departments data:", deptData);
         console.log("📊 Positions data:", posData);
-
         if (deptData.success && deptData.data) {
           setDepartments(deptData.data);
           console.log(`✅ Loaded ${deptData.data.length} departments`);
         } else {
           console.error("❌ Failed to load departments:", deptData.message);
         }
-
         if (posData.success && posData.data) {
           setPositions(posData.data);
           console.log(`✅ Loaded ${posData.data.length} positions`);
@@ -108,14 +96,11 @@ export default function RegisterPage() {
         setIsLoadingData(false);
       }
     };
-
     fetchData();
   }, []);
-
   // Real-time validation
   const validateField = (field: keyof RegisterFormData, value: string) => {
     const newErrors = { ...errors };
-
     switch (field) {
       case "name":
         if (!value.trim()) {
@@ -124,7 +109,6 @@ export default function RegisterPage() {
           delete newErrors.name;
         }
         break;
-
       case "lname":
         if (!value.trim()) {
           newErrors.lname = "กรุณากรอกนามสกุล";
@@ -132,7 +116,6 @@ export default function RegisterPage() {
           delete newErrors.lname;
         }
         break;
-
       case "email":
         if (!value) {
           newErrors.email = "กรุณากรอกอีเมล";
@@ -142,7 +125,6 @@ export default function RegisterPage() {
           delete newErrors.email;
         }
         break;
-
       case "username":
         if (!value) {
           newErrors.username = "กรุณากรอกชื่อผู้ใช้";
@@ -154,7 +136,6 @@ export default function RegisterPage() {
           delete newErrors.username;
         }
         break;
-
       case "password":
         if (!value) {
           newErrors.password = "กรุณากรอกรหัสผ่าน";
@@ -170,7 +151,6 @@ export default function RegisterPage() {
           }
         }
         break;
-
       case "confirmPassword":
         if (!value) {
           newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
@@ -181,16 +161,13 @@ export default function RegisterPage() {
         }
         break;
     }
-
     setErrors(newErrors);
   };
-
   const validateSelectField = (
     field: keyof RegisterFormData,
     value: number | undefined
   ) => {
     const newErrors = { ...errors };
-
     if (field === "department") {
       if (!value) {
         newErrors.department = "กรุณาเลือกแผนก";
@@ -204,10 +181,8 @@ export default function RegisterPage() {
         delete newErrors.position;
       }
     }
-
     setErrors(newErrors);
   };
-
   const handleInputChange = (field: keyof RegisterFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     validateField(field, value);
@@ -218,7 +193,6 @@ export default function RegisterPage() {
       });
     }
   };
-
   const handleSelectChange = (
     field: keyof RegisterFormData,
     value: number | undefined
@@ -232,57 +206,45 @@ export default function RegisterPage() {
       });
     }
   };
-
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors({});
     setSuccessMessage("");
-
     // Validate all required fields
     const newErrors: Partial<Record<keyof RegisterFormData, string>> = {};
-
     if (!formData.name.trim()) newErrors.name = "กรุณากรอกชื่อ";
     if (!formData.lname.trim()) newErrors.lname = "กรุณากรอกนามสกุล";
-
     if (!formData.email) {
       newErrors.email = "กรุณากรอกอีเมล";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
     }
-
     if (!formData.username) {
       newErrors.username = "กรุณากรอกชื่อผู้ใช้";
     } else if (formData.username.length < 3) {
       newErrors.username = "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร";
     }
-
     if (!formData.password) {
       newErrors.password = "กรุณากรอกรหัสผ่าน";
     } else if (formData.password.length < 6) {
       newErrors.password = "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";
     }
-
     if (!formData.confirmPassword) {
       newErrors.confirmPassword = "กรุณายืนยันรหัสผ่าน";
     } else if (formData.confirmPassword !== formData.password) {
       newErrors.confirmPassword = "รหัสผ่านไม่ตรงกัน";
     }
-
     if (!formData.department) {
       newErrors.department = "กรุณาเลือกแผนก";
     }
-
     if (!formData.position) {
       newErrors.position = "กรุณาเลือกตำแหน่ง";
     }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
     setIsLoading(true);
-
     try {
       const response = await fetch("/api/auth/register", {
         method: "POST",
@@ -291,12 +253,9 @@ export default function RegisterPage() {
         },
         body: JSON.stringify(formData),
       });
-
       const data = await response.json();
-
       if (data.success) {
         setSuccessMessage(data.message);
-
         // Redirect to login after 2 seconds
         setTimeout(() => {
           router.push("/login");
@@ -313,7 +272,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-red-50 via-white to-red-50">
       <motion.div
@@ -335,7 +293,6 @@ export default function RegisterPage() {
             </h1>
           </Link>
         </motion.div>
-
         {/* Register Card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
@@ -350,7 +307,6 @@ export default function RegisterPage() {
             </h2>
             <p className="text-gray-600">สร้างบัญชีใหม่เพื่อเข้าใช้งานระบบ</p>
           </div>
-
           {/* Success Message */}
           <AnimatePresence>
             {successMessage && (
@@ -365,7 +321,6 @@ export default function RegisterPage() {
               </motion.div>
             )}
           </AnimatePresence>
-
           {/* General Error Message */}
           <AnimatePresence>
             {errors.general && (
@@ -380,7 +335,6 @@ export default function RegisterPage() {
               </motion.div>
             )}
           </AnimatePresence>
-
           {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Name Fields - Grid 2 columns */}
@@ -426,7 +380,6 @@ export default function RegisterPage() {
                   )}
                 </AnimatePresence>
               </div>
-
               {/* Last Name */}
               <div>
                 <label
@@ -469,7 +422,6 @@ export default function RegisterPage() {
                 </AnimatePresence>
               </div>
             </div>
-
             {/* Email */}
             <div>
               <label
@@ -511,7 +463,6 @@ export default function RegisterPage() {
                 )}
               </AnimatePresence>
             </div>
-
             {/* Username */}
             <div>
               <label
@@ -555,7 +506,6 @@ export default function RegisterPage() {
                 )}
               </AnimatePresence>
             </div>
-
             {/* Password Fields - Grid 2 columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Password */}
@@ -613,7 +563,6 @@ export default function RegisterPage() {
                   )}
                 </AnimatePresence>
               </div>
-
               {/* Confirm Password */}
               <div>
                 <label
@@ -672,7 +621,6 @@ export default function RegisterPage() {
                 </AnimatePresence>
               </div>
             </div>
-
             {/* Department & Position - Required Fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Department */}
@@ -731,7 +679,6 @@ export default function RegisterPage() {
                   )}
                 </AnimatePresence>
               </div>
-
               {/* Position */}
               <div>
                 <label
@@ -789,7 +736,6 @@ export default function RegisterPage() {
                 </AnimatePresence>
               </div>
             </div>
-
             {/* Phone - Optional Field */}
             <div>
               <label
@@ -813,7 +759,6 @@ export default function RegisterPage() {
                 />
               </div>
             </div>
-
             {/* Submit Button */}
             <button
               type="submit"
@@ -830,7 +775,6 @@ export default function RegisterPage() {
               )}
             </button>
           </form>
-
           {/* Login Link */}
           <p className="mt-8 text-center text-sm text-gray-600">
             มีบัญชีอยู่แล้ว?{" "}
@@ -842,7 +786,6 @@ export default function RegisterPage() {
             </Link>
           </p>
         </motion.div>
-
         {/* Footer Text */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -868,4 +811,4 @@ export default function RegisterPage() {
       </motion.div>
     </div>
   );
-}
+}

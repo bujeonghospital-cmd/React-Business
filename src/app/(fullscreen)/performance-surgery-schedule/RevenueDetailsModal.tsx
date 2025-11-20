@@ -2,7 +2,6 @@ import React from "react";
 import { NClinicData } from "@/utils/databaseNClinic";
 import { RevenueFutureData } from "@/utils/databaseRevenueFuture";
 import "./SurgeryDetailsModal.css";
-
 interface RevenueDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -13,7 +12,6 @@ interface RevenueDetailsModalProps {
   year: number;
   contactPerson: string;
 }
-
 export default function RevenueDetailsModal({
   isOpen,
   onClose,
@@ -25,7 +23,6 @@ export default function RevenueDetailsModal({
   contactPerson,
 }: RevenueDetailsModalProps) {
   if (!isOpen) return null;
-
   const monthNames = [
     "มกราคม",
     "กุมภาพันธ์",
@@ -40,7 +37,6 @@ export default function RevenueDetailsModal({
     "พฤศจิกายน",
     "ธันวาคม",
   ];
-
   const formatCurrency = (amount: number | undefined) => {
     if (!amount) return "-";
     return amount.toLocaleString("th-TH", {
@@ -48,7 +44,6 @@ export default function RevenueDetailsModal({
       maximumFractionDigits: 0,
     });
   };
-
   const formatDate = (dateStr: string | undefined) => {
     if (!dateStr) return "-";
     try {
@@ -61,12 +56,10 @@ export default function RevenueDetailsModal({
       return dateStr;
     }
   };
-
   // Calculate total revenue
   const totalRevenue =
     nClinicData.reduce((sum, item) => sum + (item.proposed_amount || 0), 0) +
     futureData.reduce((sum, item) => sum + (item.proposed_amount || 0), 0);
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -76,7 +69,6 @@ export default function RevenueDetailsModal({
             ✕
           </button>
         </div>
-
         <div className="modal-info">
           <div className="info-row">
             <span className="info-label">วันที่:</span>
@@ -101,7 +93,6 @@ export default function RevenueDetailsModal({
             </span>
           </div>
         </div>
-
         <div className="surgeries-list">
           {/* N_Clinic Data (sale_date <= today) */}
           {nClinicData.length > 0 && (
@@ -117,7 +108,6 @@ export default function RevenueDetailsModal({
                       {item.contact_staff || "ไม่ระบุ"}
                     </span>
                   </div>
-
                   <div className="card-body">
                     <div className="detail-row">
                       <span className="detail-icon">👤</span>
@@ -126,7 +116,6 @@ export default function RevenueDetailsModal({
                         {item.contact_staff || "-"}
                       </span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">🛍️</span>
                       <span className="detail-label">ผลิตภัณฑ์ที่สนใจ:</span>
@@ -134,7 +123,6 @@ export default function RevenueDetailsModal({
                         {item.item_name || "-"}
                       </span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">📅</span>
                       <span className="detail-label">ทำเสร็จวันที่:</span>
@@ -142,7 +130,6 @@ export default function RevenueDetailsModal({
                         {formatDate(item.sale_date)}
                       </span>
                     </div>
-
                     <div className="detail-row highlight-row">
                       <span className="detail-icon">💰</span>
                       <span className="detail-label">ราคารวม:</span>
@@ -155,7 +142,6 @@ export default function RevenueDetailsModal({
               ))}
             </div>
           )}
-
           {/* Future Revenue Data (surgery_date >= today) */}
           {futureData.length > 0 && (
             <div className="data-section">
@@ -173,7 +159,6 @@ export default function RevenueDetailsModal({
                       {item.customer_name || "ไม่ระบุ"}
                     </span>
                   </div>
-
                   <div className="card-body">
                     <div className="detail-row">
                       <span className="detail-icon">👤</span>
@@ -182,13 +167,11 @@ export default function RevenueDetailsModal({
                         {item.customer_name || "-"}
                       </span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">👨‍⚕️</span>
                       <span className="detail-label">หมอ:</span>
                       <span className="detail-value">{item.doctor || "-"}</span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">👥</span>
                       <span className="detail-label">ผู้ติดต่อ:</span>
@@ -196,13 +179,11 @@ export default function RevenueDetailsModal({
                         {item.contact_staff || "-"}
                       </span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">📞</span>
                       <span className="detail-label">เบอร์โทร:</span>
                       <span className="detail-value">{item.phone || "-"}</span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">📅</span>
                       <span className="detail-label">วันที่นัดผ่าตัด:</span>
@@ -210,7 +191,6 @@ export default function RevenueDetailsModal({
                         {formatDate(item.surgery_date)}
                       </span>
                     </div>
-
                     <div className="detail-row">
                       <span className="detail-icon">🕐</span>
                       <span className="detail-label">เวลานัด:</span>
@@ -218,7 +198,6 @@ export default function RevenueDetailsModal({
                         {item.appointment_time || "-"}
                       </span>
                     </div>
-
                     <div className="detail-row highlight-row">
                       <span className="detail-icon">💰</span>
                       <span className="detail-label">ราคาที่เสนอ:</span>
@@ -231,14 +210,12 @@ export default function RevenueDetailsModal({
               ))}
             </div>
           )}
-
           {nClinicData.length === 0 && futureData.length === 0 && (
             <div className="empty-state">
               <p>ไม่มีข้อมูลรายรับในวันนี้</p>
             </div>
           )}
         </div>
-
         <div className="modal-footer">
           <button className="close-footer-button" onClick={onClose}>
             ปิด
@@ -247,4 +224,4 @@ export default function RevenueDetailsModal({
       </div>
     </div>
   );
-}
+}

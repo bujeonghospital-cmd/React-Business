@@ -1,21 +1,16 @@
 "use client";
-
 import React, { useState } from "react";
 import Image from "next/image";
 import Container from "@/components/Container";
-
 export default function InvestorFinancialsPage() {
   const [expandedSection, setExpandedSection] = useState<number | null>(null);
   const [expandedDownload, setExpandedDownload] = useState<number | null>(null);
-
   const toggleSection = (index: number) => {
     setExpandedSection(expandedSection === index ? null : index);
   };
-
   const toggleDownload = (index: number) => {
     setExpandedDownload(expandedDownload === index ? null : index);
   };
-
   const mainSections = [
     {
       title: "1. สิทธิของผู้ถือหุ้น",
@@ -38,7 +33,6 @@ export default function InvestorFinancialsPage() {
       content: "เนื้อหาเกี่ยวกับความรับผิดชอบของคณะกรรมการ...",
     },
   ];
-
   const downloadSections = [
     {
       title: "คู่มือและจรรยาบรรณที่เกี่ยวข้องกับการกำกับกิจการ",
@@ -53,7 +47,6 @@ export default function InvestorFinancialsPage() {
       items: ["เอกสารอื่นๆ 1", "เอกสารอื่นๆ 2"],
     },
   ];
-
   return (
     <div className="min-h-screen bg-white mt-5">
       <section
@@ -79,7 +72,6 @@ export default function InvestorFinancialsPage() {
                   }}
                 />
               </h2>
-
               <p
                 className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-black"
                 style={{
@@ -104,7 +96,6 @@ export default function InvestorFinancialsPage() {
         {/* <div className="absolute top-10 left-10 w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-float"></div>
         <div className="absolute bottom-10 right-10 w-40 h-40 bg-green-200 rounded-full opacity-20 animate-float-delayed"></div> */}
       </section>
-
       <Container>
         {/* Main Content Section */}
         <section className="py-16">
@@ -112,7 +103,6 @@ export default function InvestorFinancialsPage() {
             <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center animate-fade-in">
               การกำกับดูแลกิจการ
             </h2>
-
             {/* Description */}
             <div className="bg-green-50 p-8 rounded-lg mb-12 animate-fade-in-up delay-100 hover:shadow-lg transition-shadow duration-300">
               <p className="text-gray-700 leading-relaxed mb-4">
@@ -128,7 +118,6 @@ export default function InvestorFinancialsPage() {
                 บริหารความเสี่ยง และรักษาระบบควบคุมภายในให้มีประสิทธิผล
               </p>
             </div>
-
             <div className="bg-white p-8 rounded-lg shadow-md mb-12 animate-fade-in-up delay-200">
               <div className="flex flex-wrap items-center justify-center gap-8">
                 <div className="text-center animate-scale-in delay-300 hover:scale-110 transition-transform duration-300">
@@ -160,7 +149,6 @@ export default function InvestorFinancialsPage() {
                 </div>
               </div>
             </div>
-
             {/* 5 Main Sections - Accordion Style */}
             <div className="mb-16">
               {mainSections.map((section, index) => (
@@ -200,13 +188,11 @@ export default function InvestorFinancialsPage() {
                 </div>
               ))}
             </div>
-
             {/* Download Documents Section */}
             <div className="mb-16">
               <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center animate-fade-in">
                 ดาวน์โหลดเอกสาร
               </h2>
-
               {downloadSections.map((section, index) => (
                 <div
                   key={index}
@@ -272,7 +258,6 @@ export default function InvestorFinancialsPage() {
                 </div>
               ))}
             </div>
-
             {/* Whistleblower / Complaint Form Section */}
             <div className="bg-gray-50 p-8 rounded-lg animate-fade-in-up delay-300 hover:shadow-xl transition-shadow duration-300">
               <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center animate-fade-in">
@@ -284,7 +269,6 @@ export default function InvestorFinancialsPage() {
                 โดยเปิดโอกาสให้ผู้มีส่วนได้เสีย
                 แสดงความคิดเห็นอย่างอิสระและแจ้งเบาะแสการกระทำผิดกฎหมาย
               </p>
-
               <form className="max-w-2xl mx-auto space-y-6 animate-fade-in-up delay-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="animate-slide-in-left delay-300">
@@ -316,7 +300,6 @@ export default function InvestorFinancialsPage() {
                     />
                   </div>
                 </div>
-
                 <div className="animate-fade-in delay-400">
                   <label
                     htmlFor="email"
@@ -331,7 +314,6 @@ export default function InvestorFinancialsPage() {
                     placeholder="กรุณากรอกอีเมล"
                   />
                 </div>
-
                 <div className="animate-fade-in delay-500">
                   <label
                     htmlFor="phone"
@@ -346,7 +328,6 @@ export default function InvestorFinancialsPage() {
                     placeholder="กรุณากรอกเบอร์โทร"
                   />
                 </div>
-
                 <div className="animate-fade-in delay-600">
                   <label
                     htmlFor="message"
@@ -361,7 +342,6 @@ export default function InvestorFinancialsPage() {
                     placeholder="กรุณากรอกรายละเอียด"
                   ></textarea>
                 </div>
-
                 <div>
                   <label
                     htmlFor="captcha"
@@ -381,7 +361,6 @@ export default function InvestorFinancialsPage() {
                     />
                   </div>
                 </div>
-
                 <div className="flex justify-center animate-fade-in delay-700">
                   <button
                     type="submit"
@@ -397,4 +376,4 @@ export default function InvestorFinancialsPage() {
       </Container>
     </div>
   );
-}
+}

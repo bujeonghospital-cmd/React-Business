@@ -1,8 +1,6 @@
 "use client";
-
 import React from "react";
 import Image from "next/image";
-
 const CareersHero = () => {
   return (
     <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
@@ -15,7 +13,6 @@ const CareersHero = () => {
         className="object-cover"
         priority
       />
-
       {/* Content */}
       <div className="relative z-20 h-full flex items-center justify-center text-white px-4">
         <div className="max-w-4xl text-center">
@@ -46,7 +43,6 @@ const CareersHero = () => {
           </div>
         </div>
       </div>
-
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 animate-bounce">
         <svg
@@ -64,5 +60,4 @@ const CareersHero = () => {
     </div>
   );
 };
-
-export default CareersHero;
+export default CareersHero;

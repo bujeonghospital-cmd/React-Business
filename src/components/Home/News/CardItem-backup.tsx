@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-
 interface CardItemProps {
   image: string;
   date: string;
@@ -10,7 +9,6 @@ interface CardItemProps {
   direction?: "left" | "right";
   id?: number;
 }
-
 const CardItem: React.FC<CardItemProps> = ({
   image,
   date,
@@ -21,7 +19,6 @@ const CardItem: React.FC<CardItemProps> = ({
   id,
 }) => {
   const [imageError, setImageError] = useState(false);
-
   const cardClasses = `
     news-card bg-white rounded-xl p-4 md:p-5 flex flex-col shadow-lg cursor-pointer
     transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl
@@ -32,12 +29,10 @@ const CardItem: React.FC<CardItemProps> = ({
         : "border border-gray-200 hover:border-gray-300"
     }
   `.trim();
-
   const handleCardClick = () => {
     // Navigate to detailed news page or TPP news page
     window.location.href = "/tpp-news";
   };
-
   return (
     <div
       className={cardClasses}
@@ -74,7 +69,6 @@ const CardItem: React.FC<CardItemProps> = ({
           </div>
         )}
       </div>
-
       {/* Date & Title */}
       <span className="text-xs md:text-sm text-gray-500 mb-2 font-medium">
         {date}
@@ -82,7 +76,6 @@ const CardItem: React.FC<CardItemProps> = ({
       <div className="font-bold text-base leading-snug text-gray-900 hover:text-red-600 mb-4 line-clamp-3 transition-colors duration-300">
         {title}
       </div>
-
       {/* Arrow Button */}
       <div className="flex-grow" />
       <div className="self-end mt-3">
@@ -99,5 +92,4 @@ const CardItem: React.FC<CardItemProps> = ({
     </div>
   );
 };
-
-export default CardItem;
+export default CardItem;

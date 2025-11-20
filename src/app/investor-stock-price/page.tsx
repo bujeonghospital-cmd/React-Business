@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from "react";
 import {
   TrendingUp,
@@ -11,7 +10,6 @@ import {
   Download,
   RefreshCw,
 } from "lucide-react";
-
 // Types for SET API data
 interface StockData {
   symbol: string;
@@ -28,12 +26,10 @@ interface StockData {
   ceiling?: number;
   floor?: number;
 }
-
 interface ApiResponse {
   data?: StockData[];
   error?: string;
 }
-
 // Historical Price Data Type (mock data)
 interface HistoricalPrice {
   date: string;
@@ -42,7 +38,6 @@ interface HistoricalPrice {
   low: number;
   volume: number;
 }
-
 // Add animations
 if (typeof window !== "undefined") {
   const style = document.createElement("style");
@@ -57,12 +52,10 @@ if (typeof window !== "undefined") {
         transform: translateY(0);
       }
     }
-
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
-
     @keyframes slideInLeft {
       from {
         opacity: 0;
@@ -73,7 +66,6 @@ if (typeof window !== "undefined") {
         transform: translateX(0);
       }
     }
-
     @keyframes slideInRight {
       from {
         opacity: 0;
@@ -84,7 +76,6 @@ if (typeof window !== "undefined") {
         transform: translateX(0);
       }
     }
-
     @keyframes scaleIn {
       from {
         opacity: 0;
@@ -95,7 +86,6 @@ if (typeof window !== "undefined") {
         transform: scale(1);
       }
     }
-
     @keyframes pulse-glow {
       0%, 100% {
         box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
@@ -107,12 +97,10 @@ if (typeof window !== "undefined") {
   `;
   document.head.appendChild(style);
 }
-
 // Intersection Observer Hook
 const useScrollAnimation = (threshold = 0.1) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -123,17 +111,13 @@ const useScrollAnimation = (threshold = 0.1) => {
       },
       { threshold }
     );
-
     if (ref.current) {
       observer.observe(ref.current);
     }
-
     return () => observer.disconnect();
   }, [threshold]);
-
   return { ref, isVisible };
 };
-
 // Real-time Stock Price Card
 const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
   const [stockData, setStockData] = useState<StockData | null>(null);
@@ -141,7 +125,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const { ref, isVisible } = useScrollAnimation();
-
   const fetchStockData = React.useCallback(async () => {
     try {
       setLoading(true);
@@ -153,13 +136,10 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
           },
         }
       );
-
       if (!response.ok) {
         throw new Error(`API Error: ${response.status}`);
       }
-
       const data: ApiResponse = await response.json();
-
       if (data.data && Array.isArray(data.data)) {
         const stock = data.data.find(
           (s) => s.symbol.toUpperCase() === symbol.toUpperCase()
@@ -179,14 +159,12 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
       setLoading(false);
     }
   }, [symbol]);
-
   useEffect(() => {
     fetchStockData();
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchStockData, 30000);
     return () => clearInterval(interval);
   }, [fetchStockData]);
-
   if (loading && !stockData) {
     return (
       <div className="bg-white rounded-2xl shadow-xl p-8 animate-pulse">
@@ -201,7 +179,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
       </div>
     );
   }
-
   if (error || !stockData) {
     return (
       <div
@@ -222,10 +199,8 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
       </div>
     );
   }
-
   const isPositive = stockData.change >= 0;
   const isOpen = stockData.marketStatus === "OPEN";
-
   return (
     <div
       ref={ref}
@@ -277,7 +252,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
           <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
-
       {/* Main Price Display */}
       <div className="mb-8 pb-8 border-b-2 border-gray-200">
         <div className="flex items-end justify-between">
@@ -315,7 +289,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
           </div>
         </div>
       </div>
-
       {/* Price Details Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-green-50 to-white p-5 rounded-xl border border-green-200 hover:shadow-lg transition-shadow duration-300">
@@ -327,7 +300,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
             {stockData.high.toFixed(2)}
           </p>
         </div>
-
         <div className="bg-gradient-to-br from-red-50 to-white p-5 rounded-xl border border-red-200 hover:shadow-lg transition-shadow duration-300">
           <div className="flex items-center gap-2 mb-2">
             <TrendingDown className="w-5 h-5 text-red-600" />
@@ -337,7 +309,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
             {stockData.low.toFixed(2)}
           </p>
         </div>
-
         <div className="bg-gradient-to-br from-blue-50 to-white p-5 rounded-xl border border-blue-200 hover:shadow-lg transition-shadow duration-300">
           <div className="flex items-center gap-2 mb-2">
             <Activity className="w-5 h-5 text-blue-600" />
@@ -348,7 +319,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
             <span className="text-sm ml-1">ล้านหุ้น</span>
           </p>
         </div>
-
         <div className="bg-gradient-to-br from-purple-50 to-white p-5 rounded-xl border border-purple-200 hover:shadow-lg transition-shadow duration-300">
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 className="w-5 h-5 text-purple-600" />
@@ -360,7 +330,6 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
           </p>
         </div>
       </div>
-
       {/* Footer Note */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <p className="text-xs text-gray-400 text-center">
@@ -371,30 +340,24 @@ const StockPriceCard: React.FC<{ symbol?: string }> = ({ symbol = "TVO" }) => {
     </div>
   );
 };
-
 // Historical Price Chart Component (Mock data for demo)
 const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
   const { ref, isVisible } = useScrollAnimation();
   const [period, setPeriod] = useState<"1M" | "3M" | "6M" | "1Y">("3M");
-
   // Mock historical data
   const generateMockData = (months: number): HistoricalPrice[] => {
     const data: HistoricalPrice[] = [];
     const today = new Date();
     let basePrice = 25.0;
-
     for (let i = months * 20; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-
       // Random walk
       const change = (Math.random() - 0.5) * 2;
       basePrice = Math.max(20, Math.min(35, basePrice + change));
-
       const high = basePrice + Math.random() * 1.5;
       const low = basePrice - Math.random() * 1.5;
       const volume = Math.random() * 50000000 + 10000000;
-
       data.push({
         date: date.toLocaleDateString("th-TH", {
           day: "2-digit",
@@ -406,10 +369,8 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
         volume,
       });
     }
-
     return data;
   };
-
   const getMonths = () => {
     switch (period) {
       case "1M":
@@ -422,19 +383,16 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
         return 12;
     }
   };
-
   const historicalData = generateMockData(getMonths());
   const maxPrice = Math.max(...historicalData.map((d) => d.high));
   const minPrice = Math.min(...historicalData.map((d) => d.low));
   const priceRange = maxPrice - minPrice;
-
   // Calculate trend
   const firstPrice = historicalData[0]?.price || 0;
   const lastPrice = historicalData[historicalData.length - 1]?.price || 0;
   const trendChange = lastPrice - firstPrice;
   const trendPercent = (trendChange / firstPrice) * 100;
   const isPositiveTrend = trendChange >= 0;
-
   return (
     <div
       ref={ref}
@@ -469,7 +427,6 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
             <span className="text-sm text-gray-500">ใน {period}</span>
           </div>
         </div>
-
         {/* Period Selector */}
         <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
           {(["1M", "3M", "6M", "1Y"] as const).map((p) => (
@@ -487,7 +444,6 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
           ))}
         </div>
       </div>
-
       {/* Chart */}
       <div className="relative h-80 bg-gradient-to-b from-teal-50/50 to-white rounded-xl p-6 border border-gray-200">
         {/* Y-axis labels */}
@@ -496,7 +452,6 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
           <span>{((maxPrice + minPrice) / 2).toFixed(2)}</span>
           <span>{minPrice.toFixed(2)}</span>
         </div>
-
         {/* Chart area */}
         <div className="ml-12 h-full flex items-end justify-between gap-1">
           {historicalData.map((item, index) => {
@@ -506,7 +461,6 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
               ((item.high - minPrice) / priceRange) * 100 || 0;
             const lowHeightPercent =
               ((item.low - minPrice) / priceRange) * 100 || 0;
-
             return (
               <div
                 key={index}
@@ -524,13 +478,11 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
                     ปริมาณ: {(item.volume / 1000000).toFixed(2)}M
                   </div>
                 </div>
-
                 {/* High-Low Line */}
                 <div
                   className="w-0.5 bg-gray-300 group-hover:bg-teal-400 transition-colors duration-200"
                   style={{ height: `${highHeightPercent - lowHeightPercent}%` }}
                 />
-
                 {/* Price Bar */}
                 <div
                   className="w-full bg-gradient-to-t from-teal-600 to-teal-400 rounded-t-sm hover:from-teal-700 hover:to-teal-500 transition-all duration-300 group-hover:shadow-lg"
@@ -546,7 +498,6 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
             );
           })}
         </div>
-
         {/* X-axis labels */}
         <div className="ml-12 mt-2 flex justify-between text-xs text-gray-500">
           <span>{historicalData[0]?.date}</span>
@@ -556,7 +507,6 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
           <span>{historicalData[historicalData.length - 1]?.date}</span>
         </div>
       </div>
-
       {/* Chart Legend */}
       <div className="mt-6 flex flex-wrap gap-6 justify-center text-sm">
         <div className="flex items-center gap-2">
@@ -571,11 +521,9 @@ const PriceHistoryChart: React.FC<{ symbol: string }> = ({ symbol }) => {
     </div>
   );
 };
-
 // Key Statistics Component
 const KeyStatistics: React.FC = () => {
   const { ref, isVisible } = useScrollAnimation();
-
   const stats = [
     {
       label: "มูลค่าตลาด",
@@ -610,7 +558,6 @@ const KeyStatistics: React.FC = () => {
       bgColor: "from-orange-50 to-orange-100",
     },
   ];
-
   return (
     <div
       ref={ref}
@@ -621,7 +568,6 @@ const KeyStatistics: React.FC = () => {
       <h3 className="text-2xl font-bold text-gray-900 mb-6">
         สถิติสำคัญ (ข้อมูลปี 2025)
       </h3>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
@@ -642,7 +588,6 @@ const KeyStatistics: React.FC = () => {
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>
-
               <p className="text-sm font-medium text-gray-700 mb-2">
                 {stat.label}
               </p>
@@ -657,11 +602,9 @@ const KeyStatistics: React.FC = () => {
     </div>
   );
 };
-
 // Download Reports Section
 const DownloadReports: React.FC = () => {
   const { ref, isVisible } = useScrollAnimation();
-
   const reports = [
     {
       title: "รายงานราคาหลักทรัพย์ รายเดือน",
@@ -682,7 +625,6 @@ const DownloadReports: React.FC = () => {
       type: "Excel",
     },
   ];
-
   return (
     <div
       ref={ref}
@@ -701,7 +643,6 @@ const DownloadReports: React.FC = () => {
           ดาวน์โหลดรายงานราคาหลักทรัพย์
         </h3>
       </div>
-
       <div className="space-y-4">
         {reports.map((report, index) => (
           <div
@@ -738,16 +679,13 @@ const DownloadReports: React.FC = () => {
     </div>
   );
 };
-
 // Main Page Component
 export default function InvestorStockPrice() {
   const [isHeroVisible, setIsHeroVisible] = useState(false);
   const [stockSymbol, setStockSymbol] = useState("TVO");
-
   useEffect(() => {
     setIsHeroVisible(true);
   }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
@@ -771,7 +709,6 @@ export default function InvestorStockPrice() {
           <div className="absolute top-0 left-0 w-96 h-96 bg-teal-500 rounded-full filter blur-3xl opacity-20 animate-pulse" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500 rounded-full filter blur-3xl opacity-20 animate-pulse delay-1000" />
         </div>
-
         {/* Content */}
         <div
           className={`relative z-10 text-center max-w-4xl px-6 transform transition-all duration-1000 ${
@@ -786,7 +723,6 @@ export default function InvestorStockPrice() {
               ข้อมูลเรียลไทม์จาก SET
             </span>
           </div>
-
           <h1
             className={`text-5xl md:text-6xl font-extrabold text-white mb-6 transition-all duration-1000 delay-200 ${
               isHeroVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
@@ -797,7 +733,6 @@ export default function InvestorStockPrice() {
           >
             ข้อมูลราคาหลักทรัพย์
           </h1>
-
           <p
             className={`text-xl text-teal-50 leading-relaxed max-w-3xl mx-auto transition-all duration-1000 delay-300 ${
               isHeroVisible
@@ -808,7 +743,6 @@ export default function InvestorStockPrice() {
             ติดตามราคาหุ้นแบบเรียลไทม์ พร้อมวิเคราะห์แนวโน้มและสถิติที่สำคัญ
             สำหรับการตัดสินใจลงทุนของคุณ
           </p>
-
           {/* Stock Symbol Search */}
           <div
             className={`mt-8 flex items-center justify-center gap-3 transition-all duration-1000 delay-400 ${
@@ -833,29 +767,24 @@ export default function InvestorStockPrice() {
           </div>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-16 space-y-16">
         {/* Real-time Stock Price */}
         <section>
           <StockPriceCard symbol={stockSymbol} />
         </section>
-
         {/* Price History Chart */}
         <section>
           <PriceHistoryChart symbol={stockSymbol} />
         </section>
-
         {/* Key Statistics */}
         <section>
           <KeyStatistics />
         </section>
-
         {/* Download Reports */}
         <section>
           <DownloadReports />
         </section>
-
         {/* Disclaimer */}
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
           <div className="flex items-start gap-3">
@@ -877,4 +806,4 @@ export default function InvestorStockPrice() {
       </div>
     </div>
   );
-}
+}

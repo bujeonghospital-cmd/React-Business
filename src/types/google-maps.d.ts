@@ -18,5 +18,4 @@ declare namespace JSX {
     >;
   }
 }
-
-export {};
+export {};

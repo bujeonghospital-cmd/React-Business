@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 export async function POST(request: NextRequest) {
   try {
     // ข้อมูลตัวอย่าง
@@ -48,24 +47,19 @@ export async function POST(request: NextRequest) {
         age: 35,
       },
     ];
-
     const insertedData = [];
-
     for (const customer of sampleData) {
       const fields = Object.keys(customer);
       const values = Object.values(customer);
       const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
       const query = `
         INSERT INTO customers (${fields.join(", ")}, created_at, updated_at) 
         VALUES (${placeholders}, NOW(), NOW()) 
         RETURNING *
       `;
-
       const result = await pool.query(query, values);
       insertedData.push(result.rows[0]);
     }
-
     return NextResponse.json({
       success: true,
       message: `เพิ่มข้อมูลตัวอย่าง ${insertedData.length} รายการสำเร็จ`,
@@ -83,11 +77,10 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 export async function GET(request: NextRequest) {
   return NextResponse.json({
     message: "Use POST method to insert sample data",
     instructions:
       "Send a POST request to this endpoint to add 3 sample customer records",
   });
-}
+}

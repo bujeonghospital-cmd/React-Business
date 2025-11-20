@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
-
 // Create PostgreSQL connection pool
 // Support both DATABASE_URL or individual connection params
 const pool = new Pool(
@@ -24,21 +23,17 @@ const pool = new Pool(
             : false,
       }
 );
-
 export async function GET(request: NextRequest) {
   let client;
   try {
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date"); // Format: YYYY-MM-DD
     const adIds = searchParams.get("ad_ids"); // Comma-separated ad_ids
-
     console.log("📞 [Phone Leads API] Request params:", { dateParam, adIds });
-
     // Check database configuration
     const hasDbConfig =
       process.env.DATABASE_URL ||
       (process.env.DB_HOST && process.env.DB_PASSWORD);
-
     if (!hasDbConfig) {
       console.error("❌ [Phone Leads API] Database not configured");
       console.error("Available env vars:", {
@@ -53,15 +48,12 @@ export async function GET(request: NextRequest) {
         data: {},
       });
     }
-
     console.log("✅ [Phone Leads API] Database configuration found");
-
     // Parse ad_ids if provided
     let adIdList: string[] = [];
     if (adIds) {
       adIdList = adIds.split(",").map((id) => id.trim());
     }
-
     // Build SQL query
     let query = `
       SELECT
@@ -79,9 +71,7 @@ export async function GET(request: NextRequest) {
         ON ads.id = src.ad_id
       WHERE t.name = 'phone'
     `;
-
     const queryParams: any[] = [];
-
     // Add date filter if provided
     if (dateParam) {
       queryParams.push(dateParam);
@@ -90,13 +80,11 @@ export async function GET(request: NextRequest) {
       // Default to current date
       query += ` AND ct.assigned_at::date = CURRENT_DATE`;
     }
-
     // Add ad_id filter if provided
     if (adIdList.length > 0) {
       queryParams.push(adIdList);
       query += ` AND ads.fb_ad_id = ANY($${queryParams.length}::text[])`;
     }
-
     query += `
       GROUP BY
         ads.fb_ad_id,
@@ -104,23 +92,18 @@ export async function GET(request: NextRequest) {
       ORDER BY
         customers_with_phone DESC
     `;
-
     console.log("📞 [Phone Leads API] Executing query:", query);
     console.log("📞 [Phone Leads API] Query params:", queryParams);
-
     // Get a client from the pool
     client = await pool.connect();
     console.log("✅ [Phone Leads API] Database connected successfully");
-
     const result = await client.query(query, queryParams);
-
     console.log(
       "✅ [Phone Leads API] Query result:",
       result.rows.length,
       "rows"
     );
     console.log("📊 [Phone Leads API] Sample data:", result.rows.slice(0, 3));
-
     // Convert to map for easy lookup by fb_ad_id
     const phoneLeadsMap: { [key: string]: number } = {};
     result.rows.forEach((row) => {
@@ -129,7 +112,6 @@ export async function GET(request: NextRequest) {
         `  📍 Ad ${row.fb_ad_id}: ${row.customers_with_phone} phone leads`
       );
     });
-
     return NextResponse.json({
       success: true,
       data: phoneLeadsMap,
@@ -141,7 +123,6 @@ export async function GET(request: NextRequest) {
     console.error("❌ [Phone Leads API] Error stack:", error?.stack);
     console.error("❌ [Phone Leads API] Error name:", error?.name);
     console.error("❌ [Phone Leads API] Error message:", error?.message);
-
     // Return empty data instead of error to prevent breaking the UI
     return NextResponse.json({
       success: false,
@@ -156,4 +137,4 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   }
-}
+}

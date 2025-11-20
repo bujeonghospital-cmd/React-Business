@@ -1,8 +1,7 @@
 // Test Date Parsing from Google Sheets
 // วิธีทดสอบ: node test-date-parsing.js
 
-console.log("🧪 ทดสอบการจับวันที่จาก Google Sheets\n");
-console.log("=".repeat(60));
+);
 
 // ฟังก์ชันจับวันที่เหมือนในระบบ
 function parseSheetDate(dateStr) {
@@ -88,39 +87,25 @@ const testDates = [
   undefined,
 ];
 
-console.log("\n📋 ทดสอบรูปแบบวันที่ต่างๆ:\n");
-
 testDates.forEach((testDate) => {
   const parsed = parseSheetDate(testDate);
 
-  console.log(`Input: "${testDate}"`);
-
-  if (parsed) {
-    console.log(`✅ ผลลัพธ์: ${parsed.toISOString()}`);
-    console.log(
-      `   วันที่: ${parsed.getUTCDate()}/${
+    if (parsed) {
+    }`);
+    }/${
         parsed.getUTCMonth() + 1
       }/${parsed.getUTCFullYear()}`
     );
   } else {
-    console.log(`❌ ไม่สามารถจับวันที่ได้`);
-  }
-  console.log("");
-});
+      }
+  });
 
-console.log("=".repeat(60));
-console.log("\n📊 สรุปรูปแบบที่รองรับ:");
-console.log("1. ✅ DD/MM/YYYY (รูปแบบไทย) - เช่น 11/11/2025");
-console.log("2. ✅ D/M/YYYY (รูปแบบไทยแบบสั้น) - เช่น 1/1/2025");
-console.log("3. ✅ YYYY-MM-DD (ISO format) - เช่น 2025-11-11");
-console.log("4. ❓ Serial date (44911) - ต้องแปลงก่อน");
-console.log("5. ❓ Text dates - ขึ้นกับ browser");
+);
+ - เช่น 11/11/2025");
+ - เช่น 1/1/2025");
+ - เช่น 2025-11-11");
+ - ต้องแปลงก่อน");
+ เพื่อแปลงเป็น string");
+');
 
-console.log("\n💡 คำแนะนำสำหรับ Google Sheets:");
-console.log("- ใช้รูปแบบ DD/MM/YYYY หรือ YYYY-MM-DD");
-console.log("- ตั้ง Format ของเซลล์เป็น 'Plain text' หรือ 'Date'");
-console.log("- หลีกเลี่ยงการใช้ Serial date format");
-console.log("- ถ้าใช้ฟอร์มูลา ให้ใช้ TEXT() เพื่อแปลงเป็น string");
-console.log('  ตัวอย่าง: =TEXT(A1, "DD/MM/YYYY")');
-
-console.log("\n" + "=".repeat(60));
+);

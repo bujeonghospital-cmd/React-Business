@@ -1,8 +1,6 @@
 "use client";
-
 import Image from "next/image";
 import { useState, useEffect } from "react";
-
 // ======= ข้อมูลพื้นฐาน =======
 const COMPANY_INFO = {
   name: "บริษัท ไทยบรรจุภัณฑ์และการพิมพ์ จำกัด (มหาชน)",
@@ -39,7 +37,6 @@ const COMPANY_INFO = {
     fax: "(+66) 2-529-1254",
   },
 };
-
 const REFERENCE_CONTACTS = [
   {
     title: "นายทะเบียนหลักทรัพย์",
@@ -69,7 +66,6 @@ const REFERENCE_CONTACTS = [
     fax: "(+66) 2231-2324",
   },
 ];
-
 // ผู้ถือหุ้นรายใหญ่ - อ้างอิงจากหน้า about-executives
 const MAJOR_SHAREHOLDERS = [
   {
@@ -133,7 +129,6 @@ const MAJOR_SHAREHOLDERS = [
     percentage: "8.95",
   },
 ];
-
 // นโยบายและประวัติการจ่ายเงินปันผล
 const DIVIDEND_HISTORY = [
   {
@@ -221,12 +216,10 @@ const DIVIDEND_HISTORY = [
     source: "กำไรสุทธิ",
   },
 ];
-
 const Video_TITLE = "ข้อมูลผู้ถือหุ้น";
 const Video_DESC =
   "ทีพีพี ให้ความสำคัญและเคารพสิทธิของผู้ถือหุ้นทุกกลุ่ม โดยมีนโยบายกำกับดูแลให้ผู้ถือหุ้นทุกกลุ่มได้รับการปฏิบัติและปกป้องสิทธิขั้นพื้นฐาน และผลประโยชน์อย่างเท่าเทียมและเป็นธรรม";
 const Video_BG_URL = "/images/Shareholders/Shareholders_1.png";
-
 // Color palette for pie chart (red theme)
 const COLOR_PALETTE = [
   "#dc2626", // red-600
@@ -240,24 +233,19 @@ const COLOR_PALETTE = [
   "#f97316", // orange-500
   "#9ca3af", // gray-400
 ];
-
 // Helper function to get color for index
 function getColorForIndex(index: number): string {
   return COLOR_PALETTE[index % COLOR_PALETTE.length];
 }
-
 export default function ShareholderInfo() {
   const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
   const totalShares = MAJOR_SHAREHOLDERS.reduce(
     (sum, sh) => sum + parseFloat(sh.shares.replace(/,/g, "")),
     0
   );
-
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* Global Styles for Animations */}
@@ -272,7 +260,6 @@ export default function ShareholderInfo() {
             transform: translateY(0);
           }
         }
-
         @keyframes fadeInDown {
           from {
             opacity: 0;
@@ -283,7 +270,6 @@ export default function ShareholderInfo() {
             transform: translateY(0);
           }
         }
-
         @keyframes fadeInLeft {
           from {
             opacity: 0;
@@ -294,50 +280,39 @@ export default function ShareholderInfo() {
             transform: translateX(0);
           }
         }
-
         @keyframes fadeIn {
           to {
             opacity: 1;
           }
         }
-
         .animate-fadeInUp {
           animation: fadeInUp 0.8s ease-out forwards;
         }
-
         .animate-fadeInDown {
           animation: fadeInDown 0.6s ease-out forwards;
         }
-
         .animate-fadeInLeft {
           animation: fadeInLeft 0.7s ease-out forwards;
         }
-
         .Video-content {
           opacity: 0;
         }
-
         .Video-content.mounted {
           animation: fadeInLeft 1s ease-out forwards;
         }
-
         .Video-bg-overlay {
           opacity: 0;
           animation: fadeIn 1.2s ease-out 0.2s forwards;
         }
-
         .info-card {
           opacity: 0;
           animation: fadeInUp 0.6s ease-out forwards;
         }
-
         .stagger-animation {
           animation-delay: calc(var(--index) * 0.1s);
         }
       `}</style>
-
       <HeroSection mounted={mounted} />
-
       <main className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mt-6 sm:mt-8">
           {/* Left Column - ข้อมูลพื้นฐาน */}
@@ -413,7 +388,6 @@ export default function ShareholderInfo() {
               </div>
             </div>
           </section>
-
           {/* Right Column - บุคคลอ้างอิงอื่นๆ */}
           <section>
             <h2 className="text-xl sm:text-2xl font-bold bg-red-700 text-white px-4 py-3 rounded-t-lg">
@@ -454,7 +428,6 @@ export default function ShareholderInfo() {
             </div>
           </section>
         </div>
-
         {/* โครงสร้างการถือหุ้นของบริษัท */}
         <section className="mt-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-red-800 mb-6 text-center">
@@ -472,7 +445,6 @@ export default function ShareholderInfo() {
                   />
                 </div>
               </div>
-
               <div className="text-center w-full">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2">
                   {COMPANY_INFO.name}
@@ -515,13 +487,11 @@ export default function ShareholderInfo() {
             </div>
           </div>
         </section>
-
         {/* โครงสร้างผู้ถือหุ้น */}
         <section className="mt-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-red-800 mb-6 text-center">
             โครงสร้างผู้ถือหุ้น
           </h2>
-
           {/* Pie Chart Section */}
           <div className="bg-white rounded-2xl border-2 border-red-300 p-6 sm:p-8 shadow-lg mb-6">
             <div className="flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-12">
@@ -529,7 +499,6 @@ export default function ShareholderInfo() {
               <div className="flex-shrink-0">
                 <PieChart data={MAJOR_SHAREHOLDERS} />
               </div>
-
               {/* Legend/Table for All Shareholders */}
               <div className="flex-1 w-full max-w-md">
                 <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
@@ -561,7 +530,6 @@ export default function ShareholderInfo() {
               </div>
             </div>
           </div>
-
           {/* Full Table */}
           <div className="overflow-x-auto">
             <table className="w-full bg-white rounded-lg shadow-lg overflow-hidden border-2 border-red-200">
@@ -600,13 +568,11 @@ export default function ShareholderInfo() {
             </table>
           </div>
         </section>
-
         {/* นโยบายและประวัติการจ่ายเงินปันผล */}
         <section className="mt-12">
           <h2 className="text-2xl sm:text-3xl font-bold text-red-800 mb-6 text-center">
             นโยบายและประวัติการจ่ายเงินปันผล
           </h2>
-
           <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-700 p-5 sm:p-6 mb-6 rounded-r-lg shadow-md">
             <h3 className="font-bold text-red-800 mb-3 text-lg">
               นโยบายการจ่ายเงินปันผล
@@ -619,7 +585,6 @@ export default function ShareholderInfo() {
               ทั้งนี้ขึ้นอยู่กับผลการดำเนินงาน สภาพคล่อง และแผนการลงทุนของบริษัท
             </p>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full bg-white rounded-lg shadow-lg overflow-hidden border-2 border-red-200">
               <thead className="bg-red-700 text-white">
@@ -669,7 +634,6 @@ export default function ShareholderInfo() {
     </div>
   );
 }
-
 // Hero Section Component
 function HeroSection({ mounted }: { mounted: boolean }) {
   return (
@@ -686,10 +650,8 @@ function HeroSection({ mounted }: { mounted: boolean }) {
               className="object-cover"
             />
           </div>
-
           {/* Red-themed gradient overlay */}
           <div className="Video-bg-overlay absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent backdrop-blur-[1px]" />
-
           {/* Animated pattern overlay with red tone */}
           <div
             className="absolute inset-0 opacity-10"
@@ -698,7 +660,6 @@ function HeroSection({ mounted }: { mounted: boolean }) {
               animation: mounted ? "pulse 4s ease-in-out infinite" : "none",
             }}
           />
-
           {/* Content */}
           <div className="absolute inset-0 flex items-start justify-start">
             <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
@@ -718,7 +679,6 @@ function HeroSection({ mounted }: { mounted: boolean }) {
                     }}
                   />
                 </h1>
-
                 <p
                   className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-gray-700"
                   style={{
@@ -737,7 +697,6 @@ function HeroSection({ mounted }: { mounted: boolean }) {
     </section>
   );
 }
-
 // PieChart Component
 interface PieChartProps {
   data: Array<{
@@ -746,14 +705,12 @@ interface PieChartProps {
     shares: string;
   }>;
 }
-
 function PieChart({ data }: PieChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const size = 500;
   const center = size / 2;
   const outerRadius = 180;
   const innerRadius = 100;
-
   // Calculate cumulative percentages for pie slices (all shareholders)
   let cumulativePercentage = 0;
   const slices = data.map((item, index) => {
@@ -762,7 +719,6 @@ function PieChart({ data }: PieChartProps) {
     cumulativePercentage += percentage;
     const endAngle = (cumulativePercentage / 100) * 360;
     const midAngle = (startAngle + endAngle) / 2;
-
     return {
       ...item,
       startAngle,
@@ -772,7 +728,6 @@ function PieChart({ data }: PieChartProps) {
       color: getColorForIndex(index),
     };
   });
-
   // Create SVG path for donut slice
   const createDonutArc = (
     startAngle: number,
@@ -785,7 +740,6 @@ function PieChart({ data }: PieChartProps) {
     const startInner = polarToCartesian(center, center, inner, endAngle);
     const endInner = polarToCartesian(center, center, inner, startAngle);
     const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
-
     return [
       `M ${startOuter.x} ${startOuter.y}`,
       `A ${outer} ${outer} 0 ${largeArcFlag} 0 ${endOuter.x} ${endOuter.y}`,
@@ -794,7 +748,6 @@ function PieChart({ data }: PieChartProps) {
       "Z",
     ].join(" ");
   };
-
   const polarToCartesian = (
     centerX: number,
     centerY: number,
@@ -807,12 +760,10 @@ function PieChart({ data }: PieChartProps) {
       y: centerY + radius * Math.sin(angleInRadians),
     };
   };
-
   // Get label position
   const getLabelPosition = (midAngle: number, distance: number) => {
     return polarToCartesian(center, center, distance, midAngle);
   };
-
   return (
     <div className="relative w-full max-w-[500px] mx-auto">
       <svg
@@ -835,13 +786,11 @@ function PieChart({ data }: PieChartProps) {
             </feMerge>
           </filter>
         </defs>
-
         {/* Draw donut slices */}
         {slices.map((slice, index) => {
           const isHovered = hoveredIndex === index;
           const currentOuter = isHovered ? outerRadius + 10 : outerRadius;
           const currentInner = isHovered ? innerRadius - 5 : innerRadius;
-
           return (
             <g key={index}>
               {/* Donut slice */}
@@ -863,7 +812,6 @@ function PieChart({ data }: PieChartProps) {
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
               />
-
               {/* Label line and text */}
               {slice.percentage > 3 && (
                 <g className="pointer-events-none">
@@ -889,7 +837,6 @@ function PieChart({ data }: PieChartProps) {
                     strokeWidth="2"
                     opacity="0.8"
                   />
-
                   {/* Label text */}
                   <text
                     x={
@@ -923,10 +870,8 @@ function PieChart({ data }: PieChartProps) {
             </g>
           );
         })}
-
         {/* Center white circle */}
         <circle cx={center} cy={center} r={innerRadius} fill="white" />
-
         {/* Center circle border */}
         <circle
           cx={center}
@@ -937,7 +882,6 @@ function PieChart({ data }: PieChartProps) {
           strokeWidth="2"
         />
       </svg>
-
       {/* Center text overlay */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-center">
@@ -964,7 +908,6 @@ function PieChart({ data }: PieChartProps) {
     </div>
   );
 }
-
 // InfoItem Component (for list-style layout like TVO)
 function InfoItem({
   label,
@@ -995,7 +938,6 @@ function InfoItem({
     </div>
   );
 }
-
 // InfoCard Component
 function InfoCard({
   title,
@@ -1021,4 +963,4 @@ function InfoCard({
       <div className="text-gray-700 text-sm leading-relaxed">{content}</div>
     </div>
   );
-}
+}

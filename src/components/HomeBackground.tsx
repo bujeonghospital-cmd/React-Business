@@ -1,11 +1,9 @@
 "use client";
 import ScaledCanvas from "./ScaledCanvas";
 import { usePathname } from "next/navigation";
-
 export default function HomeBackground() {
   const path = usePathname();
   if (path !== "/") return null; // แสดงเฉพาะหน้า Home
-
   return (
     <ScaledCanvas>
       (
@@ -16,4 +14,4 @@ export default function HomeBackground() {
       )
     </ScaledCanvas>
   );
-}
+}

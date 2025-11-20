@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 // In-memory cache
 const cache = new Map<
   string,
   { data: any; timestamp: number; expiresAt: number }
 >();
 const CACHE_DURATION = 30000; // 30 seconds
-
 /**
  * GET /api/sale-incentive-db
  * ดึงข้อมูล Sale Incentive จาก PostgreSQL Database
@@ -20,14 +18,12 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month"); // 1-12
     const year = searchParams.get("year");
     const salePerson = searchParams.get("sale_person");
-
     // Check cache first
     const cacheKey = `sale-incentive-db-${month || "all"}-${year || "all"}-${
       salePerson || "all"
     }`;
     const cached = cache.get(cacheKey);
     const now = Date.now();
-
     if (cached && now < cached.expiresAt) {
       console.log(`✅ Returning cached sale incentive from database`);
       return NextResponse.json(cached.data, {
@@ -39,9 +35,7 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     console.log(`📡 Fetching sale incentive from database...`);
-
     // สร้าง SQL query แบบ dynamic
     // ดึงข้อมูลจาก n_saleIncentive และเปรียบเทียบกับ bjh_all_leads
     let query = `
@@ -138,10 +132,8 @@ export async function GET(request: NextRequest) {
       FROM combined_data
       WHERE 1=1
     `;
-
     const params: any[] = [];
     let paramIndex = 1;
-
     // Filter by month and year if provided
     if (month && year) {
       query += ` AND month = $${paramIndex++}`;
@@ -152,25 +144,20 @@ export async function GET(request: NextRequest) {
       query += ` AND year = $${paramIndex++}`;
       params.push(parseInt(year));
     }
-
     // Filter by sale person if provided
     if (salePerson && salePerson !== "all") {
       query += ` AND sale_person = $${paramIndex++}`;
       params.push(salePerson);
     }
-
     // Order by date
     query += ` ORDER BY sale_date DESC, created_at DESC`;
-
     // Execute query
     const client = await pool.connect();
     try {
       const result = await client.query(query, params);
-
       console.log(
         `✅ Successfully fetched ${result.rows.length} sale incentive records from database`
       );
-
       // Transform data to match expected format
       const transformedData = {
         success: true,
@@ -186,21 +173,18 @@ export async function GET(request: NextRequest) {
           },
         },
       };
-
       // Update cache with expiration time
       cache.set(cacheKey, {
         data: transformedData,
         timestamp: now,
         expiresAt: now + CACHE_DURATION,
       });
-
       // Clean old cache entries
       for (const [key, value] of cache.entries()) {
         if (now > value.expiresAt + 60000) {
           cache.delete(key);
         }
       }
-
       return NextResponse.json(transformedData, {
         status: 200,
         headers: {
@@ -214,7 +198,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error: any) {
     console.error("Error fetching sale incentive from database:", error);
-
     // Return cached data if available even if expired
     const cached = cache.get("sale-incentive-db");
     if (cached) {
@@ -227,7 +210,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -243,7 +225,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 /**
  * POST /api/sale-incentive-db
  * เพิ่มข้อมูล Sale Incentive ใหม่
@@ -251,9 +232,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
     const { sale_person, sale_date, income, customer_name, notes } = body;
-
     // Validate required fields
     if (!sale_person || !sale_date || income === undefined || income === null) {
       return NextResponse.json(
@@ -264,7 +243,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const client = await pool.connect();
     try {
       const query = `
@@ -273,7 +251,6 @@ export async function POST(request: NextRequest) {
         ) VALUES ($1, $2, $3, $4, $5)
         RETURNING *
       `;
-
       const values = [
         sale_person,
         sale_date,
@@ -281,12 +258,9 @@ export async function POST(request: NextRequest) {
         customer_name || null,
         notes || null,
       ];
-
       const result = await client.query(query, values);
-
       // Clear cache
       cache.clear();
-
       return NextResponse.json(
         {
           success: true,
@@ -309,7 +283,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 /**
  * PUT /api/sale-incentive-db
  * อัพเดทข้อมูล Sale Incentive
@@ -318,7 +291,6 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, ...updateData } = body;
-
     if (!id) {
       return NextResponse.json(
         {
@@ -328,7 +300,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // สร้าง dynamic update query
     const fields = Object.keys(updateData);
     if (fields.length === 0) {
@@ -340,12 +311,10 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const setClause = fields
       .map((field, index) => `${field} = $${index + 2}`)
       .join(", ");
     const values = [id, ...fields.map((field) => updateData[field])];
-
     const client = await pool.connect();
     try {
       const query = `
@@ -354,9 +323,7 @@ export async function PUT(request: NextRequest) {
         WHERE id = $1
         RETURNING *
       `;
-
       const result = await client.query(query, values);
-
       if (result.rows.length === 0) {
         return NextResponse.json(
           {
@@ -366,10 +333,8 @@ export async function PUT(request: NextRequest) {
           { status: 404 }
         );
       }
-
       // Clear cache
       cache.clear();
-
       return NextResponse.json({
         success: true,
         data: result.rows[0],
@@ -389,7 +354,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
 /**
  * DELETE /api/sale-incentive-db
  * ลบข้อมูล Sale Incentive
@@ -398,7 +362,6 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-
     if (!id) {
       return NextResponse.json(
         {
@@ -408,12 +371,10 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const client = await pool.connect();
     try {
       const query = `DELETE FROM sale_incentive WHERE id = $1 RETURNING id`;
       const result = await client.query(query, [id]);
-
       if (result.rows.length === 0) {
         return NextResponse.json(
           {
@@ -423,10 +384,8 @@ export async function DELETE(request: NextRequest) {
           { status: 404 }
         );
       }
-
       // Clear cache
       cache.clear();
-
       return NextResponse.json({
         success: true,
         message: "Sale incentive deleted successfully",
@@ -445,7 +404,6 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-
 // Handle OPTIONS request for CORS
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -456,4 +414,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-}
+}

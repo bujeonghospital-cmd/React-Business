@@ -1,6 +1,5 @@
 // Mock Stock Data for Testing
 // Use this when SET API is not available
-
 export interface StockData {
   symbol: string;
   last: number;
@@ -13,7 +12,6 @@ export interface StockData {
   prior: number;
   marketStatus: string;
 }
-
 export const MOCK_STOCKS: StockData[] = [
   {
     symbol: "TVO",
@@ -136,7 +134,6 @@ export const MOCK_STOCKS: StockData[] = [
     marketStatus: "CLOSED",
   },
 ];
-
 /**
  * Find stock by symbol
  */
@@ -145,14 +142,12 @@ export function findStockBySymbol(symbol: string): StockData | undefined {
     (stock) => stock.symbol.toUpperCase() === symbol.toUpperCase()
   );
 }
-
 /**
  * Get top stocks by trading value
  */
 export function getTopStocksByValue(count: number = 10): StockData[] {
   return [...MOCK_STOCKS].sort((a, b) => b.value - a.value).slice(0, count);
 }
-
 /**
  * Get stocks with positive changes
  */
@@ -162,7 +157,6 @@ export function getGainersStocks(count: number = 10): StockData[] {
     .sort((a, b) => b.percentChange - a.percentChange)
     .slice(0, count);
 }
-
 /**
  * Get stocks with negative changes
  */
@@ -171,4 +165,4 @@ export function getLosersStocks(count: number = 10): StockData[] {
     .filter((stock) => stock.change < 0)
     .sort((a, b) => a.percentChange - b.percentChange)
     .slice(0, count);
-}
+}

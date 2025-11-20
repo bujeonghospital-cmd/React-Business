@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import "./styles.css";
 import SurgeryDetailsModal from "./SurgeryDetailsModal";
@@ -34,13 +33,11 @@ import {
   calculateDailyRevenueByPersonNClinic,
   NClinicData,
 } from "@/utils/databaseNClinic";
-
 export default function PerformanceSurgerySchedule() {
   // State for selected month and year
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth()); // 0-11
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-
   // State for surgery data
   const [surgeryData, setSurgeryData] = useState<SurgeryScheduleData[]>([]);
   const [surgeryActualData, setSurgeryActualData] = useState<
@@ -72,7 +69,6 @@ export default function PerformanceSurgerySchedule() {
   const [nClinicData, setNClinicData] = useState<NClinicData[]>([]);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
   // KPI Data State (ข้อมูล KPI ที่กำหนดเอง ไม่ได้เชื่อมกับ Google Sheets)
   // Note: kpiToDate จะถูกคำนวณอัตโนมัติจากจำนวนวันทำงานที่ผ่านมา
   const [kpiData, setKpiData] = useState<{
@@ -87,7 +83,6 @@ export default function PerformanceSurgerySchedule() {
     "108-ว่าน": { kpiMonth: 40, kpiToDate: 0, actual: 0 },
     "109-ไม่ระบุ": { kpiMonth: 0, kpiToDate: 0, actual: 0 },
   });
-
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSurgeries, setSelectedSurgeries] = useState<
@@ -96,7 +91,6 @@ export default function PerformanceSurgerySchedule() {
   const [selectedDate, setSelectedDate] = useState(1);
   const [selectedContactPerson, setSelectedContactPerson] = useState("");
   const [selectedTableType, setSelectedTableType] = useState<"P" | "L">("P");
-
   // Revenue Modal state
   const [revenueModalOpen, setRevenueModalOpen] = useState(false);
   const [selectedNClinicData, setSelectedNClinicData] = useState<NClinicData[]>(
@@ -105,7 +99,6 @@ export default function PerformanceSurgerySchedule() {
   const [selectedFutureData, setSelectedFutureData] = useState<
     RevenueFutureData[]
   >([]);
-
   // Function to load surgery schedule data from Database
   const loadData = async (isManualRefresh = false) => {
     if (isManualRefresh) {
@@ -118,11 +111,9 @@ export default function PerformanceSurgerySchedule() {
       // Fetch surgery schedule data from Database (แทน Python API/Google Sheets)
       const data = await fetchSurgeryScheduleFromDatabase();
       setSurgeryData(data);
-
       // Fetch surgery actual data (L table)
       const actualData = await fetchSurgeryActualFromDatabase();
       setSurgeryActualData(actualData);
-
       setLastUpdated(new Date());
     } catch (error: any) {
       setError(error.message || "เกิดข้อผิดพลาดในการโหลดข้อมูล");
@@ -131,7 +122,6 @@ export default function PerformanceSurgerySchedule() {
       setIsRefreshing(false);
     }
   };
-
   // Function to load N_SaleIncentive data separately from Database (DISABLED - ใช้ bjh_all_leads แทน)
   // const loadSaleIncentiveData = async () => {
   //   try {
@@ -154,7 +144,6 @@ export default function PerformanceSurgerySchedule() {
   //     setSaleIncentiveData([]);
   //   }
   // };
-
   // Function to load N_Clinic Revenue data (sale_date <= today)
   const loadNClinicData = async () => {
     try {
@@ -187,7 +176,6 @@ export default function PerformanceSurgerySchedule() {
       setNClinicData([]);
     }
   };
-
   // Function to load Future Revenue data (surgery_date >= today)
   const loadRevenueFutureData = async () => {
     try {
@@ -225,93 +213,76 @@ export default function PerformanceSurgerySchedule() {
       setRevenueFutureData([]);
     }
   };
-
   // Fetch surgery data when component mounts
   useEffect(() => {
     (async () => {
       await loadData();
     })();
   }, []);
-
   // Fetch N_SaleIncentive data when component mounts or when month/year changes (DISABLED)
   // useEffect(() => {
   //   (async () => {
   //     await loadSaleIncentiveData();
   //   })();
   // }, [selectedMonth, selectedYear]);
-
   // Fetch N_Clinic data when component mounts or when month/year changes
   useEffect(() => {
     (async () => {
       await loadNClinicData();
     })();
   }, [selectedMonth, selectedYear]);
-
   // Fetch Future Revenue data when component mounts or when month/year changes
   useEffect(() => {
     (async () => {
       await loadRevenueFutureData();
     })();
   }, [selectedMonth, selectedYear]);
-
   // Auto-refresh surgery data every 30 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       await loadData();
     }, 30000); // 30 seconds
-
     return () => clearInterval(interval);
   }, []);
-
   // Auto-refresh N_SaleIncentive data every 30 seconds (DISABLED)
   // useEffect(() => {
   //   const interval = setInterval(async () => {
   //     await loadSaleIncentiveData();
   //   }, 30000); // 30 seconds
-
   //   return () => clearInterval(interval);
   // }, []);
-
   // Auto-refresh N_Clinic data every 30 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       await loadNClinicData();
     }, 30000); // 30 seconds
-
     return () => clearInterval(interval);
   }, []);
-
   // Auto-refresh Future Revenue data every 30 seconds
   useEffect(() => {
     const interval = setInterval(async () => {
       await loadRevenueFutureData();
     }, 30000); // 30 seconds
-
     return () => clearInterval(interval);
   }, []);
-
   // Get number of days in selected month
   const getDaysInMonth = (month: number, year: number) => {
     return new Date(year, month + 1, 0).getDate();
   };
-
   const daysInMonth = getDaysInMonth(selectedMonth, selectedYear);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
   // Check if a day is a weekday (Monday-Friday)
   const isWeekday = (day: number): boolean => {
     const date = new Date(selectedYear, selectedMonth, day);
     const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
     return dayOfWeek >= 1 && dayOfWeek <= 5; // Monday to Friday
   };
-
   // Calculate number of weekdays (Mon-Fri) from start of month to current date
   const calculateWeekdaysToDate = (): number => {
     const today = new Date();
     const todayDate = today.getDate();
     const todayMonth = today.getMonth();
     const todayYear = today.getFullYear();
-
     // If viewing a future month/year, return 0 (haven't reached yet)
     if (
       selectedYear > todayYear ||
@@ -319,7 +290,6 @@ export default function PerformanceSurgerySchedule() {
     ) {
       return 0;
     }
-
     // If viewing a past month/year, return total weekdays in that month
     if (
       selectedYear < todayYear ||
@@ -334,7 +304,6 @@ export default function PerformanceSurgerySchedule() {
       }
       return weekdayCount;
     }
-
     // If viewing current month/year, count up to today
     let weekdayCount = 0;
     for (let day = 1; day <= todayDate; day++) {
@@ -344,7 +313,6 @@ export default function PerformanceSurgerySchedule() {
     }
     return weekdayCount;
   };
-
   // Update count maps when data or date changes
   useEffect(() => {
     if (surgeryData.length > 0) {
@@ -354,11 +322,9 @@ export default function PerformanceSurgerySchedule() {
         selectedMonth,
         selectedYear
       );
-
       setCountMap(newCountMap);
     }
   }, [surgeryData, selectedMonth, selectedYear]);
-
   // Update N_Clinic revenue map - ใช้ proposed_amount จาก n_clinic (sale_date <= today)
   useEffect(() => {
     console.log("🔄 Processing N_Clinic RevenueMap (sale_date <= today)...", {
@@ -371,14 +337,12 @@ export default function PerformanceSurgerySchedule() {
         proposed_amount: d.proposed_amount,
       })),
     });
-
     if (nClinicData.length > 0) {
       const newNClinicRevenueMap = calculateDailyRevenueByPersonNClinic(
         nClinicData,
         selectedMonth,
         selectedYear
       );
-
       console.log("🔍 N_Clinic Revenue Map Debug:", {
         mapSize: newNClinicRevenueMap.size,
         persons: Array.from(newNClinicRevenueMap.keys()),
@@ -394,14 +358,12 @@ export default function PerformanceSurgerySchedule() {
           })
         ),
       });
-
       setFilmRevenueMapNClinic(newNClinicRevenueMap);
     } else {
       console.log("⚠️ No N_Clinic data to process, clearing map");
       setFilmRevenueMapNClinic(new Map());
     }
   }, [nClinicData, selectedMonth, selectedYear]);
-
   // Update film revenue map - ใช้ proposed_amount จาก bjh_all_leads (surgery_date >= today)
   useEffect(() => {
     console.log(
@@ -417,7 +379,6 @@ export default function PerformanceSurgerySchedule() {
         })),
       }
     );
-
     if (revenueFutureData.length > 0) {
       // ใช้ proposed_amount และ contact_staff จาก bjh_all_leads (surgery_date >= today)
       const newFilmRevenueMap = calculateDailyRevenueByPersonFuture(
@@ -425,7 +386,6 @@ export default function PerformanceSurgerySchedule() {
         selectedMonth,
         selectedYear
       );
-
       console.log("🔍 Film Revenue Map Debug (bjh_all_leads - Future):", {
         mapSize: newFilmRevenueMap.size,
         persons: Array.from(newFilmRevenueMap.keys()),
@@ -441,14 +401,12 @@ export default function PerformanceSurgerySchedule() {
           })
         ),
       });
-
       setFilmRevenueMap(newFilmRevenueMap);
     } else {
       console.log("⚠️ No future revenue data to process, clearing map");
       setFilmRevenueMap(new Map());
     }
   }, [revenueFutureData, selectedMonth, selectedYear]);
-
   // Update L table count map when surgery actual data changes
   useEffect(() => {
     if (surgeryActualData.length > 0) {
@@ -458,11 +416,9 @@ export default function PerformanceSurgerySchedule() {
         selectedMonth,
         selectedYear
       );
-
       setCountMapL(newCountMapL);
     }
   }, [surgeryActualData, selectedMonth, selectedYear]);
-
   // Update revenue map when N_SaleIncentive data changes (DISABLED - ใช้ filmRevenueMap จาก bjh_all_leads แทน)
   // useEffect(() => {
   //   if (saleIncentiveData.length > 0) {
@@ -472,7 +428,6 @@ export default function PerformanceSurgerySchedule() {
   //       selectedMonth,
   //       selectedYear
   //     );
-
   //     console.log("🔍 Revenue Map Debug:", {
   //       mapSize: newRevenueMap.size,
   //       persons: Array.from(newRevenueMap.keys()),
@@ -483,19 +438,16 @@ export default function PerformanceSurgerySchedule() {
   //           days: Array.from(dayMap.entries()),
   //         })),
   //     });
-
   //     setRevenueMap(newRevenueMap);
   //   } else {
   //     // Clear revenue map if no data
   //     setRevenueMap(new Map());
   //   }
   // }, [saleIncentiveData, selectedMonth, selectedYear]);
-
   // Update KPI To Date and Actual based on weekdays passed in current month
   useEffect(() => {
     const weekdaysToDate = calculateWeekdaysToDate();
     const totalWeekdaysInMonth = days.filter((day) => isWeekday(day)).length;
-
     // Update kpiToDate and actual for all rows
     setKpiData((prevData) => {
       const updatedData = { ...prevData };
@@ -506,7 +458,6 @@ export default function PerformanceSurgerySchedule() {
           const count = getCellCount(day, key, "P");
           actualCount += count; // Sum up all the counts
         });
-
         if (updatedData[key].kpiMonth > 0) {
           // Calculate proportional KPI based on weekdays passed
           updatedData[key] = {
@@ -528,7 +479,6 @@ export default function PerformanceSurgerySchedule() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, selectedYear, days.length, countMap]);
-
   // Month names in Thai
   const monthNames = [
     "มกราคม",
@@ -544,21 +494,17 @@ export default function PerformanceSurgerySchedule() {
     "พฤศจิกายน",
     "ธันวาคม",
   ];
-
   // Generate year options (current year and +/- 2 years)
   const yearOptions = Array.from(
     { length: 5 },
     (_, i) => currentDate.getFullYear() - 2 + i
   );
-
   const handleMonthChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedMonth(parseInt(e.target.value));
   };
-
   const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedYear(parseInt(e.target.value));
   };
-
   const handlePreviousMonth = () => {
     if (selectedMonth === 0) {
       setSelectedMonth(11);
@@ -567,7 +513,6 @@ export default function PerformanceSurgerySchedule() {
       setSelectedMonth(selectedMonth - 1);
     }
   };
-
   const handleNextMonth = () => {
     if (selectedMonth === 11) {
       setSelectedMonth(0);
@@ -576,12 +521,10 @@ export default function PerformanceSurgerySchedule() {
       setSelectedMonth(selectedMonth + 1);
     }
   };
-
   // Handle revenue cell click to open revenue modal
   const handleRevenueCellClick = (day: number, rowId: string) => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return;
-
     // Parse date function
     const parseDateStr = (dateStr: string | undefined): Date | null => {
       if (!dateStr) return null;
@@ -591,16 +534,13 @@ export default function PerformanceSurgerySchedule() {
         return null;
       }
     };
-
     // Filter N_Clinic data for this day and person
     const filteredNClinic = nClinicData.filter((item) => {
       const date = parseDateStr(item.sale_date);
       if (!date) return false;
-
       const itemDay = date.getDate();
       const itemMonth = date.getMonth();
       const itemYear = date.getFullYear();
-
       if (
         itemMonth !== selectedMonth ||
         itemYear !== selectedYear ||
@@ -608,24 +548,19 @@ export default function PerformanceSurgerySchedule() {
       ) {
         return false;
       }
-
       // For จีน row, include both จีน and มุก
       if (rowId === "105-จีน") {
         return item.contact_staff === "จีน" || item.contact_staff === "มุก";
       }
-
       return item.contact_staff === contactPerson;
     });
-
     // Filter Future Revenue data for this day and person
     const filteredFuture = revenueFutureData.filter((item) => {
       const date = parseDateStr(item.surgery_date);
       if (!date) return false;
-
       const itemDay = date.getDate();
       const itemMonth = date.getMonth();
       const itemYear = date.getFullYear();
-
       if (
         itemMonth !== selectedMonth ||
         itemYear !== selectedYear ||
@@ -633,28 +568,22 @@ export default function PerformanceSurgerySchedule() {
       ) {
         return false;
       }
-
       // For จีน row, include both จีน and มุก
       if (rowId === "105-จีน") {
         return item.contact_staff === "จีน" || item.contact_staff === "มุก";
       }
-
       return item.contact_staff === contactPerson;
     });
-
     if (filteredNClinic.length === 0 && filteredFuture.length === 0) return;
-
     // Find the display name from pScheduleRows
     const rowInfo = pScheduleRows.find((r) => r.id === rowId);
     const displayName = rowInfo ? rowInfo.name : contactPerson;
-
     setSelectedNClinicData(filteredNClinic);
     setSelectedFutureData(filteredFuture);
     setSelectedDate(day);
     setSelectedContactPerson(displayName);
     setRevenueModalOpen(true);
   };
-
   // Handle cell click to open modal
   const handleCellClick = (
     day: number,
@@ -663,39 +592,30 @@ export default function PerformanceSurgerySchedule() {
   ) => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return;
-
     const personMap = tableType === "P" ? countMap : countMapL;
-
     let surgeries: SurgeryScheduleData[] = [];
-
     // For จีน row, combine จีน and มุก data
     if (rowId === "105-จีน") {
       const jinMap = personMap.get("จีน");
       const mukMap = personMap.get("มุก");
-
       const jinSurgeries = jinMap?.get(day) || [];
       const mukSurgeries = mukMap?.get(day) || [];
-
       surgeries = [...jinSurgeries, ...mukSurgeries];
     } else {
       const surgeryMap = personMap.get(contactPerson);
       if (!surgeryMap) return;
       surgeries = surgeryMap.get(day) || [];
     }
-
     if (surgeries.length === 0) return;
-
     // Find the display name from pScheduleRows
     const rowInfo = pScheduleRows.find((r) => r.id === rowId);
     const displayName = rowInfo ? rowInfo.name : contactPerson;
-
     setSelectedSurgeries(surgeries);
     setSelectedDate(day);
     setSelectedContactPerson(displayName);
     setSelectedTableType(tableType);
     setModalOpen(true);
   };
-
   // Get count for a specific cell
   const getCellCount = (
     day: number,
@@ -704,27 +624,20 @@ export default function PerformanceSurgerySchedule() {
   ): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
     if (!contactPerson) return 0;
-
     const personMap = tableType === "P" ? countMap : countMapL;
-
     // For จีน row, combine จีน and มุก data
     if (rowId === "105-จีน") {
       const jinMap = personMap.get("จีน");
       const mukMap = personMap.get("มุก");
-
       const jinSurgeries = jinMap?.get(day) || [];
       const mukSurgeries = mukMap?.get(day) || [];
-
       return jinSurgeries.length + mukSurgeries.length;
     }
-
     const surgeryMap = personMap.get(contactPerson);
     if (!surgeryMap) return 0;
-
     const surgeries = surgeryMap.get(day);
     return surgeries ? surgeries.length : 0;
   };
-
   // Get revenue for a specific cell (รวมข้อมูลจาก 2 API: N_Clinic + Future Revenue)
   const getCellRevenue = (day: number, rowId: string): number => {
     const contactPerson = CONTACT_PERSON_MAPPING[rowId];
@@ -732,9 +645,7 @@ export default function PerformanceSurgerySchedule() {
       console.warn(`⚠️ No contact person mapping for rowId: ${rowId}`);
       return 0;
     }
-
     let totalRevenue = 0;
-
     // Debug: ตรวจสอบทั้ง 2 maps
     if (day === 1) {
       console.log(`🔍 Debug getCellRevenue for day ${day}, rowId ${rowId}:`, {
@@ -746,7 +657,6 @@ export default function PerformanceSurgerySchedule() {
         futureMapKeys: Array.from(filmRevenueMap.keys()),
       });
     }
-
     // รวมข้อมูลจาก N_Clinic (sale_date <= today)
     if (filmRevenueMapNClinic.size > 0) {
       if (rowId === "105-จีน") {
@@ -758,7 +668,6 @@ export default function PerformanceSurgerySchedule() {
         totalRevenue += revenue;
       }
     }
-
     // รวมข้อมูลจาก Future Revenue (surgery_date >= today)
     if (filmRevenueMap.size > 0) {
       if (rowId === "105-จีน") {
@@ -770,7 +679,6 @@ export default function PerformanceSurgerySchedule() {
         totalRevenue += revenue;
       }
     }
-
     if (day === 1 && totalRevenue > 0) {
       console.log(
         `💰 Total Revenue for ${rowId} (${contactPerson}) day ${day}:`,
@@ -789,10 +697,8 @@ export default function PerformanceSurgerySchedule() {
         }
       );
     }
-
     return totalRevenue;
   };
-
   // Calculate KPI Diff (Actual - KPI To Date)
   const calculateDiff = (rowId: string): number => {
     const data = kpiData[rowId];
@@ -802,31 +708,26 @@ export default function PerformanceSurgerySchedule() {
       rowId === "105-จีน" ? data.kpiToDate * 2 : data.kpiToDate;
     return data.actual - adjustedKpiToDate;
   };
-
   // Format number as Thai currency
   const formatCurrency = (amount: number): string => {
     if (amount === 0) return "";
     return amount.toLocaleString("th-TH");
   };
-
   // Data for table (วันที่ได้นัดผ่า P)
   const pScheduleRows = [
     { id: "105-จีน", name: "105-จีน & มุก" },
     { id: "107-เจ", name: "107-เจ" },
     { id: "108-ว่าน", name: "108-ว่าน" },
   ];
-
   return (
     <div className="surgery-schedule-container">
       <div className="schedule-header">
         <h1>Performance - นัดผ่าตัด</h1>
-
         {/* Calendar Controls */}
         <div className="calendar-controls">
           <button onClick={handlePreviousMonth} className="nav-button">
             ◀ เดือนก่อน
           </button>
-
           <div className="date-selectors">
             <select
               value={selectedMonth}
@@ -839,7 +740,6 @@ export default function PerformanceSurgerySchedule() {
                 </option>
               ))}
             </select>
-
             <select
               value={selectedYear}
               onChange={handleYearChange}
@@ -852,12 +752,10 @@ export default function PerformanceSurgerySchedule() {
               ))}
             </select>
           </div>
-
           <button onClick={handleNextMonth} className="nav-button">
             เดือนถัดไป ▶
           </button>
         </div>
-
         <div className="selected-month-display">
           <strong>
             เดือน {monthNames[selectedMonth]} {selectedYear + 543}
@@ -870,10 +768,8 @@ export default function PerformanceSurgerySchedule() {
             </span>
           )}
         </div>
-
         {/* Data Info and Refresh Button */}
       </div>
-
       {/* Team Summary Dashboard */}
       {!isLoading && !error && (
         <div className="team-summary-dashboard">
@@ -881,23 +777,19 @@ export default function PerformanceSurgerySchedule() {
             const pActual = kpiData[row.id]?.actual || 0;
             const pDiff = calculateDiff(row.id);
             const pKpiToDate = kpiData[row.id]?.kpiToDate || 0;
-
             // Calculate L table actual
             let lActual = 0;
             days.forEach((day) => {
               lActual += getCellCount(day, row.id, "L");
             });
-
             // Calculate revenue actual
             let revenueActual = 0;
             days.forEach((day) => {
               revenueActual += getCellRevenue(day, row.id);
             });
-
             // Calculate L diff (using same KPI as P table)
             const lDiff = lActual - pKpiToDate;
             const lKpiToDate = pKpiToDate;
-
             // Calculate revenue diff
             // For "105-จีน & มุก", multiply KPI by 2
             const revenueKpiToDate =
@@ -905,14 +797,12 @@ export default function PerformanceSurgerySchedule() {
                 ? pKpiToDate * 2 * 25000
                 : pKpiToDate * 25000;
             const revenueDiff = revenueActual - revenueKpiToDate;
-
             // Different color for each team
             const teamColors = [
               "team-color-1", // 105-จีน & มุก
               "team-color-2", // 107-เจ
               "team-color-3", // 108-ว่าน
             ];
-
             return (
               <div
                 key={row.id}
@@ -950,7 +840,6 @@ export default function PerformanceSurgerySchedule() {
                       </div>
                     </div>
                   </div>
-
                   <div className="summary-metric">
                     <div className="metric-label">จำนวนผ่าตัด</div>
                     <div className="metric-row">
@@ -977,7 +866,6 @@ export default function PerformanceSurgerySchedule() {
                       </div>
                     </div>
                   </div>
-
                   {/* <div className="summary-metric">
                     <div className="metric-label">ว่าน</div>
                     <div className="metric-row">
@@ -1008,7 +896,6 @@ export default function PerformanceSurgerySchedule() {
           })}
         </div>
       )}
-
       {/* Loading Indicator */}
       {isLoading && (
         <div className="loading-indicator">
@@ -1016,7 +903,6 @@ export default function PerformanceSurgerySchedule() {
           <p>กำลังโหลดข้อมูล...</p>
         </div>
       )}
-
       {/* Error Display */}
       {error && (
         <div className="error-display">
@@ -1060,7 +946,6 @@ export default function PerformanceSurgerySchedule() {
           </div>
         </div>
       )}
-
       {/* Table - วันที่ได้นัดผ่า P */}
       <div className="table-section ">
         <div className="table-wrapper">
@@ -1117,7 +1002,6 @@ export default function PerformanceSurgerySchedule() {
           </table>
         </div>
       </div>
-
       {/* Table - วันที่ผ่าตัด L */}
       <div className="table-section">
         <div className="table-wrapper">
@@ -1174,7 +1058,6 @@ export default function PerformanceSurgerySchedule() {
           </table>
         </div>
       </div>
-
       {/* Table - ประมาณการรายรับ */}
       <div className="table-section">
         <div className="table-wrapper">
@@ -1248,7 +1131,6 @@ export default function PerformanceSurgerySchedule() {
         contactPerson={selectedContactPerson}
         tableType={selectedTableType}
       />
-
       {/* Revenue Details Modal */}
       <RevenueDetailsModal
         isOpen={revenueModalOpen}
@@ -1262,4 +1144,4 @@ export default function PerformanceSurgerySchedule() {
       />
     </div>
   );
-}
+}

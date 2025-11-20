@@ -1,8 +1,6 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from "react";
 import { Download, TrendingUp, TrendingDown } from "lucide-react";
-
 // Types for SET API data
 interface StockData {
   symbol: string;
@@ -16,12 +14,10 @@ interface StockData {
   prior: number;
   marketStatus: string;
 }
-
 interface ApiResponse {
   data?: StockData[];
   error?: string;
 }
-
 // Types for SETSMART API data
 interface SetSmartPriceData {
   symbol: string;
@@ -52,12 +48,10 @@ interface SetSmartPriceData {
   marketCap?: number;
   volumeTurnover?: number;
 }
-
 interface SetSmartApiResponse {
   data?: SetSmartPriceData[];
   error?: string;
 }
-
 // Types for Financial Data and Ratio API
 interface FinancialDataItem {
   symbol: string;
@@ -92,12 +86,10 @@ interface FinancialDataItem {
   fixedAssetTurnover: number;
   totalAssetTurnover: number;
 }
-
 interface FinancialDataResponse {
   data?: FinancialDataItem[];
   error?: string;
 }
-
 // Add styles for animations
 if (typeof window !== "undefined") {
   const style = document.createElement("style");
@@ -112,12 +104,10 @@ if (typeof window !== "undefined") {
         transform: translateY(0);
       }
     }
-    
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    
     @keyframes slideInLeft {
       from {
         opacity: 0;
@@ -128,7 +118,6 @@ if (typeof window !== "undefined") {
         transform: translateX(0);
       }
     }
-    
     @keyframes slideInRight {
       from {
         opacity: 0;
@@ -139,19 +128,16 @@ if (typeof window !== "undefined") {
         transform: translateX(0);
       }
     }
-    
     .animate-pulse-slow {
       animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
   `;
   document.head.appendChild(style);
 }
-
 // Intersection Observer Hook for scroll animations
 const useScrollAnimation = (threshold = 0.1) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -162,17 +148,13 @@ const useScrollAnimation = (threshold = 0.1) => {
       },
       { threshold }
     );
-
     if (ref.current) {
       observer.observe(ref.current);
     }
-
     return () => observer.disconnect();
   }, [threshold]);
-
   return { ref, isVisible };
 };
-
 // Stock Market Widget Component with SETSMART API
 const StockMarketWidget: React.FC<{ symbol?: string }> = ({
   symbol = "TPP",
@@ -183,46 +165,37 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const { ref, isVisible } = useScrollAnimation();
-
   // Initialize dates (last 7 days to today)
   useEffect(() => {
     const today = new Date();
     const lastWeek = new Date(today);
     lastWeek.setDate(lastWeek.getDate() - 7);
-
     setEndDate(formatDate(today));
     setStartDate(formatDate(lastWeek));
   }, []);
-
   const formatDate = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
-
   useEffect(() => {
     if (!startDate || !endDate) return;
-
     const fetchStockData = async () => {
       try {
         setLoading(true);
         const url = `/api/stock?symbol=${symbol}&startDate=${startDate}&endDate=${endDate}`;
-
         const response = await fetch(url, {
           method: "GET",
           headers: {
             Accept: "application/json",
           },
         });
-
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
-
         const data: any = await response.json();
-
         // Get the most recent data (last item in array)
         // Handle multiple response formats: {value: []}, {data: []}, or direct array []
         let dataArray: SetSmartPriceData[] = [];
@@ -234,14 +207,11 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
         } else if (data?.data && Array.isArray(data.data)) {
           dataArray = data.data;
         }
-
         if (dataArray && Array.isArray(dataArray) && dataArray.length > 0) {
           const latestData = dataArray[dataArray.length - 1];
-
           // Calculate change and percentChange from close and prior
           const change = latestData.close - latestData.prior;
           const percentChange = (change / latestData.prior) * 100;
-
           // Map totalValue to value and add calculated fields
           const stockData: SetSmartPriceData = {
             ...latestData,
@@ -251,7 +221,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
             percentChange: percentChange,
             priorClose: latestData.prior,
           };
-
           setStockData(stockData);
           setError(null);
         } else {
@@ -265,13 +234,11 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
         setLoading(false);
       }
     };
-
     fetchStockData();
     // Refresh every 5 minutes
     const interval = setInterval(fetchStockData, 300000);
     return () => clearInterval(interval);
   }, [symbol, startDate, endDate]);
-
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
@@ -281,7 +248,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
       </div>
     );
   }
-
   if (error || !stockData) {
     return (
       <div
@@ -299,7 +265,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
             </p>
           </div>
         </div>
-
         {/* Date Range Selector */}
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-col sm:flex-row gap-3">
@@ -330,9 +295,7 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
       </div>
     );
   }
-
   const isPositive = stockData.change >= 0;
-
   return (
     <div
       ref={ref}
@@ -374,7 +337,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
           </div>
         </div>
       </div>
-
       {/* Date Range Selector */}
       <div className="mb-4 pb-4 border-b border-gray-200">
         <div className="flex flex-col sm:flex-row gap-3">
@@ -412,7 +374,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
           </div>
         </div>
       </div>
-
       <div className="grid grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-200">
         <div>
           <p className="text-xs text-gray-500 mb-1">เปิด</p>
@@ -455,7 +416,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
           </p>
         </div>
       </div>
-
       <div className="mt-4 pt-4 border-t border-gray-200">
         <p className="text-xs text-gray-400">
           ราคาปิดก่อนหน้า: {stockData.priorClose.toFixed(2)} บาท
@@ -467,7 +427,6 @@ const StockMarketWidget: React.FC<{ symbol?: string }> = ({
     </div>
   );
 };
-
 // Chart Component with data from API
 interface ChartData {
   year: string;
@@ -475,7 +434,6 @@ interface ChartData {
   label: string; // e.g., "2024 Q3" or "2024 FY"
   value: number;
 }
-
 interface DynamicFinancialChartProps {
   title: string;
   unit: string;
@@ -484,7 +442,6 @@ interface DynamicFinancialChartProps {
   dataField: keyof FinancialDataItem; // e.g., 'totalRevenueAccum', 'netProfitAccum', 'totalAssets'
   divideBy?: number; // to convert from thousand baht to million baht
 }
-
 const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
   ({
     title,
@@ -499,36 +456,29 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
     const [error, setError] = useState<string | null>(null);
     const [isAnimated, setIsAnimated] = useState(false);
     const { ref, isVisible } = useScrollAnimation();
-
     useEffect(() => {
       // Early return if symbol not set
       if (!symbol) {
         setLoading(false);
         return;
       }
-
       let isMounted = true;
-
       const fetchFinancialData = async () => {
         try {
           setLoading(true);
           // Fetch data from 2022 to 2025
           const url = `/api/financial-data?symbol=${symbol}&startYear=2022&startQuarter=4&endYear=2025&endQuarter=4`;
-
           const response = await fetch(url, {
             method: "GET",
             headers: {
               Accept: "application/json",
             },
           });
-
           if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
           }
-
           const result: any = await response.json();
           let financialItems: FinancialDataItem[] = [];
-
           // Handle multiple response formats
           if (Array.isArray(result)) {
             financialItems = result;
@@ -537,9 +487,7 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
           } else if (result?.data && Array.isArray(result.data)) {
             financialItems = result.data;
           }
-
           if (!isMounted) return;
-
           if (financialItems.length === 0) {
             setError(`ไม่พบข้อมูลการเงิน ${symbol} สำหรับช่วงเวลาที่ขอ`);
             setData([]);
@@ -551,19 +499,16 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
               if (!byYear.has(y)) byYear.set(y, []);
               byYear.get(y)!.push(item);
             }
-
             const rank = (it: FinancialDataItem) => {
               if (it.accountPeriod === "F") return 5;
               const q = parseInt(it.quarter || "0", 10);
               return Number.isNaN(q) ? 0 : q;
             };
-
             const yearlyData = Array.from(byYear.entries())
               .map(
                 ([_year, items]) => items.sort((a, b) => rank(b) - rank(a))[0]
               )
               .sort((a, b) => parseInt(a.year) - parseInt(b.year));
-
             // Transform data
             const chartData = yearlyData.map((item) => {
               const raw = (item as any)[dataField];
@@ -589,7 +534,6 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
                 value: value / divideBy, // Convert to million
               };
             });
-
             setData(chartData);
             setError(null);
           }
@@ -605,24 +549,19 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
           }
         }
       };
-
       fetchFinancialData();
-
       return () => {
         isMounted = false;
       };
     }, [symbol, dataField, divideBy]);
-
     useEffect(() => {
       if (isVisible) {
         setTimeout(() => setIsAnimated(true), 100);
       }
     }, [isVisible]);
-
     const maxValue =
       data.length > 0 ? Math.max(...data.map((d) => d.value)) : 0;
     const chartHeight = 200;
-
     return (
       <div
         ref={ref}
@@ -634,7 +573,6 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
           <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
           <p className="text-sm text-gray-600">{unit}</p>
         </div>
-
         {/* Chart Display */}
         <div className="relative" style={{ height: `${chartHeight}px` }}>
           {loading ? (
@@ -715,7 +653,6 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
             </div>
           )}
         </div>
-
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-xs text-gray-400 text-center">
             ข้อมูลจาก SETSMART API • สำหรับการอ้างอิงเท่านั้น
@@ -725,15 +662,12 @@ const DynamicFinancialChart: React.FC<DynamicFinancialChartProps> = React.memo(
     );
   }
 );
-
 // Satisfy eslint react/display-name for memoized component
 DynamicFinancialChart.displayName = "DynamicFinancialChart";
-
 // Financial Table Component with dynamic data from API
 interface FinancialTableProps {
   symbol: string;
 }
-
 const FinancialTable: React.FC<FinancialTableProps> = React.memo(
   ({ symbol }) => {
     const { ref, isVisible } = useScrollAnimation();
@@ -750,36 +684,29 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         values: number[];
       }>;
     } | null>(null);
-
     useEffect(() => {
       // Early return if symbol not set
       if (!symbol) {
         setLoading(false);
         return;
       }
-
       let isMounted = true;
-
       const fetchFinancialData = async () => {
         try {
           setLoading(true);
           // Use the same range as charts to leverage server cache and reduce rate limits
           const url = `/api/financial-data?symbol=${symbol}&startYear=2022&startQuarter=4&endYear=2025&endQuarter=4`;
-
           const response = await fetch(url, {
             method: "GET",
             headers: {
               Accept: "application/json",
             },
           });
-
           if (!response.ok) {
             throw new Error(`API Error: ${response.status}`);
           }
-
           const result: any = await response.json();
           let financialItems: FinancialDataItem[] = [];
-
           // Handle multiple response formats
           if (Array.isArray(result)) {
             financialItems = result;
@@ -788,14 +715,11 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
           } else if (result?.data && Array.isArray(result.data)) {
             financialItems = result.data;
           }
-
           if (!isMounted) return;
-
           if (financialItems.length === 0) {
             setError(`ไม่พบข้อมูลการเงิน ${symbol}`);
             return;
           }
-
           // Select only year-end records: prefer entries whose `dateAsof` is Dec 31.
           // Fallback: if dateAsof missing/invalid, accept items with quarter==='4' or accountPeriod==='F'.
           const yearEndItems = financialItems.filter((item) => {
@@ -810,16 +734,13 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
             if (item.accountPeriod === "F") return true;
             return false;
           });
-
           const yearlyData = yearEndItems
             .sort((a, b) => parseInt(a.year) - parseInt(b.year))
             .slice(-5); // last 5 year-end records
-
           if (yearlyData.length === 0) {
             setError("ไม่มีข้อมูลประจำปี");
             return;
           }
-
           // Build table headers
           const headers = yearlyData.map((item) => {
             // Prefer provided date; otherwise, fallback to correct fiscal quarter end date
@@ -844,13 +765,11 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
             const yearBE = Number.isNaN(y) ? item.year : String(y + 543);
             return `${quarterEnd[q] || "31/12"}/${yearBE}`;
           });
-
           // Helper to coerce possible string values to numbers
           const toNum = (v: any) => {
             const n = typeof v === "string" ? parseFloat(v) : v;
             return Number.isFinite(n) ? (n as number) : 0;
           };
-
           // Build data rows - convert from thousand baht to million baht
           const rows = [
             {
@@ -894,7 +813,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
               values: yearlyData.map((item) => toNum(item.epsAccum ?? 0)),
             },
           ];
-
           // Build ratios
           const ratios = [
             {
@@ -912,7 +830,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
               ),
             },
           ];
-
           if (isMounted) {
             setTableData({ headers, rows, ratios });
             setError(null);
@@ -929,14 +846,11 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
           }
         }
       };
-
       fetchFinancialData();
-
       return () => {
         isMounted = false;
       };
     }, [symbol]);
-
     if (loading) {
       // While fetching, render the same visible table layout but with placeholder cells
       const now = new Date();
@@ -945,7 +859,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         const ad = thisYear - (4 - i);
         return `31/12/${ad + 543}`;
       });
-
       const placeholderRows = [
         "สินทรัพย์รวม",
         "หนี้สินรวม",
@@ -955,9 +868,7 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         "กำไรสุทธิ",
         "กำไรต่อหุ้น (บาท)",
       ];
-
       const placeholderRatios = ["ROA(%)", "ROE(%)", "อัตรากำไรสุทธิ(%)"];
-
       return (
         <div
           ref={ref}
@@ -969,9 +880,7 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
             ข้อมูลสำคัญทางการเงิน{" "}
             <span className="text-sm font-normal">(หน่วย: ล้านบาท)</span>
           </h2>
-
           <div className="mb-3 text-sm text-gray-600">กำลังโหลดข้อมูล...</div>
-
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -1016,7 +925,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
                     ))}
                   </tr>
                 ))}
-
                 <tr className="bg-teal-600 text-white">
                   <td
                     className="border border-gray-300 px-4 py-2 font-semibold"
@@ -1046,7 +954,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
               </tbody>
             </table>
           </div>
-
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-400 text-center">
               ข้อมูลจาก SETSMART API • สำหรับการอ้างอิงเท่านั้น
@@ -1055,7 +962,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         </div>
       );
     }
-
     if (error || !tableData) {
       // Render a visible placeholder table so the user always sees the table layout
       // even if the API failed. This helps debugging and UX — shows headings and
@@ -1067,7 +973,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         const ad = thisYear - (4 - i);
         return `31/12/${ad + 543}`;
       });
-
       const placeholderRows = [
         "สินทรัพย์รวม",
         "หนี้สินรวม",
@@ -1077,9 +982,7 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         "กำไรสุทธิ",
         "กำไรต่อหุ้น (บาท)",
       ];
-
       const placeholderRatios = ["ROA(%)", "ROE(%)", "อัตรากำไรสุทธิ(%)"];
-
       return (
         <div
           ref={ref}
@@ -1097,11 +1000,9 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
             ข้อมูลสำคัญทางการเงิน{" "}
             <span className="text-sm font-normal">(หน่วย: ล้านบาท)</span>
           </h2>
-
           <div className="mb-3 text-sm text-red-600">
             {error || "ไม่พบข้อมูลสำหรับแสดงผล"}
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -1146,7 +1047,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
                     ))}
                   </tr>
                 ))}
-
                 <tr className="bg-teal-600 text-white">
                   <td
                     className="border border-gray-300 px-4 py-2 font-semibold"
@@ -1176,7 +1076,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
               </tbody>
             </table>
           </div>
-
           <div className="mt-4 pt-4 border-t border-gray-200">
             <p className="text-xs text-gray-400 text-center">
               ข้อมูลจาก SETSMART API • สำหรับการอ้างอิงเท่านั้น
@@ -1185,7 +1084,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
         </div>
       );
     }
-
     return (
       <div
         ref={ref}
@@ -1201,7 +1099,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
           ข้อมูลสำคัญทางการเงิน{" "}
           <span className="text-sm font-normal">(หน่วย: ล้านบาท)</span>
         </h2>
-
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -1301,7 +1198,6 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
             </tbody>
           </table>
         </div>
-
         <div className="mt-4 pt-4 border-t border-gray-200">
           <p className="text-xs text-gray-400 text-center">
             ข้อมูลจาก SETSMART API • สำหรับการอ้างอิงเท่านั้น
@@ -1311,41 +1207,32 @@ const FinancialTable: React.FC<FinancialTableProps> = React.memo(
     );
   }
 );
-
 // Satisfy eslint react/display-name for memoized component
 FinancialTable.displayName = "FinancialTable";
-
 // Market Overview Component - Using SETSMART API for multiple stocks
 const MarketOverview: React.FC = () => {
   const [marketData, setMarketData] = useState<SetSmartPriceData[]>([]);
   const [loading, setLoading] = useState(true);
   const { ref, isVisible } = useScrollAnimation();
-
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
         setLoading(true);
-
         // Popular Thai stocks to display (reduced to 5 to avoid rate limit)
         const symbols = ["TPP", "KBANK", "SCB", "AOT", "CPALL"];
-
         const today = new Date();
         const lastWeek = new Date(today);
         lastWeek.setDate(lastWeek.getDate() - 7);
-
         const formatDate = (date: Date): string => {
           const year = date.getFullYear();
           const month = String(date.getMonth() + 1).padStart(2, "0");
           const day = String(date.getDate()).padStart(2, "0");
           return `${year}-${month}-${day}`;
         };
-
         const startDate = formatDate(lastWeek);
         const endDate = formatDate(today);
-
         // Fetch data for all symbols sequentially to avoid rate limit
         const stocksData: SetSmartPriceData[] = [];
-
         for (const symbol of symbols) {
           try {
             const res = await fetch(
@@ -1354,13 +1241,10 @@ const MarketOverview: React.FC = () => {
                 headers: { Accept: "application/json" },
               }
             );
-
             if (!res.ok) {
               continue;
             }
-
             const result: any = await res.json();
-
             // Handle multiple response formats: {value: []}, {data: []}, or direct array []
             let dataArray: SetSmartPriceData[] = [];
             if (Array.isArray(result)) {
@@ -1371,14 +1255,11 @@ const MarketOverview: React.FC = () => {
             } else if (result?.data && Array.isArray(result.data)) {
               dataArray = result.data;
             }
-
             if (dataArray && Array.isArray(dataArray) && dataArray.length > 0) {
               const latestData = dataArray[dataArray.length - 1];
-
               // Calculate change and percentChange from close and prior
               const change = latestData.close - latestData.prior;
               const percentChange = (change / latestData.prior) * 100;
-
               // Map totalValue to value for sorting
               const stockData: SetSmartPriceData = {
                 ...latestData,
@@ -1387,20 +1268,16 @@ const MarketOverview: React.FC = () => {
                 percentChange: percentChange,
                 priorClose: latestData.prior,
               };
-
               stocksData.push(stockData);
             }
-
             // Add delay between requests to avoid rate limiting
             await new Promise((resolve) => setTimeout(resolve, 1500));
           } catch (err) {
             // Silent catch to continue with next stock
           }
         }
-
         // Sort by value (descending)
         stocksData.sort((a, b) => b.value - a.value);
-
         setMarketData(stocksData);
       } catch (err) {
         // Silent error handling
@@ -1408,12 +1285,10 @@ const MarketOverview: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchMarketData();
     const interval = setInterval(fetchMarketData, 300000); // Refresh every 5 min
     return () => clearInterval(interval);
   }, []);
-
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6 animate-pulse">
@@ -1426,7 +1301,6 @@ const MarketOverview: React.FC = () => {
       </div>
     );
   }
-
   return (
     <div
       ref={ref}
@@ -1438,7 +1312,6 @@ const MarketOverview: React.FC = () => {
         </h3>
         <span className="text-sm text-gray-500">อัพเดตทุก 5 นาที</span>
       </div>
-
       {marketData.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p>ไม่พบข้อมูลหุ้น</p>
@@ -1514,7 +1387,6 @@ const MarketOverview: React.FC = () => {
           </table>
         </div>
       )}
-
       <div className="mt-4 pt-4 border-t border-gray-200">
         <p className="text-xs text-gray-400 text-center">
           ข้อมูลจาก SETSMART API • สำหรับการอ้างอิงเท่านั้น
@@ -1523,19 +1395,16 @@ const MarketOverview: React.FC = () => {
     </div>
   );
 };
-
 // Download Section Component
 interface DownloadItem {
   title: string;
   filename: string;
 }
-
 const DownloadSection: React.FC<{ title: string; items: DownloadItem[] }> = ({
   title,
   items,
 }) => {
   const { ref, isVisible } = useScrollAnimation();
-
   const handleDownload = (filename: string, itemTitle: string) => {
     // Create download link for files in public/downloads/financials/
     const link = document.createElement("a");
@@ -1545,7 +1414,6 @@ const DownloadSection: React.FC<{ title: string; items: DownloadItem[] }> = ({
     link.click();
     document.body.removeChild(link);
   };
-
   return (
     <div
       ref={ref}
@@ -1563,7 +1431,6 @@ const DownloadSection: React.FC<{ title: string; items: DownloadItem[] }> = ({
           ดาวน์โหลด
         </span>
       </div>
-
       <div className="space-y-3">
         {items.map((item, idx) => (
           <div
@@ -1599,16 +1466,13 @@ const DownloadSection: React.FC<{ title: string; items: DownloadItem[] }> = ({
     </div>
   );
 };
-
 // Main Page Component
 export default function InvestorFinancials() {
   const [isHeroVisible, setIsHeroVisible] = useState(false);
   const [stockSymbol, setStockSymbol] = useState("TPP");
-
   useEffect(() => {
     setIsHeroVisible(true);
   }, []);
-
   return (
     <div className="min-h-screen bg-gray-50 mt-5">
       {/* Web Section - Placeholder for image */}
@@ -1628,7 +1492,6 @@ export default function InvestorFinancials() {
               "linear-gradient(90deg,rgba(237, 66, 9, 0.69) 0%, rgba(184, 28, 46, 0.61) 50%, rgba(227, 20, 20, 0) 75%)",
           }}
         />
-
         <div className="absolute inset-0 flex items-start justify-start py-5">
           <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
             {/* ระยะห่างจากด้านบน */}
@@ -1648,7 +1511,6 @@ export default function InvestorFinancials() {
                   }}
                 />
               </h2>
-
               <p
                 className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-black"
                 style={{
@@ -1670,7 +1532,6 @@ export default function InvestorFinancials() {
           </div>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12 space-y-12">
         {/* Real-time Stock Data Section */}
@@ -1691,13 +1552,11 @@ export default function InvestorFinancials() {
               />
             </div>
           </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <StockMarketWidget symbol={stockSymbol} />
             <MarketOverview />
           </div>
         </div>
-
         {/* Charts Section: stack each chart on its own row for better readability */}
         <div className="grid grid-cols-1 gap-6">
           <DynamicFinancialChart
@@ -1708,7 +1567,6 @@ export default function InvestorFinancials() {
             color="#4A9B8E"
             divideBy={1000}
           />
-
           <DynamicFinancialChart
             title="กำไรสุทธิ"
             unit="(หน่วย: ล้านบาท)"
@@ -1717,7 +1575,6 @@ export default function InvestorFinancials() {
             color="#7EC4A8"
             divideBy={1000}
           />
-
           <DynamicFinancialChart
             title="สินทรัพย์รวม"
             unit="(หน่วย: ล้านบาท)"
@@ -1727,10 +1584,8 @@ export default function InvestorFinancials() {
             divideBy={1000}
           />
         </div>
-
         {/* Financial Table */}
         <FinancialTable symbol={stockSymbol} />
-
         {/* Download Sections */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DownloadSection
@@ -1750,7 +1605,6 @@ export default function InvestorFinancials() {
               },
             ]}
           />
-
           <DownloadSection
             title="คำอธิบายและวิเคราะห์ของฝ่ายจัดการ"
             items={[
@@ -1772,4 +1626,4 @@ export default function InvestorFinancials() {
       </div>
     </div>
   );
-}
+}

@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-
 export const metadata: Metadata = {
   title: "ข่าวสารและกิจกรรม TPP | ไทยแพคเกจจิ้ง แอนด์ พริ้นติ้ง",
   description:
@@ -22,11 +21,10 @@ export const metadata: Metadata = {
     canonical: "/tpp-news",
   },
 };
-
 export default function TPPNewsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return <>{children}</>;
-}
+}

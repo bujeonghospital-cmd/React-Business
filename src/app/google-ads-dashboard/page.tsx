@@ -1,6 +1,5 @@
 // src/app/google-ads-dashboard/page.tsx
 "use client";
-
 import { useState, useEffect } from "react";
 import {
   MousePointer,
@@ -16,7 +15,6 @@ import DateRangePicker from "@/components/GoogleAds/DateRangePicker";
 import PerformanceChart from "@/components/GoogleAds/PerformanceChart";
 import { GoogleAdsApiResponse, DateRangeFilter } from "@/types/google-ads";
 import { motion } from "framer-motion";
-
 export default function GoogleAdsDashboard() {
   const [data, setData] = useState<GoogleAdsApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,18 +24,14 @@ export default function GoogleAdsDashboard() {
     startDate: "2025-01-01",
     endDate: "2025-04-04",
   });
-
   const fetchData = async (start: string, end: string) => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch(
         `/api/google-ads?startDate=${start}&endDate=${end}`
       );
-
       const result = await response.json();
-
       if (!response.ok) {
         // แสดงข้อความ error จาก API อย่างละเอียด
         if (result.error) {
@@ -54,14 +48,12 @@ export default function GoogleAdsDashboard() {
           ]
             .filter(Boolean)
             .join("\n");
-
           setError(errorDetails);
           console.error("❌ API Error:", result);
           return;
         }
         throw new Error(result.message || "Failed to fetch data");
       }
-
       setData(result);
       setLastUpdated(new Date());
       console.log(
@@ -76,23 +68,18 @@ export default function GoogleAdsDashboard() {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchData(dateRange.startDate, dateRange.endDate);
-
     // Auto refresh ทุก 5 นาที (300000 ms)
     const interval = setInterval(() => {
       fetchData(dateRange.startDate, dateRange.endDate);
     }, 300000);
-
     return () => clearInterval(interval);
   }, [dateRange.startDate, dateRange.endDate]);
-
   const handleDateChange = (newDateRange: DateRangeFilter) => {
     setDateRange(newDateRange);
     // fetchData จะถูกเรียกโดย useEffect อัตโนมัติ
   };
-
   const handleRefresh = () => {
     console.log("🔄 Refreshing data...", {
       startDate: dateRange.startDate,
@@ -100,14 +87,12 @@ export default function GoogleAdsDashboard() {
     });
     fetchData(dateRange.startDate, dateRange.endDate);
   };
-
   const formatNumber = (num: number) => {
     if (num >= 1000) {
       return `${(num / 1000).toFixed(2)}K`;
     }
     return num.toString();
   };
-
   const formatCurrency = (num: number) => {
     return new Intl.NumberFormat("th-TH", {
       style: "currency",
@@ -115,7 +100,6 @@ export default function GoogleAdsDashboard() {
       minimumFractionDigits: 2,
     }).format(num);
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -132,7 +116,6 @@ export default function GoogleAdsDashboard() {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
@@ -163,13 +146,11 @@ export default function GoogleAdsDashboard() {
                 </p>
               </div>
             </div>
-
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <pre className="text-sm text-red-800 whitespace-pre-wrap font-mono">
                 {error}
               </pre>
             </div>
-
             <div className="flex gap-3 justify-end">
               <button
                 onClick={handleRefresh}
@@ -191,9 +172,7 @@ export default function GoogleAdsDashboard() {
       </div>
     );
   }
-
   if (!data) return null;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
@@ -218,7 +197,6 @@ export default function GoogleAdsDashboard() {
                   </div>
                 </div>
               </div>
-
               <div className="flex flex-col items-end gap-2">
                 <button
                   onClick={handleRefresh}
@@ -245,7 +223,6 @@ export default function GoogleAdsDashboard() {
           </motion.div>
         </div>
       </div>
-
       <div className="container mx-auto px-6 py-8">
         {/* Loading Indicator */}
         {loading && (
@@ -256,7 +233,6 @@ export default function GoogleAdsDashboard() {
             </div>
           </div>
         )}
-
         {/* Date Range Picker */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -270,7 +246,6 @@ export default function GoogleAdsDashboard() {
             initialEndDate={dateRange.endDate}
           />
         </motion.div>
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <MetricCard
@@ -306,15 +281,12 @@ export default function GoogleAdsDashboard() {
             trend={{ value: 15.7, isPositive: true }}
           />
         </div>
-
         {/* Campaign Table */}
         <CampaignTable campaigns={data.campaigns} />
-
         {/* Performance Chart */}
         <div className="mt-8">
           <PerformanceChart campaigns={data.campaigns} />
         </div>
-
         {/* Additional Info */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -366,7 +338,6 @@ export default function GoogleAdsDashboard() {
             </div>
           </div>
         </motion.div>
-
         {/* Setup Guide */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -430,4 +401,4 @@ GOOGLE_ADS_CUSTOMER_ID=xxx`}
       </div>
     </div>
   );
-}
+}

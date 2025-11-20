@@ -3,7 +3,6 @@ import ScaledCanvas from "../components/ScaledCanvas";
 import "./globals.css";
 import localFont from "next/font/local";
 import type { Metadata } from "next";
-
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -13,13 +12,11 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "../app/globals.css";
 import DevMiniToolbar from "@/components/DevMiniToolbar";
-
 import LoadingOverlay from "@/components/LoadingOverlay";
 import NavProgress from "@/components/NavProgress";
 import HomeBackground from "@/components/HomeBackground";
 import { Suspense } from "react";
 import Providers from "./providers";
-
 // ====== SEO / Metadata ======
 export const metadata: Metadata = {
   metadataBase: new URL("https://tpp-thanakon.store"),
@@ -29,7 +26,6 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
   icons: { icon: "/TPP.ico" },
-
   // เพิ่ม Open Graph ช่วยแชร์สวยและช่วย Search Engine
   openGraph: {
     type: "website",
@@ -39,7 +35,6 @@ export const metadata: Metadata = {
     description:
       "Thai Packaging & Printing PCL — packaging & printing solutions.",
   },
-
   // เพิ่ม Twitter Card (ถ้ายังไม่ใช้รูป ใส่ได้ภายหลัง)
   twitter: {
     card: "summary_large_image",
@@ -48,7 +43,6 @@ export const metadata: Metadata = {
       "Thai Packaging & Printing PCL — packaging & printing solutions.",
   },
 };
-
 // ====== Fonts ======
 const font = localFont({
   src: [
@@ -57,7 +51,6 @@ const font = localFont({
   ],
   display: "swap",
 });
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -79,29 +72,24 @@ export default function RootLayout({
           }}
         />
       </head>
-
       <body
         className={`about-bg-image-background min-h-dvh overflow-x-hidden antialiased ${font.className}`}>
         <Providers>
           <Suspense fallback={null}>
             <HomeBackground />
           </Suspense>
-
           <Suspense fallback={null}>
             <LoadingOverlay />
           </Suspense>
-
           <Suspense fallback={null}>
             <NavProgress minDuration={300} killMs={10000} />
           </Suspense>
-
           <Suspense fallback={null}>
             <Aoscompo>
               <div className="layout-grid">
                 <Suspense fallback={null}>
                   <Header />
                 </Suspense>
-
                 <main className="flex-grow-1">
                   <Suspense fallback={null}>
                     <DevMiniToolbar
@@ -111,12 +99,10 @@ export default function RootLayout({
                   </Suspense>
                   {children}
                 </main>
-
                 <Footer />
               </div>
             </Aoscompo>
           </Suspense>
-
           <Suspense fallback={null}>
             <ScrollToTop />
           </Suspense>
@@ -124,4 +110,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+}

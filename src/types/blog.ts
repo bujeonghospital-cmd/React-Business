@@ -5,4 +5,4 @@ export type Blog = {
   excerpt?: string;
   coverImage: string;
   date: string;
-};
+};

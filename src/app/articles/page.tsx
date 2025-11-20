@@ -1,11 +1,9 @@
 "use client";
-
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-
 // News items data
 const newsItemsData = [
   {
@@ -37,7 +35,6 @@ const newsItemsData = [
     date: "XX XX XXXX",
   },
 ];
-
 // Article items data
 const articleItemsData = [
   {
@@ -69,7 +66,6 @@ const articleItemsData = [
     date: "XX XX XXXX",
   },
 ];
-
 // Hero Banner Component
 const HeroBanner = ({ isArticlesPage }: { isArticlesPage: boolean }) => (
   <motion.div
@@ -106,7 +102,6 @@ const HeroBanner = ({ isArticlesPage }: { isArticlesPage: boolean }) => (
               transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
             />
           </h2>
-
           <p
             className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-black"
             style={{
@@ -127,7 +122,6 @@ const HeroBanner = ({ isArticlesPage }: { isArticlesPage: boolean }) => (
     </div>
   </motion.div>
 );
-
 // News Card Component
 const NewsCard = ({
   item,
@@ -174,7 +168,6 @@ const NewsCard = ({
     </div>
   </motion.div>
 );
-
 // News Section Component
 const NewsSection = ({ items }: { items: typeof newsItemsData }) => (
   <div className="w-full bg-white">
@@ -194,7 +187,6 @@ const NewsSection = ({ items }: { items: typeof newsItemsData }) => (
       >
         <div className="py-5" />
       </motion.div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {items.map((item, index) => (
           <NewsCard key={item.id} item={item} index={index} />
@@ -203,18 +195,15 @@ const NewsSection = ({ items }: { items: typeof newsItemsData }) => (
     </motion.div>
   </div>
 );
-
 // Main Page Component
 export default function ArticlesPage() {
   const pathname = usePathname();
   const isArticlesPage = pathname === "/articles";
-
   const displayItems = isArticlesPage ? articleItemsData : newsItemsData;
-
   return (
     <div className="min-h-screen bg-white">
       <HeroBanner isArticlesPage={isArticlesPage} />
       <NewsSection items={displayItems} />
     </div>
   );
-}
+}

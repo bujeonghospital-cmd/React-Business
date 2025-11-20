@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import AOS from "aos"
 import 'aos/dist/aos.css';
-
 const Aoscompo = ({children}:any) => {
     useEffect(() => {
         AOS.init({
@@ -16,5 +15,4 @@ const Aoscompo = ({children}:any) => {
     </div>
   )
 }
-
-export default Aoscompo
+export default Aoscompo

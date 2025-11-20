@@ -31,9 +31,7 @@ const PYTHON_API_URL =
 async function fetchFromPythonAPI(endpoint) {
   return new Promise((resolve, reject) => {
     const url = `${PYTHON_API_URL}${endpoint}`;
-    console.log(`📡 Fetching from: ${url}`);
-
-    https
+        https
       .get(url, (res) => {
         let data = "";
 
@@ -45,8 +43,7 @@ async function fetchFromPythonAPI(endpoint) {
           try {
             const parsed = JSON.parse(data);
             if (parsed.success) {
-              console.log(`✅ Fetched ${parsed.data?.length || 0} records`);
-              resolve(parsed.data || []);
+                            resolve(parsed.data || []);
             } else {
               reject(new Error(parsed.error || "Failed to fetch data"));
             }
@@ -107,21 +104,16 @@ function parseAmount(amountStr) {
  * Migrate Surgery Schedule data (Film data)
  */
 async function migrateSurgerySchedule() {
-  console.log("\n📋 Starting Surgery Schedule migration...\n");
-
-  const client = await pool.connect();
+    const client = await pool.connect();
   try {
     // Fetch data from Python API
     const data = await fetchFromPythonAPI("/api/film-data");
 
     if (!data || data.length === 0) {
-      console.log("⚠️  No data to migrate");
-      return { success: 0, failed: 0 };
+            return { success: 0, failed: 0 };
     }
 
-    console.log(`📊 Found ${data.length} records to migrate\n`);
-
-    let successCount = 0;
+        let successCount = 0;
     let failedCount = 0;
 
     // Start transaction
@@ -173,26 +165,19 @@ async function migrateSurgerySchedule() {
         successCount++;
 
         if (successCount % 100 === 0) {
-          console.log(`✅ Migrated ${successCount} records...`);
-        }
+                  }
       } catch (error) {
-        console.error(`❌ Failed to migrate record:`, error.message);
-        failedCount++;
+                failedCount++;
       }
     }
 
     // Commit transaction
     await client.query("COMMIT");
 
-    console.log(`\n✅ Surgery Schedule migration completed:`);
-    console.log(`   - Success: ${successCount}`);
-    console.log(`   - Failed: ${failedCount}\n`);
-
-    return { success: successCount, failed: failedCount };
+                return { success: successCount, failed: failedCount };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("❌ Migration failed:", error);
-    throw error;
+        throw error;
   } finally {
     client.release();
   }
@@ -202,21 +187,16 @@ async function migrateSurgerySchedule() {
  * Migrate Sale Incentive data (N_SaleIncentive)
  */
 async function migrateSaleIncentive() {
-  console.log("\n💰 Starting Sale Incentive migration...\n");
-
-  const client = await pool.connect();
+    const client = await pool.connect();
   try {
     // Fetch data from Python API
     const data = await fetchFromPythonAPI("/N_SaleIncentive_data");
 
     if (!data || data.length === 0) {
-      console.log("⚠️  No data to migrate");
-      return { success: 0, failed: 0 };
+            return { success: 0, failed: 0 };
     }
 
-    console.log(`📊 Found ${data.length} records to migrate\n`);
-
-    let successCount = 0;
+        let successCount = 0;
     let failedCount = 0;
 
     // Start transaction
@@ -255,26 +235,19 @@ async function migrateSaleIncentive() {
         successCount++;
 
         if (successCount % 100 === 0) {
-          console.log(`✅ Migrated ${successCount} records...`);
-        }
+                  }
       } catch (error) {
-        console.error(`❌ Failed to migrate record:`, error.message);
-        failedCount++;
+                failedCount++;
       }
     }
 
     // Commit transaction
     await client.query("COMMIT");
 
-    console.log(`\n✅ Sale Incentive migration completed:`);
-    console.log(`   - Success: ${successCount}`);
-    console.log(`   - Failed: ${failedCount}\n`);
-
-    return { success: successCount, failed: failedCount };
+                return { success: successCount, failed: failedCount };
   } catch (error) {
     await client.query("ROLLBACK");
-    console.error("❌ Migration failed:", error);
-    throw error;
+        throw error;
   } finally {
     client.release();
   }
@@ -284,35 +257,21 @@ async function migrateSaleIncentive() {
  * Main migration function
  */
 async function migrate() {
-  console.log("🚀 Starting migration from Google Sheets to Database...\n");
-
-  try {
+    try {
     // Test database connection
-    console.log("🔗 Testing database connection...");
-    const testResult = await pool.query("SELECT NOW()");
-    console.log("✅ Database connected:", testResult.rows[0].now);
-
-    // Migrate Surgery Schedule
+        const testResult = await pool.query("SELECT NOW()");
+        // Migrate Surgery Schedule
     const surgeryResult = await migrateSurgerySchedule();
 
     // Migrate Sale Incentive
     const saleResult = await migrateSaleIncentive();
 
     // Summary
-    console.log("\n" + "=".repeat(60));
-    console.log("📊 MIGRATION SUMMARY");
-    console.log("=".repeat(60));
-    console.log(`Surgery Schedule:`);
-    console.log(`  - Success: ${surgeryResult.success}`);
-    console.log(`  - Failed: ${surgeryResult.failed}`);
-    console.log(`\nSale Incentive:`);
-    console.log(`  - Success: ${saleResult.success}`);
-    console.log(`  - Failed: ${saleResult.failed}`);
-    console.log("=".repeat(60));
-    console.log("\n✅ Migration completed successfully!\n");
-  } catch (error) {
-    console.error("\n❌ Migration failed:", error.message);
-    process.exit(1);
+    );
+        );
+                            );
+      } catch (error) {
+        process.exit(1);
   } finally {
     await pool.end();
   }

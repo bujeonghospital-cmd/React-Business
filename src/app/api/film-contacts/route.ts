@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 /**
  * GET /api/film-contacts
  * ดึงข้อมูลการติดต่อจาก PostgreSQL Database
@@ -8,7 +7,6 @@ import pool from "@/lib/db";
  *        FROM postgres."BJH-Server".bjh_all_leads
  *        WHERE phone IS NOT NULL AND status_call = 'อยู่ระหว่างโทรออก'
  */
-
 interface ContactData {
   id: string;
   dbId: number; // ID จาก database
@@ -20,16 +18,12 @@ interface ContactData {
   contactDate: string;
   nextContactDate?: string; // วันที่ติดต่อครั้งถัดไป
 }
-
 export async function GET(request: NextRequest) {
   const client = await pool.connect();
-
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
-
     console.log("🔄 Fetching contacts from PostgreSQL database...");
-
     // Query ดึงข้อมูลจาก database - เฉพาะรายการที่ status_call = 'อยู่ระหว่างโทรออก'
     const query = `
       SELECT 
@@ -47,15 +41,12 @@ export async function GET(request: NextRequest) {
       ORDER BY customer_name ASC
       LIMIT 1000
     `;
-
     console.log("📝 Executing query:", query);
     const result = await client.query(query);
-
     console.log(`✅ Found ${result.rows.length} contacts from database`);
     if (result.rows.length > 0) {
       console.log("📋 Sample row:", result.rows[0]);
     }
-
     // แปลงข้อมูลจาก database เป็น ContactData format
     const contacts: ContactData[] = result.rows.map((row, index) => {
       // กำหนดสถานะตาม status_call
@@ -65,7 +56,6 @@ export async function GET(request: NextRequest) {
       } else if (row.status_call === "โทรเสร็จสิ้น") {
         status = "completed";
       }
-
       return {
         id: `db-${index + 1}`,
         dbId: row.id, // ID จาก database
@@ -78,9 +68,7 @@ export async function GET(request: NextRequest) {
         nextContactDate: row.next_followup || "", // ดึงจาก next_followup
       };
     });
-
     console.log(`🔄 Processed ${contacts.length} contacts`);
-
     // Filter by search if provided
     let filteredContacts = contacts;
     if (search) {
@@ -96,7 +84,6 @@ export async function GET(request: NextRequest) {
         `🔍 Filtered to ${filteredContacts.length} contacts matching search: "${search}"`
       );
     }
-
     return NextResponse.json({
       success: true,
       data: filteredContacts,
@@ -110,7 +97,6 @@ export async function GET(request: NextRequest) {
       message: error instanceof Error ? error.message : "Unknown error",
       stack: error instanceof Error ? error.stack : null,
     });
-
     // Return error with details for debugging
     return NextResponse.json(
       {
@@ -126,4 +112,4 @@ export async function GET(request: NextRequest) {
   } finally {
     client.release();
   }
-}
+}

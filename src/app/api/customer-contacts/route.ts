@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseServer as supabase } from "@/utils/supabase/server";
-
 // Types
 interface ContactRecord {
   id: string;
@@ -13,7 +12,6 @@ interface ContactRecord {
   notes: string;
   createdAt: string;
 }
-
 // GET - Retrieve all contacts from Supabase
 export async function GET(request: NextRequest) {
   try {
@@ -23,30 +21,24 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status");
     const search = searchParams.get("search");
-
     let query = supabase
       .from("customer_contacts")
       .select("*")
       .order("created_at", { ascending: false });
-
     // Filter by status
     if (status && status !== "all") {
       query = query.eq("status", status);
     }
-
     // Filter by search query (search in name, company, phone, email)
     if (search) {
       query = query.or(
         `name.ilike.%${search}%,company.ilike.%${search}%,phone.ilike.%${search}%,email.ilike.%${search}%`
       );
     }
-
     const { data, error } = await query;
-
     if (error) {
       console.error("❌ Supabase Error:", error);
       return NextResponse.json(
@@ -54,7 +46,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Transform data to match frontend interface
     const transformedData = data.map((contact: any) => ({
       id: contact.id,
@@ -67,7 +58,6 @@ export async function GET(request: NextRequest) {
       notes: contact.notes || "",
       createdAt: contact.created_at,
     }));
-
     return NextResponse.json({
       success: true,
       data: transformedData,
@@ -84,7 +74,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // POST - Create new contact in Supabase
 export async function POST(request: NextRequest) {
   try {
@@ -94,9 +83,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
     const body = await request.json();
-
     // Validate required fields
     if (!body.name || !body.phone) {
       return NextResponse.json(
@@ -107,7 +94,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Validate email format if provided
     if (body.email) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -121,7 +107,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
     // Insert into Supabase
     const { data, error } = await supabase
       .from("customer_contacts")
@@ -138,7 +123,6 @@ export async function POST(request: NextRequest) {
       ])
       .select()
       .single();
-
     if (error) {
       console.error("❌ Supabase Insert Error:", error);
       return NextResponse.json(
@@ -146,7 +130,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Transform response
     const transformedData = {
       id: data.id,
@@ -159,7 +142,6 @@ export async function POST(request: NextRequest) {
       notes: data.notes || "",
       createdAt: data.created_at,
     };
-
     return NextResponse.json(
       {
         success: true,
@@ -178,4 +160,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

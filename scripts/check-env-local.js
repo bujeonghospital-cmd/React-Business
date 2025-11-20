@@ -25,8 +25,7 @@ const colors = {
 };
 
 function log(message, color = "reset") {
-  console.log(`${colors[color]}${message}${colors.reset}`);
-}
+  }
 
 function checkEnvFile() {
   const envPath = path.join(process.cwd(), ".env.local");

@@ -1,8 +1,6 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-
 interface Job {
   id: string;
   title: string;
@@ -14,19 +12,16 @@ interface Job {
   isUrgent?: boolean;
   hasOnlineInterview?: boolean;
 }
-
 const JobListings = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-
   useEffect(() => {
     fetchJobs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   const fetchJobs = async () => {
     try {
       setLoading(true);
@@ -46,7 +41,6 @@ const JobListings = () => {
       setLoading(false);
     }
   };
-
   const getFallbackJobs = (): Job[] => {
     return [
       {
@@ -205,7 +199,6 @@ const JobListings = () => {
       },
     ];
   };
-
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title
       .toLowerCase()
@@ -214,7 +207,6 @@ const JobListings = () => {
       selectedCategory === "all" || job.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
-
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
@@ -222,7 +214,6 @@ const JobListings = () => {
       </div>
     );
   }
-
   return (
     <div id="job-listings" className="space-y-8">
       {/* Search and Filter */}
@@ -245,13 +236,11 @@ const JobListings = () => {
           </button>
         </div>
       </div>
-
       {error && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
           <p className="text-yellow-800">{error}</p>
         </div>
       )}
-
       {/* Job Cards */}
       <div className="grid grid-cols-1 gap-6">
         {filteredJobs.length === 0 ? (
@@ -347,7 +336,6 @@ const JobListings = () => {
                       </div>
                     </div>
                   </div>
-
                   <div className="flex flex-col gap-3 md:items-end">
                     <span className="text-sm text-gray-500">
                       {job.postedDate}
@@ -365,7 +353,6 @@ const JobListings = () => {
                   </div>
                 </div>
               </div>
-
               <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">
@@ -388,7 +375,6 @@ const JobListings = () => {
           ))
         )}
       </div>
-
       {/* Contact Information */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-8 text-white mt-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -444,5 +430,4 @@ const JobListings = () => {
     </div>
   );
 };
-
-export default JobListings;
+export default JobListings;

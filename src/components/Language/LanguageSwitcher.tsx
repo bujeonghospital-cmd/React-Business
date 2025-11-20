@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-
 const LanguageSwitcher: React.FC = () => (
   <div className="d-flex align-items-center gap-1 gap-md-2 ms-auto header-lang">
     <Link
@@ -33,5 +32,4 @@ const LanguageSwitcher: React.FC = () => (
     <div style={{ width: 75 }} aria-hidden="true"></div>
   </div>
 );
-
-export default LanguageSwitcher;
+export default LanguageSwitcher;

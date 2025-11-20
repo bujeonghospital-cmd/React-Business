@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-
 export async function GET() {
   try {
     const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
     const adAccountId = process.env.FACEBOOK_AD_ACCOUNT_ID;
-
     // ตรวจสอบว่ามี environment variables หรือไม่
     const envCheck = {
       hasAccessToken: !!accessToken,
@@ -12,7 +10,6 @@ export async function GET() {
       accessTokenLength: accessToken?.length || 0,
       adAccountId: adAccountId || "NOT_SET",
     };
-
     if (!accessToken || !adAccountId) {
       return NextResponse.json({
         success: false,
@@ -22,12 +19,10 @@ export async function GET() {
           "กรุณาตั้งค่า FACEBOOK_ACCESS_TOKEN และ FACEBOOK_AD_ACCOUNT_ID ใน .env.local แล้วรีสตาร์ท server",
       });
     }
-
     // ทดสอบเรียก Facebook API
     const testUrl = `https://graph.facebook.com/v24.0/me?access_token=${accessToken}`;
     const response = await fetch(testUrl);
     const data = await response.json();
-
     if (response.ok) {
       return NextResponse.json({
         success: true,
@@ -53,4 +48,4 @@ export async function GET() {
       details: error instanceof Error ? error.message : "Unknown error",
     });
   }
-}
+}

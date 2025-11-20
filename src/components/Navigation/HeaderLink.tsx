@@ -6,13 +6,11 @@ import { usePathname } from "next/navigation";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@/Style/style.css";
 import "animate.css";
-
 type SubMenuItem = {
   label: string;
   href: string;
   [key: string]: unknown;
 };
-
 const HeaderLink: React.FC<{
   item: HeaderItem;
   isFirst?: boolean;
@@ -22,10 +20,8 @@ const HeaderLink: React.FC<{
 }> = ({ item, submenuOpenId, setSubmenuOpenId, index }) => {
   const path = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
-
   const submenuOpen = submenuOpenId === index;
   const isParent = !!item.submenu;
-
   return (
     <div
       className="dropdown"
@@ -58,7 +54,6 @@ const HeaderLink: React.FC<{
           {item.label}
         </Link>
       )}
-
       {/* เมนูย่อย */}
       {isParent && (
         <ul
@@ -93,5 +88,4 @@ const HeaderLink: React.FC<{
     </div>
   );
 };
-
-export default HeaderLink;
+export default HeaderLink;

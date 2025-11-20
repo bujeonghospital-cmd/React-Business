@@ -1,21 +1,17 @@
 import { NextResponse } from "next/server";
-
 export async function GET(request: Request) {
   try {
     const ACCESS_TOKEN =
       process.env.FACEBOOK_ACCESS_TOKEN ||
       "EAAPb1ZBYCiNcBPzNxxSUntCZCTVHyl5AkAZBIiwCmDzrWKMLU4VEHJxRve7oqUDSaMs8om9pdVWFLzUdeTbTvkGPuTeuQ4KvGFizMy3VsSid8vgmjZB8OMoLySRmXxyAUpAwyyhSqOO8tSZAU6IYpxarsXBbZCDzFdy8u279HxSXtyWMpIolRtjJEWLdmfU5SwZCsP5";
     const ACCOUNT_ID = "act_454323590676166";
-
     const url = `https://graph.facebook.com/v24.0/${ACCOUNT_ID}?fields=account_id,name,account_status,balance,amount_spent,currency,funding_source_details,min_daily_budget,spend_cap&access_token=${ACCESS_TOKEN}`;
-
     const response = await fetch(url, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     });
-
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Facebook API Error:", errorData);
@@ -28,10 +24,8 @@ export async function GET(request: Request) {
         { status: response.status }
       );
     }
-
     const data = await response.json();
     console.log("Facebook Balance API Response:", data);
-
     // Extract balance from display_string
     let availableBalance = 0;
     if (data.funding_source_details?.display_string) {
@@ -43,7 +37,6 @@ export async function GET(request: Request) {
         availableBalance = parseFloat(match[1].replace(/,/g, ""));
       }
     }
-
     return NextResponse.json({
       success: true,
       data: {
@@ -69,4 +62,4 @@ export async function GET(request: Request) {
       { status: 500 }
     );
   }
-}
+}

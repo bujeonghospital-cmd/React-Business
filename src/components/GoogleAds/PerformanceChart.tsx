@@ -1,19 +1,15 @@
 // src/components/GoogleAds/PerformanceChart.tsx
 "use client";
-
 import { GoogleAdsCampaign } from "@/types/google-ads";
 import { motion } from "framer-motion";
 import { useMemo } from "react";
-
 interface PerformanceChartProps {
   campaigns: GoogleAdsCampaign[];
 }
-
 export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
   // คำนวณข้อมูลสำหรับกราฟ
   const chartData = useMemo(() => {
     const maxCost = Math.max(...campaigns.map((c) => c.cost));
-
     return campaigns.map((campaign) => ({
       ...campaign,
       costPercentage: (campaign.cost / maxCost) * 100,
@@ -21,7 +17,6 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
         (campaign.clicks / Math.max(...campaigns.map((c) => c.clicks))) * 100,
     }));
   }, [campaigns]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,7 +33,6 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
           เปรียบเทียบค่าใช้จ่ายและคลิกของแต่ละแคมเปญ
         </p>
       </div>
-
       {/* Chart */}
       <div className="p-6 space-y-6">
         {chartData.map((campaign, index) => (
@@ -61,7 +55,6 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
                 CTR: {campaign.ctr.toFixed(2)}%
               </span>
             </div>
-
             {/* Cost Bar */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-gray-600">
@@ -82,7 +75,6 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
                 />
               </div>
             </div>
-
             {/* Clicks Bar */}
             <div className="space-y-1">
               <div className="flex items-center justify-between text-xs text-gray-600">
@@ -100,7 +92,6 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
                 />
               </div>
             </div>
-
             {/* ROI Indicator */}
             <div className="pt-1">
               <div className="flex items-center gap-2">
@@ -129,7 +120,6 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
           </motion.div>
         ))}
       </div>
-
       {/* Legend */}
       <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
         <div className="flex items-center justify-center gap-6 text-xs text-gray-600">
@@ -150,4 +140,4 @@ export default function PerformanceChart({ campaigns }: PerformanceChartProps) {
       </div>
     </motion.div>
   );
-}
+}

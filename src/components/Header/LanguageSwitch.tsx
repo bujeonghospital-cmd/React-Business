@@ -3,22 +3,18 @@ import ScaledCanvas from "../ScaledCanvas";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-
 const SUPPORTED = ["th", "en"] as const;
 type Locale = (typeof SUPPORTED)[number];
-
 function normalize(path: string) {
   const p = path.startsWith("/") ? path : "/" + path;
   return p.replace(/\/+$/g, "") || "/";
 }
-
 function getLocale(path: string): Locale | null {
   const seg = path.split("/")[1];
   return (SUPPORTED as readonly string[]).includes(seg)
     ? (seg as Locale)
     : null;
 }
-
 function withLocale(path: string, locale: Locale) {
   const clean = normalize(path);
   const parts = clean.split("/");
@@ -28,7 +24,6 @@ function withLocale(path: string, locale: Locale) {
   }
   return `/${locale}${clean === "/" ? "" : clean}`;
 }
-
 export default function LanguageSwitch({
   className = "",
 }: {
@@ -38,7 +33,6 @@ export default function LanguageSwitch({
   const current = getLocale(pathname);
   const thHref = withLocale(pathname, "th");
   const enHref = withLocale(pathname, "en");
-
   return (
     <ScaledCanvas>
       <div className={`flex items-center ${className}`}>
@@ -59,9 +53,7 @@ export default function LanguageSwitch({
             />
             <span className="text-xs font-medium">English</span>
           </Link>
-
           <span className="text-gray-300">|</span>
-
           <Link
             href={thHref}
             aria-current={current === "th" ? "true" : undefined}
@@ -78,7 +70,6 @@ export default function LanguageSwitch({
             <span className="text-xs font-medium">ไทย</span>
           </Link>
         </div>
-
         {/* Mobile/Tablet view (<1600px) - compact flags only */}
         <div className="flex [@media(min-width:1600px)]:hidden gap-2 items-center">
           <Link
@@ -96,9 +87,7 @@ export default function LanguageSwitch({
               className="w-5 h-auto"
             />
           </Link>
-
           <span className="text-gray-300 text-xs">|</span>
-
           <Link
             href={thHref}
             aria-current={current === "th" ? "true" : undefined}
@@ -118,4 +107,4 @@ export default function LanguageSwitch({
       </div>
     </ScaledCanvas>
   );
-}
+}

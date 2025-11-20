@@ -2,7 +2,6 @@
 import ScaledCanvas from "./ScaledCanvas";
 import React from "react";
 import { useLoading } from "./LoadingContext";
-
 export default function LoadingOverlay() {
   const { loading: isLoading } = useLoading();
   return (
@@ -20,4 +19,4 @@ export default function LoadingOverlay() {
       </div>
     </ScaledCanvas>
   );
-}
+}

@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
-
 const Footer = () => {
   return (
     <footer className="footer-img1 pt-4">
@@ -39,7 +38,6 @@ const Footer = () => {
               </Link>
             </div>
           </div>
-
           {/* ติดต่อสอบถาม/เวลาทำการ */}
           <div className="col-md-3 col-sm-6">
             <h6 className="text-white fw-bold">ติดต่อสอบถาม</h6>
@@ -55,7 +53,6 @@ const Footer = () => {
               วันหยุด วันอาทิตย์
             </p>
           </div>
-
           {/* เกี่ยวกับเรา */}
           <div className="col-md-3 col-sm-6">
             <h6 className="text-white fw-bold">เกี่ยวกับเรา</h6>
@@ -94,7 +91,6 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-
           {/* สินค้าและบริการ */}
           <div className="col-md-3 col-sm-6">
             <h6 className="text-white fw-bold">สินค้าและบริการ</h6>
@@ -124,7 +120,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-
       {/* Bottom Bar */}
       <div className="bg-white py-3 mt-4">
         <div className="container d-flex flex-wrap justify-content-between align-items-center text-secondary">
@@ -177,5 +172,4 @@ const Footer = () => {
     </footer>
   );
 };
-
-export default Footer;
+export default Footer;

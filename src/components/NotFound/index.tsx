@@ -4,24 +4,18 @@ import ScaledCanvas from "../ScaledCanvas";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-
 export default function NotFound() {
   const [minH, setMinH] = useState<number>();
-
   const measure = useCallback(() => {
     const vv = (window as any).visualViewport;
     const vh = Math.round(vv?.height ?? window.innerHeight);
-
     const header = document.querySelector("header") as HTMLElement | null;
     const footer = document.querySelector("footer") as HTMLElement | null;
-
     const headerH = header?.getBoundingClientRect().height ?? 0;
     const footerH = footer?.getBoundingClientRect().height ?? 0;
-
     const h = Math.max(0, vh - headerH - footerH);
     setMinH(h);
   }, []);
-
   useEffect(() => {
     measure();
     window.addEventListener("resize", measure);
@@ -31,7 +25,6 @@ export default function NotFound() {
       window.removeEventListener("orientationchange", measure);
     };
   }, [measure]);
-
   return (
     <ScaledCanvas>
       <section
@@ -48,7 +41,6 @@ export default function NotFound() {
               priority
             />
           </div>
-
           <div className="text-center md:text-left">
             <h1 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
               Page Not Found
@@ -68,4 +60,4 @@ export default function NotFound() {
       </section>
     </ScaledCanvas>
   );
-}
+}

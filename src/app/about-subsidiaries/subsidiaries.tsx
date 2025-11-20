@@ -1,12 +1,10 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-
 export default function OmanAirStyleLayout() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const [isVisible, setIsVisible] = useState<Record<string, boolean>>({});
   const observerRef = useRef<IntersectionObserver | null>(null);
-
   useEffect(() => {
     const detectZoomLevel = () => {
       const vv = (window as any).visualViewport as VisualViewport | undefined;
@@ -15,30 +13,23 @@ export default function OmanAirStyleLayout() {
         setViewportSize({ width: vv.width, height: vv.height });
         return vv.scale;
       }
-
       const zoom = window.devicePixelRatio || 1;
       setZoomLevel(zoom);
-
       setViewportSize({
         width: window.innerWidth,
         height: window.innerHeight,
       });
-
       return zoom;
     };
-
     detectZoomLevel();
     const handleResize = () => detectZoomLevel();
-
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
-
     const vv = (window as any).visualViewport as VisualViewport | undefined;
     if (vv) {
       vv.addEventListener("resize", handleResize);
       vv.addEventListener("scroll", handleResize);
     }
-
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         (e.ctrlKey || e.metaKey) &&
@@ -47,9 +38,7 @@ export default function OmanAirStyleLayout() {
         setTimeout(detectZoomLevel, 100);
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("orientationchange", handleResize);
@@ -60,7 +49,6 @@ export default function OmanAirStyleLayout() {
       }
     };
   }, []);
-
   // Intersection Observer for animations
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -79,23 +67,19 @@ export default function OmanAirStyleLayout() {
         rootMargin: "0px 0px -50px 0px",
       }
     );
-
     const elements = document.querySelectorAll("[data-aos]");
     elements.forEach((el) => {
       if (observerRef.current) {
         observerRef.current.observe(el);
       }
     });
-
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
       }
     };
   }, []);
-
   const inverseZoom = 1 / zoomLevel;
-
   return (
     <main className="min-h-dvh w-full overflow-x-hidden bg-white p-0 ps pt-[120px] sm:pt-[120px] md:pt-[110px] lg:pt-[110px] xl:pt-[105px]">
       <style jsx>{`
@@ -106,36 +90,28 @@ export default function OmanAirStyleLayout() {
           transition-duration: 600ms;
           transition-timing-function: cubic-bezier(0.39, 0.575, 0.565, 1);
         }
-
         [data-aos^="fade"][data-aos^="fade"].aos-animate {
           opacity: 1;
           transform: translateZ(0);
         }
-
         [data-aos="fade-up"] {
           transform: translate3d(0, 100px, 0);
         }
-
         [data-aos="fade-down"] {
           transform: translate3d(0, -100px, 0);
         }
-
         [data-aos="fade-right"] {
           transform: translate3d(-100px, 0, 0);
         }
-
         [data-aos="fade-left"] {
           transform: translate3d(100px, 0, 0);
         }
-
         [data-aos="fade-up-right"] {
           transform: translate3d(-100px, 100px, 0);
         }
-
         [data-aos="fade-up-left"] {
           transform: translate3d(100px, 100px, 0);
         }
-
         /* Zoom Animations */
         [data-aos^="zoom"][data-aos^="zoom"] {
           opacity: 0;
@@ -143,59 +119,46 @@ export default function OmanAirStyleLayout() {
           transition-duration: 600ms;
           transition-timing-function: cubic-bezier(0.39, 0.575, 0.565, 1);
         }
-
         [data-aos^="zoom"][data-aos^="zoom"].aos-animate {
           opacity: 1;
           transform: translateZ(0) scale(1);
         }
-
         [data-aos="zoom-in"] {
           transform: scale(0.6);
         }
-
         [data-aos="zoom-in-up"] {
           transform: translate3d(0, 100px, 0) scale(0.6);
         }
-
         [data-aos="zoom-in-down"] {
           transform: translate3d(0, -100px, 0) scale(0.6);
         }
-
         [data-aos="zoom-in-right"] {
           transform: translate3d(-100px, 0, 0) scale(0.6);
         }
-
         [data-aos="zoom-in-left"] {
           transform: translate3d(100px, 0, 0) scale(0.6);
         }
-
         /* Slide Animations */
         [data-aos^="slide"][data-aos^="slide"] {
           transition-property: transform;
           transition-duration: 600ms;
           transition-timing-function: cubic-bezier(0.39, 0.575, 0.565, 1);
         }
-
         [data-aos^="slide"][data-aos^="slide"].aos-animate {
           transform: translateZ(0);
         }
-
         [data-aos="slide-up"] {
           transform: translate3d(0, 100%, 0);
         }
-
         [data-aos="slide-down"] {
           transform: translate3d(0, -100%, 0);
         }
-
         [data-aos="slide-right"] {
           transform: translate3d(-100%, 0, 0);
         }
-
         [data-aos="slide-left"] {
           transform: translate3d(100%, 0, 0);
         }
-
         /* Flip Animations */
         [data-aos^="flip"][data-aos^="flip"] {
           backface-visibility: hidden;
@@ -203,31 +166,24 @@ export default function OmanAirStyleLayout() {
           transition-duration: 600ms;
           transition-timing-function: cubic-bezier(0.455, 0.03, 0.515, 0.955);
         }
-
         [data-aos="flip-left"] {
           transform: perspective(2500px) rotateY(-100deg);
         }
-
         [data-aos="flip-left"].aos-animate {
           transform: perspective(2500px) rotateY(0);
         }
-
         [data-aos="flip-right"] {
           transform: perspective(2500px) rotateY(100deg);
         }
-
         [data-aos="flip-right"].aos-animate {
           transform: perspective(2500px) rotateY(0);
         }
-
         [data-aos="flip-up"] {
           transform: perspective(2500px) rotateX(-100deg);
         }
-
         [data-aos="flip-up"].aos-animate {
           transform: perspective(2500px) rotateX(0);
         }
-
         /* Perfect Scrollbar Styles */
         .ps {
           overflow: hidden !important;
@@ -236,11 +192,9 @@ export default function OmanAirStyleLayout() {
           touch-action: auto;
           -ms-touch-action: auto;
         }
-
         .ps::-webkit-scrollbar {
           display: none;
         }
-
         .ps__rail-x,
         .ps__rail-y {
           display: none;
@@ -248,30 +202,25 @@ export default function OmanAirStyleLayout() {
           position: absolute;
           transition: background-color 0.2s linear, opacity 0.2s linear;
         }
-
         .ps__rail-x {
           bottom: 0;
           height: 15px;
         }
-
         .ps__rail-y {
           right: 0;
           width: 15px;
         }
-
         .ps--active-x > .ps__rail-x,
         .ps--active-y > .ps__rail-y {
           display: block;
           background-color: transparent;
         }
-
         .ps:hover > .ps__rail-x,
         .ps:hover > .ps__rail-y,
         .ps--focus > .ps__rail-x,
         .ps--focus > .ps__rail-y {
           opacity: 0.6;
         }
-
         /* Zoom-resistant image styles */
         .zoom-immune-container {
           position: relative;
@@ -282,13 +231,11 @@ export default function OmanAirStyleLayout() {
           transform-origin: 0 0;
           will-change: transform;
         }
-
         @media (min-width: 768px) {
           .zoom-immune-container {
             border-radius: 1rem;
           }
         }
-
         .Video-background {
           position: absolute;
           top: 0;
@@ -306,13 +253,11 @@ export default function OmanAirStyleLayout() {
           min-width: 928px;
           min-height: 703px;
         }
-
         @media (min-width: 768px) {
           .Video-background {
             transform-origin: center center;
           }
         }
-
         .fixed-aspect {
           position: relative;
           width: 100%;
@@ -320,7 +265,6 @@ export default function OmanAirStyleLayout() {
           overflow: hidden;
           border-radius: 1rem;
         }
-
         .fixed-aspect > * {
           position: absolute;
           top: 0;
@@ -328,48 +272,39 @@ export default function OmanAirStyleLayout() {
           width: 100%;
           height: 100%;
         }
-
         /* Stagger animation delays */
         [data-aos][data-aos-delay="100"] {
           transition-delay: 100ms;
         }
-
         [data-aos][data-aos-delay="200"] {
           transition-delay: 200ms;
         }
-
         [data-aos][data-aos-delay="300"] {
           transition-delay: 300ms;
         }
-
         [data-aos][data-aos-delay="400"] {
           transition-delay: 400ms;
         }
-
         /* Custom smooth scroll */
         html {
           scroll-behavior: smooth;
         }
-
         /* Clean spacing for header */
         main {
           background: linear-gradient(to bottom, #ffffff 0%, #ffffff 100%);
           position: relative;
           z-index: 1;
         }
-
         /* Ensure content doesn't overlap with header */
         section {
           position: relative;
           z-index: 2;
         }
-
         /* Mobile screens */
         @media (max-width: 640px) {
           main {
             padding-top: 120px !important;
           }
-
           .zoom-immune-container {
             min-height: 350px !important;
             overflow: visible;
@@ -379,7 +314,6 @@ export default function OmanAirStyleLayout() {
             align-items: center !important;
             justify-content: center !important;
           }
-
           .zoom-immune-container img {
             max-width: 95% !important;
             max-height: 90% !important;
@@ -389,13 +323,11 @@ export default function OmanAirStyleLayout() {
             opacity: 1 !important;
           }
         }
-
         /* Tablet and medium screens (iPad, etc.) */
         @media (min-width: 641px) and (max-width: 1199px) {
           main {
             padding-top: 110px !important;
           }
-
           .zoom-immune-container {
             min-height: 450px !important;
             overflow: visible;
@@ -405,7 +337,6 @@ export default function OmanAirStyleLayout() {
             align-items: center !important;
             justify-content: center !important;
           }
-
           .zoom-immune-container img {
             max-width: 95% !important;
             max-height: 95% !important;
@@ -414,28 +345,23 @@ export default function OmanAirStyleLayout() {
             visibility: visible !important;
             opacity: 1 !important;
           }
-
           .Video-background {
             background-size: contain !important;
           }
         }
-
         /* PC screens (≥1200px) - Original size */
         @media (min-width: 1200px) {
           main {
             padding-top: 105px !important;
           }
-
           .zoom-immune-container {
             background-color: transparent !important;
             border: none !important;
           }
-
           .Video-background {
             background-size: auto !important;
           }
         }
-
         /* Touch-friendly interactions */
         @media (hover: none) and (pointer: coarse) {
           .ps:hover > .ps__rail-x,
@@ -444,7 +370,6 @@ export default function OmanAirStyleLayout() {
           }
         }
       `}</style>
-
       <section className="h-full w-full bg-white p-3 sm:p-4 md:p-6 lg:p-8 pb-8">
         <div className="grid h-full items-stretch gap-3 sm:gap-4 md:gap-6 lg:grid-cols-2">
           <div className="order-1 space-y-3 sm:space-y-4 md:space-y-5">
@@ -475,7 +400,6 @@ export default function OmanAirStyleLayout() {
                 </p>
               </div>
             </article>
-
             {/* Contact info card with fade-up animation */}
             <article
               id="contact-card"
@@ -545,7 +469,6 @@ export default function OmanAirStyleLayout() {
                     </a>
                   </p>
                 </div>
-
                 {/* Airplane image with zoom-in animation */}
                 <div
                   id="plane-image"
@@ -575,7 +498,6 @@ export default function OmanAirStyleLayout() {
               </div>
             </article>
           </div>
-
           {/* Video panel with slide animation */}
           <div
             id="Video-panel"
@@ -614,7 +536,6 @@ export default function OmanAirStyleLayout() {
                       console.log("Non-PC Image loaded successfully");
                     }}
                   />
-
                   {/* Fallback text for non-PC */}
                   <div
                     style={{ display: "none" }}
@@ -639,7 +560,6 @@ export default function OmanAirStyleLayout() {
                       objectPosition: "center center",
                     }}
                   />
-
                   {/* Fallback background method for PC */}
                   <div
                     className="Video-background absolute inset-0"
@@ -657,4 +577,4 @@ export default function OmanAirStyleLayout() {
       </section>
     </main>
   );
-}
+}

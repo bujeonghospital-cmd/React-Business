@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,7 +11,6 @@ import {
   Save,
   Loader2,
 } from "lucide-react";
-
 interface ContactFormData {
   name: string;
   company: string;
@@ -21,7 +19,6 @@ interface ContactFormData {
   status: "outgoing" | "received" | "waiting" | "sale" | "Ringing";
   notes: string;
 }
-
 interface CustomerContactFormProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,14 +26,12 @@ interface CustomerContactFormProps {
   initialData?: ContactFormData;
   mode: "create" | "edit";
 }
-
 const STATUS_OPTIONS = [
   { value: "outgoing", label: "โทรออก", color: "bg-red-500" },
   { value: "received", label: "รับสาย", color: "bg-yellow-500" },
   { value: "waiting", label: "รอสาย", color: "bg-cyan-500" },
   { value: "sale", label: "SALE ติดต่อ", color: "bg-green-500" },
 ];
-
 const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
   isOpen,
   onClose,
@@ -56,7 +51,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<ContactFormData>>({});
-
   const handleInputChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -69,10 +63,8 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
-
   const validateForm = (): boolean => {
     const newErrors: Partial<ContactFormData> = {};
-
     if (!formData.name.trim()) {
       newErrors.name = "กรุณากรอกชื่อ-นามสกุล";
     }
@@ -84,18 +76,14 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
     try {
       await onSubmit(formData);
@@ -106,7 +94,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
       setIsSubmitting(false);
     }
   };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -119,7 +106,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
             onClick={onClose}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
           />
-
           {/* Modal */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -140,7 +126,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                   <X className="w-6 h-6" />
                 </button>
               </div>
-
               {/* Form */}
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 {/* Name */}
@@ -169,7 +154,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                     <p className="text-red-500 text-sm mt-1">{errors.name}</p>
                   )}
                 </div>
-
                 {/* Company */}
                 <div>
                   <label
@@ -191,7 +175,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                     />
                   </div>
                 </div>
-
                 {/* Phone and Email Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Phone */}
@@ -222,7 +205,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                       </p>
                     )}
                   </div>
-
                   {/* Email */}
                   <div>
                     <label
@@ -252,7 +234,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                     )}
                   </div>
                 </div>
-
                 {/* Status */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -282,7 +263,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                     ))}
                   </div>
                 </div>
-
                 {/* Notes */}
                 <div>
                   <label
@@ -304,7 +284,6 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
                     />
                   </div>
                 </div>
-
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">
                   <motion.button
@@ -344,5 +323,4 @@ const CustomerContactForm: React.FC<CustomerContactFormProps> = ({
     </AnimatePresence>
   );
 };
-
-export default CustomerContactForm;
+export default CustomerContactForm;

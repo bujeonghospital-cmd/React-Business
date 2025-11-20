@@ -1,16 +1,13 @@
 "use client";
-
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, MapPin, Send, User, Building2 } from "lucide-react";
 import Container from "@/components/Container";
-
 // Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0 },
 };
-
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -20,7 +17,6 @@ const staggerContainer = {
     },
   },
 };
-
 // Contact Card Component
 interface ContactCardProps {
   name: string;
@@ -29,7 +25,6 @@ interface ContactCardProps {
   phone: string;
   variant?: "blue" | "gradient";
 }
-
 const ContactCard: React.FC<ContactCardProps> = ({
   name,
   position,
@@ -41,7 +36,6 @@ const ContactCard: React.FC<ContactCardProps> = ({
     variant === "gradient"
       ? "bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-500"
       : "bg-gradient-to-br from-blue-900 to-blue-800";
-
   return (
     <motion.div
       variants={fadeInUp}
@@ -58,7 +52,6 @@ const ContactCard: React.FC<ContactCardProps> = ({
           </div>
           <User className="w-8 h-8 opacity-30 group-hover:opacity-50 transition-opacity" />
         </div>
-
         <div className="border-t border-white/20 pt-3">
           <p className="text-sm font-medium mb-3 opacity-90">{department}</p>
           <div className="flex items-center gap-2 text-sm">
@@ -75,7 +68,6 @@ const ContactCard: React.FC<ContactCardProps> = ({
     </motion.div>
   );
 };
-
 // Contact Form Component
 const ContactForm: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -86,75 +78,57 @@ const ContactForm: React.FC = () => {
     message: "",
     acceptPolicy: false,
   });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
-
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
-
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
     if (!formData.name.trim()) {
       newErrors.name = "กรุณากรอกชื่อ-นามสกุล";
     }
-
     if (!formData.organization.trim()) {
       newErrors.organization = "กรุณากรอกชื่อหน่วยงาน";
     }
-
     if (!formData.email.trim()) {
       newErrors.email = "กรุณากรอกอีเมล";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "รูปแบบอีเมลไม่ถูกต้อง";
     }
-
     if (!formData.phone.trim()) {
       newErrors.phone = "กรุณากรอกเบอร์โทรศัพท์";
     }
-
     if (!formData.message.trim()) {
       newErrors.message = "กรุณากรอกข้อความ";
     }
-
     if (!formData.acceptPolicy) {
       newErrors.acceptPolicy = "กรุณายอมรับนโยบายความเป็นส่วนตัว";
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) {
       return;
     }
-
     setIsSubmitting(true);
-
     try {
       // TODO: Implement actual form submission
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
       alert("ส่งข้อความสำเร็จ! เราจะติดต่อกลับโดยเร็วที่สุด");
-
       // Reset form
       setFormData({
         name: "",
@@ -170,7 +144,6 @@ const ContactForm: React.FC = () => {
       setIsSubmitting(false);
     }
   };
-
   return (
     <motion.div
       initial="hidden"
@@ -187,7 +160,6 @@ const ContactForm: React.FC = () => {
           <div className="w-full h-1 bg-gradient-to-r from-blue-600 to-cyan-500 mx-auto rounded-full" />
         </div>
       </div>
-
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name Field */}
         <div>
@@ -208,7 +180,6 @@ const ContactForm: React.FC = () => {
             <p className="mt-1 text-sm text-red-500">{errors.name}</p>
           )}
         </div>
-
         {/* Organization Field */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -228,7 +199,6 @@ const ContactForm: React.FC = () => {
             <p className="mt-1 text-sm text-red-500">{errors.organization}</p>
           )}
         </div>
-
         {/* Email and Phone Fields */}
         <div className="grid md:grid-cols-2 gap-6">
           <div>
@@ -249,7 +219,6 @@ const ContactForm: React.FC = () => {
               <p className="mt-1 text-sm text-red-500">{errors.email}</p>
             )}
           </div>
-
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               เบอร์โทรศัพท์ <span className="text-red-500">*</span>
@@ -269,7 +238,6 @@ const ContactForm: React.FC = () => {
             )}
           </div>
         </div>
-
         {/* Message Field */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -289,7 +257,6 @@ const ContactForm: React.FC = () => {
             <p className="mt-1 text-sm text-red-500">{errors.message}</p>
           )}
         </div>
-
         {/* Privacy Policy Checkbox */}
         <div className="flex items-start gap-3">
           <input
@@ -314,7 +281,6 @@ const ContactForm: React.FC = () => {
         {errors.acceptPolicy && (
           <p className="text-sm text-red-500 -mt-3">{errors.acceptPolicy}</p>
         )}
-
         {/* Submit Button */}
         <button
           type="submit"
@@ -337,7 +303,6 @@ const ContactForm: React.FC = () => {
     </motion.div>
   );
 };
-
 // Main Page Component
 export default function InvestorContactPage() {
   const contactPersons: ContactCardProps[] = [
@@ -384,7 +349,6 @@ export default function InvestorContactPage() {
       variant: "blue",
     },
   ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 py-12 mt-5">
       <Container>
@@ -405,7 +369,6 @@ export default function InvestorContactPage() {
             ทีมนักลงทุนสัมพันธ์ของเรายินดีให้บริการข้อมูลและตอบข้อซักถามเกี่ยวกับการลงทุนและผลการดำเนินงานของบริษัท
           </p>
         </motion.div>
-
         {/* Company Contact Section */}
         <motion.div
           initial="hidden"
@@ -461,7 +424,6 @@ export default function InvestorContactPage() {
             </div>
           </div>
         </motion.div>
-
         {/* Contact Cards Grid */}
         {/* <motion.div
           initial="hidden"
@@ -479,10 +441,8 @@ export default function InvestorContactPage() {
             ))}
           </div>
         </motion.div> */}
-
         {/* Contact Form Section */}
         <ContactForm />
-
         {/* Additional Info Section */}
         <motion.div
           initial="hidden"
@@ -506,4 +466,4 @@ export default function InvestorContactPage() {
       </Container>
     </div>
   );
-}
+}

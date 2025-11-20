@@ -1,8 +1,6 @@
 import { HeaderItem } from "@/types/menu";
-
 export const headerData: HeaderItem[] = [
   { label: "หน้าหลัก", href: "/#" },
-
   {
     label: "เกี่ยวกับเรา",
     submenu: [
@@ -32,10 +30,8 @@ export const headerData: HeaderItem[] = [
       { label: "รางวัลและความภาคภูมิใจ", href: "/awards-achievements" },
     ],
   },
-
   { label: "ข่าวสารและกิจกรรม", href: "/news-events" },
   { label: "บทความ", href: "/articles" },
-
   {
     label: "นักลงทุนสัมพันธ์",
     submenu: [
@@ -53,4 +49,4 @@ export const headerData: HeaderItem[] = [
       { label: "ติดต่อสอบถาม", href: "/contact-inquiry" },
     ],
   },
-];
+];

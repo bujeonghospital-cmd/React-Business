@@ -1,5 +1,4 @@
 import { Metadata, Viewport } from "next";
-
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -7,7 +6,6 @@ export const viewport: Viewport = {
   userScalable: true,
   viewportFit: "cover",
 };
-
 export const metadata: Metadata = {
   title: "Facebook Ads Manager Dashboard",
   description: "จัดการและติดตามประสิทธิภาพโฆษณา Facebook",
@@ -15,11 +13,10 @@ export const metadata: Metadata = {
     icon: "/TPP.ico",
   },
 };
-
 export default function FacebookAdsManagerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return <>{children}</>;
-}
+}

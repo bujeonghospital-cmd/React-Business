@@ -1,7 +1,6 @@
 // src/app/api/google-ads/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleAdsApiResponse, GoogleAdsCampaign } from "@/types/google-ads";
-
 /**
  * Google Ads API Route
  *
@@ -42,7 +41,6 @@ import { GoogleAdsApiResponse, GoogleAdsCampaign } from "@/types/google-ads";
  *   WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'
  * `);
  */
-
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -52,7 +50,6 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get("endDate") || today;
     const daily = searchParams.get("daily") === "true"; // ถ้า daily=true จะให้ข้อมูลแยกรายวัน
     const useMockData = searchParams.get("mock") === "true"; // เพิ่ม mock mode
-
     // ตรวจสอบว่ามี credentials อะไรบ้าง
     const credentials = {
       clientId: process.env.GOOGLE_ADS_CLIENT_ID,
@@ -61,7 +58,6 @@ export async function GET(request: NextRequest) {
       refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN,
       customerId: process.env.GOOGLE_ADS_CUSTOMER_ID,
     };
-
     const missingCredentials = [];
     if (!credentials.clientId) missingCredentials.push("GOOGLE_ADS_CLIENT_ID");
     if (!credentials.clientSecret)
@@ -72,7 +68,6 @@ export async function GET(request: NextRequest) {
       missingCredentials.push("GOOGLE_ADS_REFRESH_TOKEN");
     if (!credentials.customerId)
       missingCredentials.push("GOOGLE_ADS_CUSTOMER_ID");
-
     // ถ้าขาด credentials ให้ return error พร้อมข้อความชัดเจน
     if (missingCredentials.length > 0) {
       console.error("❌ Missing Google Ads credentials:", missingCredentials);
@@ -99,11 +94,9 @@ export async function GET(request: NextRequest) {
         { status: 503 } // Service Unavailable
       );
     }
-
     // ถ้าเปิด Mock Mode ให้ return mock data
     if (useMockData) {
       console.log("🎭 Using Mock Data Mode...");
-
       const mockCampaigns: GoogleAdsCampaign[] = [
         {
           id: "1",
@@ -139,7 +132,6 @@ export async function GET(request: NextRequest) {
           conversions: 28,
         },
       ];
-
       const summary = {
         totalClicks: mockCampaigns.reduce((sum, c) => sum + c.clicks, 0),
         totalImpressions: mockCampaigns.reduce(
@@ -154,12 +146,10 @@ export async function GET(request: NextRequest) {
           mockCampaigns.reduce((sum, c) => sum + c.ctr, 0) /
           mockCampaigns.length,
       };
-
       console.log("✅ Mock Data Generated:");
       console.log(`  Total Cost: ฿${summary.totalCost.toFixed(2)}`);
       console.log(`  Total Clicks: ${summary.totalClicks}`);
       console.log(`  Average CPC: ฿${summary.averageCpc.toFixed(2)}`);
-
       return NextResponse.json({
         campaigns: mockCampaigns,
         summary,
@@ -168,37 +158,29 @@ export async function GET(request: NextRequest) {
         _note: "This is mock data. Remove ?mock=true to use real API data.",
       });
     }
-
     // ถ้ามี credentials ครบ ให้เชื่อมต่อ API จริง
     console.log(
       "✅ All credentials available. Connecting to Google Ads API..."
     );
-
     try {
       // Dynamic import to avoid require()
       const { GoogleAdsApi } = await import("google-ads-api");
-
       console.log("🔑 Initializing Google Ads API client...");
       console.log("Customer ID:", credentials.customerId);
-
       const client = new GoogleAdsApi({
         client_id: credentials.clientId!,
         client_secret: credentials.clientSecret!,
         developer_token: credentials.developerToken!,
       });
-
       const customer = client.Customer({
         customer_id: credentials.customerId!.replace(/-/g, ""),
         refresh_token: credentials.refreshToken!,
         login_customer_id: credentials.customerId!.replace(/-/g, ""), // เพิ่ม login_customer_id
       });
-
       console.log("🔍 Checking if account is a Manager Account...");
-
       // ตรวจสอบว่าเป็น Manager Account หรือไม่
       let isManagerAccount = false;
       let clientAccounts: any[] = [];
-
       try {
         const accountInfo = await customer.query(`
           SELECT
@@ -208,13 +190,11 @@ export async function GET(request: NextRequest) {
           FROM customer
           LIMIT 1
         `);
-
         if (accountInfo.length > 0 && accountInfo[0]?.customer?.manager) {
           isManagerAccount = true;
           console.log(
             "⚠️  This is a Manager Account (MCC). Fetching client accounts..."
           );
-
           // ดึงรายการ Client Accounts ภายใต้ Manager (แบบง่าย)
           try {
             const clientAccountsData = await customer.query(`
@@ -226,7 +206,6 @@ export async function GET(request: NextRequest) {
               FROM customer_client
               WHERE customer_client.status = 'ENABLED'
             `);
-
             clientAccounts = clientAccountsData
               .filter((row: any) => !row.customer_client.manager)
               .map((row: any) => ({
@@ -235,14 +214,12 @@ export async function GET(request: NextRequest) {
                 isManager: row.customer_client.manager,
                 status: row.customer_client.status,
               }));
-
             console.log(`📋 Found ${clientAccounts.length} client accounts`);
           } catch (queryError: any) {
             console.log(
               "⚠️  Could not fetch client accounts:",
               queryError.message
             );
-
             // ถ้า query ไม่ได้ ให้แสดงคำแนะนำ
             clientAccounts = [
               {
@@ -257,7 +234,6 @@ export async function GET(request: NextRequest) {
       } catch (checkError: any) {
         console.log("ℹ️  Unable to check account type, proceeding...");
       }
-
       // ถ้าเป็น Manager Account แสดงรายการ Client Accounts
       if (isManagerAccount) {
         return NextResponse.json(
@@ -299,9 +275,7 @@ export async function GET(request: NextRequest) {
           { status: 400 }
         );
       }
-
       console.log("🔍 Querying campaigns from Google Ads API...");
-
       // ถ้าต้องการข้อมูลรายวัน ให้ใช้ segments.date
       const query = daily
         ? `
@@ -328,32 +302,25 @@ export async function GET(request: NextRequest) {
         FROM campaign
         WHERE segments.date BETWEEN '${startDate}' AND '${endDate}'
       `;
-
       const campaignsData = await customer.query(query);
-
       console.log(
         `✅ Retrieved ${campaignsData.length} ${
           daily ? "daily records" : "campaigns"
         }`
       );
-
       // ถ้าต้องการข้อมูลรายวัน
       if (daily) {
         console.log("📊 Processing daily data...");
-
         // จัดกลุ่มข้อมูลตามวันที่
         const dailyDataMap = new Map<
           string,
           { clicks: number; impressions: number }
         >();
-
         campaignsData.forEach((row: any) => {
           const date = row.segments?.date || "";
           if (!date) return;
-
           const clicks = row.metrics?.clicks || 0;
           const impressions = row.metrics?.impressions || 0;
-
           const existing = dailyDataMap.get(date) || {
             clicks: 0,
             impressions: 0,
@@ -363,7 +330,6 @@ export async function GET(request: NextRequest) {
             impressions: existing.impressions + impressions,
           });
         });
-
         // แปลงเป็น array และเรียงตามวันที่
         const dailyData = Array.from(dailyDataMap.entries())
           .map(([date, metrics]) => ({
@@ -374,14 +340,12 @@ export async function GET(request: NextRequest) {
           .sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
           );
-
         console.log(`✅ Daily breakdown: ${dailyData.length} days`);
         dailyData.forEach((d) => {
           console.log(
             `  ${d.date}: ${d.clicks} clicks, ${d.impressions} impressions`
           );
         });
-
         return NextResponse.json({
           success: true,
           dailyData: dailyData,
@@ -391,7 +355,6 @@ export async function GET(request: NextRequest) {
           },
         });
       }
-
       // แปลงข้อมูลเป็นรูปแบบที่ต้องการ (สำหรับ non-daily)
       const campaigns: GoogleAdsCampaign[] = campaignsData.map((row: any) => ({
         id: row.campaign.id.toString(),
@@ -404,12 +367,10 @@ export async function GET(request: NextRequest) {
         ctr: (row.metrics.ctr || 0) * 100, // Convert to percentage
         conversions: row.metrics.conversions || 0,
       }));
-
       console.log("📊 Campaign Details:");
       campaigns.forEach((c) => {
         console.log(`  - ${c.name}: ${c.clicks} clicks (Status: ${c.status})`);
       });
-
       // คำนวณ summary
       const summary = {
         totalClicks: campaigns.reduce((sum, c) => sum + c.clicks, 0),
@@ -425,7 +386,6 @@ export async function GET(request: NextRequest) {
             ? campaigns.reduce((sum, c) => sum + c.ctr, 0) / campaigns.length
             : 0,
       };
-
       const response: GoogleAdsApiResponse = {
         campaigns,
         summary,
@@ -434,19 +394,16 @@ export async function GET(request: NextRequest) {
           endDate,
         },
       };
-
       return NextResponse.json(response);
     } catch (apiError: any) {
       console.error("❌ Google Ads API Error:", apiError);
       console.error("Error Stack:", apiError.stack);
       console.error("Error Details:", JSON.stringify(apiError, null, 2));
-
       // แสดง error message ที่เป็นประโยชน์
       let errorMessage = "เกิดข้อผิดพลาดในการเชื่อมต่อ Google Ads API";
       let errorDetails = apiError.message || "Unknown error";
       let errorCode = "";
       let solution = "";
-
       // ตรวจสอบ error type ต่างๆ
       let firstError: any = null;
       if (apiError.errors && Array.isArray(apiError.errors)) {
@@ -462,7 +419,6 @@ export async function GET(request: NextRequest) {
               : null) ||
             "UNKNOWN";
           errorDetails = firstError.message || errorDetails;
-
           // ตรวจสอบ quota error พิเศษ
           if (firstError.error_code?.quota_error) {
             const quotaDetails = firstError.details?.quota_error_details;
@@ -473,7 +429,6 @@ export async function GET(request: NextRequest) {
           }
         }
       }
-
       // จัดการ error แต่ละประเภท
       if (errorDetails.includes("Too many requests") || errorCode === "2") {
         errorMessage = "โดน Quota Limit - เรียก API บ่อยเกินไป";
@@ -484,26 +439,21 @@ export async function GET(request: NextRequest) {
         errorDetails = `Developer Token อยู่ในโหมด Test Access ซึ่งมี quota จำกัดมาก (15,000 operations/วัน)`;
         solution = `
 🕐 ตอนนี้: รอ ${Math.ceil(Number(retrySeconds) / 3600)} ชั่วโมง แล้วลองใหม่
-
 📋 วิธีแก้ถาวร (เลือก 1 ใน 3):
-
 1️⃣ ขอ Developer Token แบบ "Basic Access" (แนะนำ)
    • ไปที่: https://ads.google.com/aw/apicenter
    • คลิก "Apply for Basic Access"
    • ต้องมี API Budget อย่างน้อย $50/วัน
    • รอการอนุมัติ 1-3 วัน
    • ได้ quota: 15,000 ops/วัน → 100,000+ ops/วัน
-
 2️⃣ ใช้ Test Account (Manager Account)
    • ไปที่: https://ads.google.com/
    • สร้าง Test Account ใหม่
    • ใช้ Customer ID ของ Test Account แทน
    • Test Account จะมี quota สูงกว่า
-
 3️⃣ รอ Quota Reset ทุกวัน (00:00 UTC)
    • Quota จะ reset ตอน 7:00 น. (เวลาไทย)
    • วันนี้รอถึงพรุ่งนี้เช้า
-
 ⚠️ หมายเหตุ: Developer Token ของคุณอยู่ในโหมด "Test/Explorer Access" ซึ่งมี limit น้อยมาก
 `;
       } else if (
@@ -553,7 +503,6 @@ export async function GET(request: NextRequest) {
         solution =
           "รัน: node scripts/generate-google-ads-refresh-token.js เพื่อสร้าง Token ใหม่";
       }
-
       return NextResponse.json(
         {
           error: errorMessage,
@@ -588,4 +537,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

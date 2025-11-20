@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -39,7 +38,6 @@ import {
   fetchFilmDataContacts,
   transformFilmDataToAgentCounts,
 } from "@/utils/filmDataApi";
-
 // Types
 interface ContactRecord {
   id: string;
@@ -53,7 +51,6 @@ interface ContactRecord {
   createdAt: string;
   [key: string]: any; // สำหรับ dynamic columns จาก Google Sheets
 }
-
 // Film Contact Types (from Film_dev sheet)
 interface FilmContactRecord {
   id: string;
@@ -69,15 +66,12 @@ interface FilmContactRecord {
   email?: string;
   agentId?: string; // ผู้ติดต่อ - Agent ID from YaleCom
 }
-
 type StatusType = "outgoing" | "received" | "waiting" | "sale" | "all";
-
 // Google Sheets Types
 interface GoogleSheetsData {
   id: string;
   [key: string]: any; // Dynamic columns
 }
-
 // Yalecom API Types
 interface YalecomAgent {
   agent_id: string;
@@ -86,14 +80,12 @@ interface YalecomAgent {
   agent_outbound_callee_number: string;
   agent_queue_caller_number: string;
 }
-
 interface YalecomQueueStatus {
   queue_name: string;
   queue_extension: string;
   waiting_calls_in_queue: number;
   agents: YalecomAgent[];
 }
-
 // Robocall API Types
 interface RobocallRecord {
   id: number;
@@ -107,7 +99,6 @@ interface RobocallRecord {
   call_duration: string;
   last_fail_cause: string;
 }
-
 // Status Configuration
 const STATUS_CONFIG = {
   outgoing: {
@@ -147,13 +138,11 @@ const STATUS_CONFIG = {
     gradient: "from-green-500 to-green-600",
   },
 };
-
 // Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
 };
-
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -163,7 +152,6 @@ const staggerContainer = {
     },
   },
 };
-
 const CustomerContactDashboard = () => {
   const [contacts, setContacts] = useState<ContactRecord[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<ContactRecord[]>([]);
@@ -180,7 +168,6 @@ const CustomerContactDashboard = () => {
   const [allAgents, setAllAgents] = useState<ContactRecord[]>([]); // เก็บ agents ทั้งหมดสำหรับแสดงในส่วนล่าง
   const [robocallData, setRobocallData] = useState<RobocallRecord[]>([]); // เก็บข้อมูล Robocall
   const [logCallAiData, setLogCallAiData] = useState<any[]>([]); // เก็บข้อมูล Log_call_ai
-
   // Film Contact States (from contact-dashboard)
   const [filmContacts, setFilmContacts] = useState<FilmContactRecord[]>([]);
   const [filteredFilmContacts, setFilteredFilmContacts] = useState<
@@ -201,18 +188,15 @@ const CustomerContactDashboard = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<"success" | "error">("success");
-
   // Google Sheets States
   const [googleSheetsData, setGoogleSheetsData] = useState<GoogleSheetsData[]>(
     []
   );
   const [googleSheetsHeaders, setGoogleSheetsHeaders] = useState<string[]>([]);
   const [googleSheetsLoading, setGoogleSheetsLoading] = useState(false);
-
   // Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
-
   // Call Matrix States
   const [callMatrixYaleCounts, setCallMatrixYaleCounts] = useState<
     Record<string, Record<string, number>>
@@ -220,7 +204,6 @@ const CustomerContactDashboard = () => {
   const [callMatrixYaleTotals, setCallMatrixYaleTotals] = useState<
     Record<string, number>
   >({});
-
   // User Log Robocall States - ตารางบันทึกการโทรตามช่วงเวลา
   const [userLogRobocallData, setUserLogRobocallData] = useState<
     Record<string, Record<string, number>>
@@ -244,7 +227,6 @@ const CustomerContactDashboard = () => {
     outgoing: "",
     successful: "",
   });
-
   // Film Data States - จำนวนนับ (O) และจำนวนผ่า (P)
   const [filmDataCounts, setFilmDataCounts] = useState<Record<string, number>>(
     {}
@@ -252,7 +234,6 @@ const CustomerContactDashboard = () => {
   const [filmDataSurgeryCounts, setFilmDataSurgeryCounts] = useState<
     Record<string, number>
   >({});
-
   const callTableTimeSlots = [
     { label: "9:00-10:00", start: "9" },
     { label: "10:00-11:00", start: "10" },
@@ -266,7 +247,6 @@ const CustomerContactDashboard = () => {
     { label: "18:00-19:00", start: "18" },
     { label: "19:00-20:00", start: "19" },
   ];
-
   const agentDisplayList = [
     { id: "101", label: "101-สา" },
     { id: "102", label: "102-พัดชา" },
@@ -277,7 +257,6 @@ const CustomerContactDashboard = () => {
     { id: "107", label: "107-เจ" },
     { id: "108", label: "108-ว่าน" },
   ];
-
   const getCallTableValue = (
     agentId: string,
     hourSlot: string,
@@ -296,20 +275,16 @@ const CustomerContactDashboard = () => {
       }
       return slotData[agentId] ?? 0;
     }
-
     if (metric === "outgoing") {
       // ใช้ข้อมูลจาก Film Data - จำนวนนับ (O)
       return filmDataCounts[agentId] ?? 0;
     }
-
     if (metric === "passed") {
       // ใช้ข้อมูลจาก Film Data - จำนวนผ่า (P)
       return filmDataSurgeryCounts[agentId] ?? 0;
     }
-
     return 0;
   };
-
   // Calculate statistics
   const allContacts = agentContacts.length > 0 ? agentContacts : contacts;
   const displayAgents = allAgents.length > 0 ? allAgents : allContacts; // ใช้สำหรับแสดงในส่วนล่าง
@@ -320,7 +295,6 @@ const CustomerContactDashboard = () => {
     sale: allContacts.filter((c) => c.status === "sale").length,
     total: allContacts.length,
   };
-
   // Film Contact Statistics
   const filmContactsArray = Array.isArray(filmContacts) ? filmContacts : [];
   const filmStats = {
@@ -330,13 +304,11 @@ const CustomerContactDashboard = () => {
     pending: filmContactsArray.filter((c) => c.status === "pending").length,
     completed: filmContactsArray.filter((c) => c.status === "completed").length,
   };
-
   // คำนวณยอดรวมจากข้อมูล user_log_robocall
   const totalYaleCalls = Object.values(userLogRobocallTotals).reduce(
     (sum, value) => sum + value,
     0
   );
-
   // Auto-fetch on component mount
   useEffect(() => {
     fetchContacts();
@@ -346,7 +318,6 @@ const CustomerContactDashboard = () => {
     fetchUserLogRobocallData(); // โหลดข้อมูลตารางบันทึกการโทร
     fetchCallMatrixYaleSummary();
     fetchFilmData();
-
     // Auto refresh ทุก 5 วินาที - Yalecom Queue Status และ Robocall
     const fastInterval = setInterval(() => {
       fetchYalecomQueueStatus(undefined, "900");
@@ -354,7 +325,6 @@ const CustomerContactDashboard = () => {
       fetchLogCallAiData(); // รีเฟรช Log_call_ai ทุก 5 วินาที
       fetchFilmContacts(); // รีเฟรช Film contacts
     }, 5000); // 5 วินาที
-
     // Auto refresh ทุก 30 วินาที - ตารางบันทึกการโทรและ Google Sheets
     const slowInterval = setInterval(() => {
       fetchUserLogRobocallData(); // ตารางบันทึกการโทรตามช่วงเวลาจาก API ใหม่
@@ -362,24 +332,20 @@ const CustomerContactDashboard = () => {
       fetchFilmData(); // Film data
       fetchGoogleSheetsData(); // ตารางสรุป call_AI
     }, 30000); // 30 วินาที
-
     return () => {
       clearInterval(fastInterval);
       clearInterval(slowInterval);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
-
   // Filter contacts
   useEffect(() => {
     // ใช้ข้อมูลจาก Yalecom API แทน contacts
     let filtered = agentContacts.length > 0 ? agentContacts : contacts;
-
     // Filter by status
     if (selectedStatus !== "all") {
       filtered = filtered.filter((c) => c.status === selectedStatus);
     }
-
     // Filter by search query
     if (searchQuery) {
       filtered = filtered.filter(
@@ -390,15 +356,12 @@ const CustomerContactDashboard = () => {
           c.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
     setFilteredContacts(filtered);
   }, [selectedStatus, searchQuery, contacts, agentContacts]);
-
   // Filter Film Contacts
   useEffect(() => {
     const contactsArray = Array.isArray(filmContacts) ? filmContacts : [];
     let filtered = [...contactsArray];
-
     if (filmSearchQuery.customerName) {
       filtered = filtered.filter((c) =>
         c.customerName
@@ -406,13 +369,11 @@ const CustomerContactDashboard = () => {
           .includes(filmSearchQuery.customerName.toLowerCase())
       );
     }
-
     if (filmSearchQuery.phoneNumber) {
       filtered = filtered.filter((c) =>
         c.phoneNumber.includes(filmSearchQuery.phoneNumber)
       );
     }
-
     if (filmSearchQuery.product) {
       filtered = filtered.filter((c) =>
         (c.product || "")
@@ -420,7 +381,6 @@ const CustomerContactDashboard = () => {
           .includes(filmSearchQuery.product.toLowerCase())
       );
     }
-
     if (filmSearchQuery.remarks) {
       filtered = filtered.filter((c) =>
         (c.remarks || "")
@@ -428,10 +388,8 @@ const CustomerContactDashboard = () => {
           .includes(filmSearchQuery.remarks.toLowerCase())
       );
     }
-
     setFilteredFilmContacts(filtered);
   }, [filmSearchQuery, filmContacts]);
-
   // Format date
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -443,13 +401,11 @@ const CustomerContactDashboard = () => {
       minute: "2-digit",
     }).format(date);
   };
-
   // Fetch Robocall API data
   const fetchRobocallData = async () => {
     try {
       const response = await fetch("/api/robocall");
       const result = await response.json();
-
       if (result.success && Array.isArray(result.data)) {
         // กรองเฉพาะสถานะ "กำลังดำเนินการ"
         const activeRobocalls = result.data.filter(
@@ -461,13 +417,11 @@ const CustomerContactDashboard = () => {
       console.error("Error fetching Robocall data:", error);
     }
   };
-
   // Fetch Log_call_ai data from Google Sheets
   const fetchLogCallAiData = async () => {
     try {
       const response = await fetch("/api/google-sheets-log-call-ai");
       const result = await response.json();
-
       if (result.success && Array.isArray(result.data)) {
         setLogCallAiData(result.data);
         console.log("✅ Log_call_ai data loaded:", result.data.length, "rows");
@@ -480,7 +434,6 @@ const CustomerContactDashboard = () => {
       console.error("❌ Error fetching Log_call_ai data:", error);
     }
   };
-
   // Fetch queue status from Yalecom API (via internal API route)
   const fetchYalecomQueueStatus = async (
     queueUuid?: string,
@@ -490,7 +443,6 @@ const CustomerContactDashboard = () => {
       // ดึงข้อมูล Log_call_ai ก่อนทุกอย่าง
       const logResponse = await fetch("/api/google-sheets-log-call-ai");
       const logResult = await logResponse.json();
-
       let currentLogData: any[] = [];
       if (logResult.success && Array.isArray(logResult.data)) {
         currentLogData = logResult.data;
@@ -502,11 +454,9 @@ const CustomerContactDashboard = () => {
         );
         console.log("📋 ข้อมูลตัวอย่าง:", currentLogData[0]);
       }
-
       // ดึงข้อมูล Robocall ต่อ
       const robocallResponse = await fetch("/api/robocall");
       const robocallResult = await robocallResponse.json();
-
       let activeRobocalls: RobocallRecord[] = [];
       if (robocallResult.success && Array.isArray(robocallResult.data)) {
         activeRobocalls = robocallResult.data.filter(
@@ -519,29 +469,22 @@ const CustomerContactDashboard = () => {
           "calls"
         );
       }
-
       const params = new URLSearchParams();
-
       if (queueUuid) {
         params.append("queue_uuid", queueUuid);
       } else if (queueExtension) {
         params.append("queue_extension", queueExtension);
       }
-
       const response = await fetch(
         `/api/yalecom/queue-status?${params.toString()}`
       );
       const result = await response.json();
-
       if (!result.success) {
         console.error("❌ API Error:", result.error);
         throw new Error(result.error || "Failed to fetch queue status");
       }
-
       const data: YalecomQueueStatus = result.data;
-
       setQueueData(data);
-
       // Agent Name Mapping
       const agentNameMap: { [key: string]: string } = {
         "101": "สา",
@@ -553,17 +496,14 @@ const CustomerContactDashboard = () => {
         "107": "เจ",
         "108": "ว่าน",
       };
-
       // แปลงข้อมูล agents เป็น ContactRecord สำหรับแสดงในส่วนล่าง (ทุกคน)
       const allAgentsData: ContactRecord[] = data.agents.map((agent) => {
         const agentName = agentNameMap[agent.agent_id];
         const displayName = agentName
           ? `${agent.agent_id} - ${agentName}`
           : agent.agent_name;
-
         let status: ContactRecord["status"] = "waiting";
         let customerPhone = "-";
-
         // กำหนดสถานะและเบอร์
         if (agent.agent_queue_status === "Dialing") {
           status = "outgoing";
@@ -586,7 +526,6 @@ const CustomerContactDashboard = () => {
           status = "waiting";
           customerPhone = "-";
         }
-
         return {
           id: agent.agent_id,
           name: displayName,
@@ -599,24 +538,19 @@ const CustomerContactDashboard = () => {
           createdAt: new Date().toISOString(),
         };
       });
-
       setAllAgents(allAgentsData); // เก็บทุกคนไว้สำหรับแสดงในส่วนล่าง
-
       // แปลงข้อมูลจาก Robocall API เป็น ContactRecord สำหรับ "โทรออก"
       const robocallContacts: ContactRecord[] = activeRobocalls.map((call) => {
         // ใช้เบอร์ caller (effective_caller_id_number) เป็นชื่อแสดง
         const callerNumber = call.effective_caller_id_number;
-
         // ทำความสะอาดเบอร์โทรศัพท์ (เอาเฉพาะตัวเลข)
         const cleanPhone = (phone: string) => {
           return phone.replace(/\D/g, ""); // เอาเฉพาะตัวเลข
         };
-
         // ตัดเลข 0 ออกจากเบอร์ลูกค้า (caller_destination) เพื่อแมพกับ Log_call_ai
         const customerPhone = call.caller_destination;
         const customerPhoneClean = cleanPhone(customerPhone);
         const customerPhoneWithoutZero = customerPhoneClean.replace(/^0/, "");
-
         // ตรวจสอบว่ามีเบอร์นี้ใน Log_call_ai หรือไม่ และ status = "2" (รับสาย)
         const isAnswered = currentLogData.some((log) => {
           const logPhone =
@@ -624,15 +558,12 @@ const CustomerContactDashboard = () => {
           const logPhoneClean = cleanPhone(String(logPhone));
           const logPhoneWithoutZero = logPhoneClean.replace(/^0/, "");
           const logStatus = String(log.status || log.Status || log.สถานะ || "");
-
           const phoneMatch =
             customerPhoneClean === logPhoneClean ||
             customerPhoneWithoutZero === logPhoneWithoutZero ||
             customerPhone === logPhone;
-
           return phoneMatch && logStatus === "2";
         });
-
         // ตรวจสอบว่ามีเบอร์นี้ใน Log_call_ai หรือไม่ และ status = "3" (รอสาย)
         const isWaiting = currentLogData.some((log) => {
           const logPhone =
@@ -640,29 +571,24 @@ const CustomerContactDashboard = () => {
           const logPhoneClean = cleanPhone(String(logPhone));
           const logPhoneWithoutZero = logPhoneClean.replace(/^0/, "");
           const logStatus = String(log.status || log.Status || log.สถานะ || "");
-
           const phoneMatch =
             customerPhoneClean === logPhoneClean ||
             customerPhoneWithoutZero === logPhoneWithoutZero ||
             customerPhone === logPhone;
-
           return phoneMatch && logStatus === "3";
         });
-
         // Debug logging
         const matchedLog = currentLogData.find((log) => {
           const logPhone =
             log.phone || log.Phone || log.เบอร์ || log["เบอร์"] || "";
           const logPhoneClean = cleanPhone(String(logPhone));
           const logPhoneWithoutZero = logPhoneClean.replace(/^0/, "");
-
           return (
             customerPhoneClean === logPhoneClean ||
             customerPhoneWithoutZero === logPhoneWithoutZero ||
             customerPhone === logPhone
           );
         });
-
         if (matchedLog) {
           const logStatus = String(
             matchedLog.status || matchedLog.Status || matchedLog.สถานะ || ""
@@ -693,12 +619,10 @@ const CustomerContactDashboard = () => {
         } else if (currentLogData.length === 0) {
           console.warn("⚠️ Log_call_ai ยังไม่มีข้อมูล - รอโหลด...");
         }
-
         // กำหนด status และ display name
         let finalStatus: ContactRecord["status"] = "outgoing";
         let displayName = `Robocall - ${callerNumber}`;
         let companyName = "Robocall (กำลังดำเนินการ)";
-
         if (isAnswered) {
           finalStatus = "received";
           displayName = customerPhone;
@@ -708,7 +632,6 @@ const CustomerContactDashboard = () => {
           displayName = customerPhone;
           companyName = "Robocall (รอสาย)";
         }
-
         return {
           id: `robocall-${call.id}`,
           name: displayName,
@@ -721,19 +644,16 @@ const CustomerContactDashboard = () => {
           createdAt: call.created_at,
         };
       });
-
       // แปลงข้อมูล agents เป็น ContactRecord ตามระบบใหม่ (สำหรับ Kanban Board)
       const agentContactsData: ContactRecord[] = data.agents
         .map((agent): ContactRecord | null => {
           let status: ContactRecord["status"] | null = null;
           let customerPhone = "-";
-
           // ใช้ชื่อจาก mapping พร้อม ID หรือใช้ชื่อเดิมถ้าไม่มีใน mapping
           const agentName = agentNameMap[agent.agent_id];
           const displayName = agentName
             ? `${agent.agent_id} - ${agentName}`
             : agent.agent_name;
-
           // 1. โทรออก - Robocall API (กำลังดำเนินการ)
           if (agent.agent_queue_status === "Dialing") {
             status = "outgoing"; // แท็กเป็น "โทรออก"
@@ -761,7 +681,6 @@ const CustomerContactDashboard = () => {
           else {
             return null;
           }
-
           return {
             id: agent.agent_id,
             name: displayName,
@@ -775,7 +694,6 @@ const CustomerContactDashboard = () => {
           };
         })
         .filter((contact) => contact !== null) as ContactRecord[]; // กรอง null ออก
-
       // รวม Robocall contacts กับ agent contacts
       const combinedContacts = [...robocallContacts, ...agentContactsData];
       setAgentContacts(combinedContacts);
@@ -785,18 +703,15 @@ const CustomerContactDashboard = () => {
       return null;
     }
   };
-
   // Fetch Film Contacts from API (Google Sheets - Film_dev)
   const fetchFilmContacts = async () => {
     try {
       const response = await fetch("/api/film-contacts");
-
       if (response.ok) {
         const result = await response.json();
         const contactsData: FilmContactRecord[] = Array.isArray(result)
           ? result
           : result.data || [];
-
         setFilmContacts(contactsData);
         setFilteredFilmContacts(contactsData);
         console.log("✅ Film contacts loaded:", contactsData.length);
@@ -805,17 +720,14 @@ const CustomerContactDashboard = () => {
       console.error("Error fetching film contacts:", error);
     }
   };
-
   // Fetch contacts from API
   const fetchContacts = async () => {
     try {
       setIsLoading(true);
-
       // Fetch from Supabase API (optional - ถ้าไม่มี Supabase ก็ข้ามไป)
       try {
         const response = await fetch("/api/customer-contacts");
         const result = await response.json();
-
         if (result.success) {
           setContacts(result.data);
           console.log("✅ Contacts loaded from Supabase:", result.data.length);
@@ -828,10 +740,8 @@ const CustomerContactDashboard = () => {
       } catch (supabaseError) {
         console.warn("⚠️ Supabase not available, skipping...");
       }
-
       // Also fetch from Yalecom API (ใช้ queue_extension 900)
       await fetchYalecomQueueStatus(undefined, "900");
-
       // Fetch Film contacts
       await fetchFilmContacts();
     } catch (error) {
@@ -840,21 +750,16 @@ const CustomerContactDashboard = () => {
       setIsLoading(false);
     }
   };
-
   // Fetch Google Sheets Data (สรุป call_AI)
   const fetchGoogleSheetsData = async () => {
     try {
       setGoogleSheetsLoading(true);
-
       const response = await fetch("/api/google-sheets-call-ai");
       const result = await response.json();
-
       if (result.success) {
         setGoogleSheetsData(result.data);
-
         // Debug: ดูว่า headers มีอะไรบ้าง
         console.log("📋 All available headers:", result.headers);
-
         // กรองเฉพาะคอลัมน์ที่ต้องการ (รองรับทั้ง End และ end)
         const desiredHeaders = [
           "ชื่อลูกค้า",
@@ -863,22 +768,17 @@ const CustomerContactDashboard = () => {
           "เบอร์",
           "start",
         ];
-
         // หา End column (case insensitive)
         const endColumn = result.headers.find(
           (h: string) => h.toLowerCase() === "end"
         );
-
         if (endColumn) {
           desiredHeaders.push(endColumn);
         }
-
         const filteredHeaders = result.headers.filter((header: string) =>
           desiredHeaders.includes(header)
         );
-
         console.log("✅ Filtered headers:", filteredHeaders);
-
         setGoogleSheetsHeaders(
           filteredHeaders.length > 0 ? filteredHeaders : desiredHeaders
         );
@@ -897,29 +797,23 @@ const CustomerContactDashboard = () => {
       setGoogleSheetsLoading(false);
     }
   };
-
   // Fetch User Log Robocall data from API
   const fetchUserLogRobocallData = async () => {
     try {
       console.log("🔄 Fetching user_log_robocall data for date:", selectedDate);
-
       const params = new URLSearchParams();
       params.append("report_date", selectedDate); // ใช้ report_date แทน
       params.append("limit", "1000");
-
       const response = await fetch(
         `/api/user-log-robocall?${params.toString()}`
       );
       const result = await response.json();
-
       if (result.success && Array.isArray(result.data)) {
         // จัดกลุ่มข้อมูลตาม caller_id_name และ time slot
         const counts: Record<string, Record<string, number>> = {};
         const totals: Record<string, number> = {};
-
         result.data.forEach((log: any) => {
           const callerId = log.caller_id_name || log.user_id || "Unknown";
-
           // วนลูปทุก time slot (09:00-10:00 ถึง 19:00-20:00)
           for (let hour = 9; hour <= 19; hour++) {
             // Key สำหรับเก็บข้อมูลและแสดงผล
@@ -928,13 +822,10 @@ const CustomerContactDashboard = () => {
             )
               .toString()
               .padStart(2, "0")}:00`;
-
             // Key ของคอลัมน์ในตาราง (ตรงกับ API response: "09:00-10:00", "10:00-11:00")
             const columnKey = timeSlotKey;
-
             // ดึงค่าจากคอลัมน์ในตาราง
             const value = parseInt(log[columnKey]) || 0;
-
             if (value > 0) {
               if (!counts[timeSlotKey]) {
                 counts[timeSlotKey] = {};
@@ -942,13 +833,11 @@ const CustomerContactDashboard = () => {
               counts[timeSlotKey][callerId] = value;
             }
           }
-
           // ใช้ total_day สำหรับยอดรวม
           if (log.total_day) {
             totals[callerId] = parseInt(log.total_day) || 0;
           }
         });
-
         setUserLogRobocallData(counts);
         setUserLogRobocallTotals(totals);
         console.log("✅ User log robocall data loaded:", counts);
@@ -961,7 +850,6 @@ const CustomerContactDashboard = () => {
       console.error("❌ Error fetching user_log_robocall data:", error);
     }
   };
-
   // Fetch Yale call summary from Python API
   const fetchCallMatrixYaleSummary = async () => {
     try {
@@ -969,14 +857,11 @@ const CustomerContactDashboard = () => {
         "🔄 Fetching call matrix from Python API for date:",
         selectedDate
       );
-
       const result = await fetchCallMatrix(selectedDate);
-
       if (result.success) {
         // แปลงข้อมูลจาก Python API format เป็น format ที่ใช้ใน dashboard
         const { callMatrixYaleCounts, callMatrixYaleTotals } =
           transformCallMatrixData(result);
-
         setCallMatrixYaleCounts(callMatrixYaleCounts);
         setCallMatrixYaleTotals(callMatrixYaleTotals);
         console.log("✅ Call matrix loaded from Python API:", {
@@ -1000,25 +885,20 @@ const CustomerContactDashboard = () => {
           `/api/google-sheets-call-ai-summary?date=${selectedDate}`
         );
         const result = await response.json();
-
         if (result.success) {
           const slotMap: Record<string, Record<string, number>> = {};
-
           if (Array.isArray(result.timeSlots)) {
             result.timeSlots.forEach((slot: any) => {
               if (!slot || typeof slot !== "object") {
                 return;
               }
-
               const hourKey = String(slot.hourStart ?? slot.key ?? "");
               if (!hourKey) {
                 return;
               }
-
               slotMap[hourKey] = { ...(slot.agentCounts || {}) };
             });
           }
-
           setCallMatrixYaleCounts(slotMap);
           setCallMatrixYaleTotals(result.totals || {});
           console.log(
@@ -1034,7 +914,6 @@ const CustomerContactDashboard = () => {
       }
     }
   };
-
   // Fetch Film Data - จำนวนนับ (O) และจำนวนผ่า (P) จาก SQL API (ORDER BY booking_count DESC)
   const fetchFilmData = async () => {
     try {
@@ -1042,17 +921,14 @@ const CustomerContactDashboard = () => {
       const params = new URLSearchParams();
       params.append("date", selectedDate);
       params.append("today", "true");
-
       const response = await fetch(
         `/api/film-booking-count?${params.toString()}`
       );
       const result = await response.json();
-
       if (result.success) {
         // ตั้งค่าจำนวน consult และนัดผ่าตัด
         setFilmDataCounts(result.consultCounts || {});
         setFilmDataSurgeryCounts(result.surgeryCounts || {});
-
         console.log(
           "✅ Film data loaded from SQL API (ORDER BY booking_count DESC):",
           result
@@ -1066,7 +942,6 @@ const CustomerContactDashboard = () => {
           "⚠️ Film data SQL API returned error:",
           result.error || result
         );
-
         // Fallback: ลอง Python API (เดิม)
         console.log("⚠️ Trying fallback to Python API...");
         try {
@@ -1075,14 +950,11 @@ const CustomerContactDashboard = () => {
             true,
             true
           );
-
           if (pythonResult.success) {
             const { consultCounts, surgeryCounts } =
               transformFilmDataToAgentCounts(pythonResult);
-
             setFilmDataCounts(consultCounts);
             setFilmDataSurgeryCounts(surgeryCounts);
-
             console.log(
               "✅ Film data loaded from Python API (fallback):",
               pythonResult
@@ -1094,7 +966,6 @@ const CustomerContactDashboard = () => {
               `/api/google-sheets-film-data?date=${selectedDate}`
             );
             const gsResult = await gsResponse.json();
-
             if (gsResult.success) {
               setFilmDataCounts(gsResult.agentCounts || {});
               setFilmDataSurgeryCounts(gsResult.surgeryCounts || {});
@@ -1116,7 +987,6 @@ const CustomerContactDashboard = () => {
       }
     } catch (error) {
       console.error("❌ Error fetching Film data from SQL API:", error);
-
       // Fallback: ลอง Python API
       try {
         const pythonResult = await fetchFilmDataContacts(
@@ -1124,14 +994,11 @@ const CustomerContactDashboard = () => {
           true,
           true
         );
-
         if (pythonResult.success) {
           const { consultCounts, surgeryCounts } =
             transformFilmDataToAgentCounts(pythonResult);
-
           setFilmDataCounts(consultCounts);
           setFilmDataSurgeryCounts(surgeryCounts);
-
           console.log(
             "✅ Film data loaded from Python API (error fallback):",
             pythonResult
@@ -1147,30 +1014,25 @@ const CustomerContactDashboard = () => {
       }
     }
   };
-
   // Save call input to database via Python API
   const handleSaveCallInput = async () => {
     if (!callInputValues.outgoing && !callInputValues.successful) {
       alert("กรุณากรอกจำนวนอย่างน้อย 1 ค่า");
       return;
     }
-
     try {
       const outgoingCount = parseInt(callInputValues.outgoing) || 0;
       const successfulCount = parseInt(callInputValues.successful) || 0;
-
       // สร้าง time_slot format (เช่น "9" -> "9-10")
       const hourStart = parseInt(callInputModal.hourSlot);
       const hourEnd = hourStart + 1;
       const timeSlot = `${hourStart}-${hourEnd}`;
-
       console.log("💾 บันทึกข้อมูล:", {
         agent_id: callInputModal.agentId,
         time_slot: timeSlot,
         outgoing: outgoingCount,
         successful: successfulCount,
       });
-
       // อัพเดทค่าผ่าน Python API
       // ใช้ค่า successful (จำนวนที่นับ) เป็นค่าที่บันทึก
       if (successfulCount > 0) {
@@ -1179,7 +1041,6 @@ const CustomerContactDashboard = () => {
           time_slot: timeSlot,
           value: successfulCount,
         });
-
         if (result.success) {
           console.log("✅ บันทึกสำเร็จผ่าน Python API:", result);
           alert("บันทึกข้อมูลสำเร็จ");
@@ -1198,14 +1059,12 @@ const CustomerContactDashboard = () => {
       alert("เกิดข้อผิดพลาด: " + (error as Error).message);
     }
   };
-
   // Film Contact Modal Handlers
   const handleFilmRowClick = async (contact: FilmContactRecord) => {
     setSelectedFilmContact(contact);
     setEditedRemarks(contact.remarks || "");
     setEditedNextContactDate(contact.nextContactDate || "");
     setIsFilmModalOpen(true);
-
     // บันทึก last_followup อัตโนมัติเป็นเวลาปัจจุบัน
     if (contact.dbId) {
       try {
@@ -1217,11 +1076,9 @@ const CustomerContactDashboard = () => {
             body: JSON.stringify({ id: contact.dbId }),
           }
         );
-
         if (response.ok) {
           const result = await response.json();
           const newContactDate = result.data.last_followup;
-
           const updatedContacts = filmContacts.map((c) =>
             c.dbId === contact.dbId ? { ...c, contactDate: newContactDate } : c
           );
@@ -1235,7 +1092,6 @@ const CustomerContactDashboard = () => {
       }
     }
   };
-
   const handleCloseFilmModal = () => {
     setIsFilmModalOpen(false);
     setTimeout(() => {
@@ -1244,7 +1100,6 @@ const CustomerContactDashboard = () => {
       setEditedNextContactDate("");
     }, 300);
   };
-
   const showToastNotification = (
     message: string,
     type: "success" | "error"
@@ -1254,16 +1109,13 @@ const CustomerContactDashboard = () => {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
-
   const handleSaveFilmContact = async () => {
     if (!selectedFilmContact || !selectedFilmContact.dbId) {
       showToastNotification("ไม่สามารถบันทึกได้: ไม่พบ ID ของข้อมูล", "error");
       return;
     }
-
     try {
       setIsSavingRemarks(true);
-
       const [remarksResponse, nextContactResponse] = await Promise.all([
         fetch("/api/film-contacts/update-remarks", {
           method: "POST",
@@ -1282,10 +1134,8 @@ const CustomerContactDashboard = () => {
           }),
         }),
       ]);
-
       if (remarksResponse.ok && nextContactResponse.ok) {
         showToastNotification("✅ บันทึกข้อมูลทั้งหมดสำเร็จ!", "success");
-
         const updatedContacts = filmContacts.map((c) =>
           c.dbId === selectedFilmContact.dbId
             ? {
@@ -1320,7 +1170,6 @@ const CustomerContactDashboard = () => {
       setIsSavingRemarks(false);
     }
   };
-
   // Refresh data
   const handleRefresh = async () => {
     await fetchContacts();
@@ -1330,21 +1179,18 @@ const CustomerContactDashboard = () => {
     await fetchFilmData();
     await fetchFilmContacts();
   };
-
   // Open form for creating new contact
   const handleCreate = () => {
     setFormMode("create");
     setEditingContact(null);
     setIsFormOpen(true);
   };
-
   // Open form for editing contact
   const handleEdit = (contact: ContactRecord) => {
     setFormMode("edit");
     setEditingContact(contact);
     setIsFormOpen(true);
   };
-
   // Handle form submit
   const handleFormSubmit = async (formData: any) => {
     try {
@@ -1355,9 +1201,7 @@ const CustomerContactDashboard = () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
-
         const result = await response.json();
-
         if (result.success) {
           setContacts((prev) => [result.data, ...prev]);
         }
@@ -1371,9 +1215,7 @@ const CustomerContactDashboard = () => {
             body: JSON.stringify(formData),
           }
         );
-
         const result = await response.json();
-
         if (result.success) {
           setContacts((prev) =>
             prev.map((c) => (c.id === editingContact.id ? result.data : c))
@@ -1385,20 +1227,16 @@ const CustomerContactDashboard = () => {
       throw error;
     }
   };
-
   // Handle delete contact
   const handleDelete = async (id: string) => {
     if (!confirm("คุณแน่ใจหรือไม่ที่จะลบรายการนี้?")) {
       return;
     }
-
     try {
       const response = await fetch(`/api/customer-contacts/${id}`, {
         method: "DELETE",
       });
-
       const result = await response.json();
-
       if (result.success) {
         setContacts((prev) => prev.filter((c) => c.id !== id));
       }
@@ -1406,7 +1244,6 @@ const CustomerContactDashboard = () => {
       console.error("Error deleting contact:", error);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 w-full">
       <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
@@ -1431,7 +1268,6 @@ const CustomerContactDashboard = () => {
             )}
           </div>
         </motion.div>
-
         {/* Action Buttons */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -1464,7 +1300,6 @@ const CustomerContactDashboard = () => {
             const config = STATUS_CONFIG[status];
             const Icon = config.icon;
             const count = stats[status];
-
             return (
               <motion.div
                 key={status}
@@ -1511,9 +1346,7 @@ const CustomerContactDashboard = () => {
             );
           })}
         </motion.div>
-
         {/* Filters and Search */}
-
         {/* Kanban Board - Contact Tables by Status */}
         <motion.div
           initial="hidden"
@@ -1529,7 +1362,6 @@ const CustomerContactDashboard = () => {
             const statusContacts = filteredContacts.filter(
               (c) => c.status === status
             );
-
             return (
               <motion.div
                 key={status}
@@ -1550,7 +1382,6 @@ const CustomerContactDashboard = () => {
                     </div>
                   </div>
                 </div>
-
                 {/* Contact Cards in Column */}
                 <div className="p-4 space-y-3 min-h-[400px] max-h-[600px] overflow-y-auto">
                   <AnimatePresence mode="popLayout">
@@ -1598,7 +1429,6 @@ const CustomerContactDashboard = () => {
             );
           })}
         </motion.div>
-
         {/* Detail Cards Section - แสดงรายละเอียดทั้งหมด */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1610,12 +1440,10 @@ const CustomerContactDashboard = () => {
             <UserCheck className="w-7 h-7 text-indigo-600" />
             รายละเอียด Agents ทั้งหมด
           </h2>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {displayAgents.map((contact) => {
               const config = STATUS_CONFIG[contact.status];
               const StatusIcon = config.icon;
-
               return (
                 <motion.div
                   key={contact.id}
@@ -1630,7 +1458,6 @@ const CustomerContactDashboard = () => {
                       {contact.name}
                     </p>
                   </div>
-
                   {/* Contact Info */}
                   <div className="p-4">
                     {/* Phone Number - เบอร์ที่ติดต่อกับลูกค้า */}
@@ -1639,7 +1466,6 @@ const CustomerContactDashboard = () => {
                         {contact.phone}
                       </p>
                     </div>
-
                     {/* Status - จาก API */}
                     <div className="mb-3">
                       <p className="text-xs text-gray-400 text-center mb-2">
@@ -1659,7 +1485,6 @@ const CustomerContactDashboard = () => {
               );
             })}
           </div>
-
           {displayAgents.length === 0 && (
             <div className="text-center py-12 text-gray-400">
               <AlertCircle className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -1668,7 +1493,6 @@ const CustomerContactDashboard = () => {
             </div>
           )}
         </motion.div>
-
         {/* Call Log Matrix */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1682,7 +1506,6 @@ const CustomerContactDashboard = () => {
               ตารางบันทึกการโทรตามช่วงเวลา
             </h2>
           </div>
-
           <div className="px-6 py-4 bg-white border-b border-gray-200 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3 text-sm text-gray-600">
               <Calendar className="w-4 h-4 text-indigo-600" />
@@ -1717,7 +1540,6 @@ const CustomerContactDashboard = () => {
               />
             </div>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full border border-gray-400 text-sm border-collapse">
               <thead>
@@ -1814,7 +1636,6 @@ const CustomerContactDashboard = () => {
               </tbody>
             </table>
           </div>
-
           <div className="bg-gray-50 px-6 py-4 border-t-2 border-gray-200">
             <div className="flex flex-col gap-2 text-sm text-gray-600 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
@@ -1842,7 +1663,6 @@ const CustomerContactDashboard = () => {
             </div>
           </div>
         </motion.div>
-
         {/* Contact History Table - ตารางประวัติการติดต่อลูกค้า */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1856,7 +1676,6 @@ const CustomerContactDashboard = () => {
               รายการติดต่อลูกค้า
             </h2>
           </div>
-
           {/* Statistics Cards */}
           <div className="px-6 py-4 bg-gray-50">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -1882,7 +1701,6 @@ const CustomerContactDashboard = () => {
               </div>
             </div>
           </div>
-
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -1998,7 +1816,6 @@ const CustomerContactDashboard = () => {
               </tbody>
             </table>
           </div>
-
           {filteredFilmContacts.length > 0 && (
             <div className="bg-gray-50 px-6 py-4 border-t-2 border-gray-200">
               <div className="text-sm text-gray-600">
@@ -2023,7 +1840,6 @@ const CustomerContactDashboard = () => {
               ตารางสรุป call_AI จาก Google Sheets
             </h2>
           </div>
-
           {/* Loading State */}
           {googleSheetsLoading && (
             <div className="flex items-center justify-center py-12">
@@ -2033,7 +1849,6 @@ const CustomerContactDashboard = () => {
               </span>
             </div>
           )}
-
           {/* Table */}
           {!googleSheetsLoading && googleSheetsData.length > 0 && (
             <>
@@ -2091,7 +1906,6 @@ const CustomerContactDashboard = () => {
                   </tbody>
                 </table>
               </div>
-
               {/* Pagination Controls */}
               {(() => {
                 const filteredData = googleSheetsData;
@@ -2118,7 +1932,6 @@ const CustomerContactDashboard = () => {
                           </span>{" "}
                           รายการ
                         </div>
-
                         {/* Pagination Buttons */}
                         <div className="flex items-center gap-2">
                           {/* Previous Button */}
@@ -2138,7 +1951,6 @@ const CustomerContactDashboard = () => {
                             <ChevronLeft className="w-4 h-4" />
                             ก่อนหน้า
                           </motion.button>
-
                           {/* Page Numbers */}
                           <div className="flex items-center gap-1">
                             {(() => {
@@ -2147,7 +1959,6 @@ const CustomerContactDashboard = () => {
                               );
                               const pageButtons = [];
                               const maxVisiblePages = 5;
-
                               let startPage = Math.max(
                                 1,
                                 currentPage - Math.floor(maxVisiblePages / 2)
@@ -2156,7 +1967,6 @@ const CustomerContactDashboard = () => {
                                 totalPages,
                                 startPage + maxVisiblePages - 1
                               );
-
                               // Adjust startPage if we're near the end
                               if (endPage - startPage < maxVisiblePages - 1) {
                                 startPage = Math.max(
@@ -2164,7 +1974,6 @@ const CustomerContactDashboard = () => {
                                   endPage - maxVisiblePages + 1
                                 );
                               }
-
                               // First page
                               if (startPage > 1) {
                                 pageButtons.push(
@@ -2189,7 +1998,6 @@ const CustomerContactDashboard = () => {
                                   );
                                 }
                               }
-
                               // Page numbers
                               for (let i = startPage; i <= endPage; i++) {
                                 pageButtons.push(
@@ -2208,7 +2016,6 @@ const CustomerContactDashboard = () => {
                                   </motion.button>
                                 );
                               }
-
                               // Last page
                               if (endPage < totalPages) {
                                 if (endPage < totalPages - 1) {
@@ -2233,11 +2040,9 @@ const CustomerContactDashboard = () => {
                                   </motion.button>
                                 );
                               }
-
                               return pageButtons;
                             })()}
                           </div>
-
                           {/* Next Button */}
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -2272,7 +2077,6 @@ const CustomerContactDashboard = () => {
               })()}
             </>
           )}
-
           {/* Empty State */}
           {!googleSheetsLoading &&
             (() => {
@@ -2289,7 +2093,6 @@ const CustomerContactDashboard = () => {
                 )
               );
             })()}
-
           {/* Table Footer with Summary */}
           {!googleSheetsLoading &&
             (() => {
@@ -2332,7 +2135,6 @@ const CustomerContactDashboard = () => {
             })()}
         </motion.div>
       </div>
-
       {/* Film Contact Detail Modal */}
       <AnimatePresence>
         {isFilmModalOpen && selectedFilmContact && (
@@ -2373,7 +2175,6 @@ const CustomerContactDashboard = () => {
                   </svg>
                 </button>
               </div>
-
               <div className="p-8 overflow-y-auto max-h-[calc(90vh-140px)]">
                 <div className="space-y-6">
                   <div className="bg-slate-50 rounded-2xl p-6">
@@ -2384,7 +2185,6 @@ const CustomerContactDashboard = () => {
                       {selectedFilmContact.customerName}
                     </p>
                   </div>
-
                   <div className="bg-slate-50 rounded-2xl p-6">
                     <label className="block text-base font-bold text-gray-800 mb-3">
                       เบอร์โทรศัพท์
@@ -2393,7 +2193,6 @@ const CustomerContactDashboard = () => {
                       {selectedFilmContact.phoneNumber}
                     </p>
                   </div>
-
                   {selectedFilmContact.product && (
                     <div className="bg-slate-50 rounded-2xl p-6">
                       <label className="block text-base font-bold text-gray-800 mb-3">
@@ -2404,7 +2203,6 @@ const CustomerContactDashboard = () => {
                       </p>
                     </div>
                   )}
-
                   <div className="bg-slate-50 rounded-2xl p-6">
                     <label className="block text-base font-bold text-gray-800 mb-3">
                       วันที่ติดต่อ
@@ -2413,7 +2211,6 @@ const CustomerContactDashboard = () => {
                       {formatDate(selectedFilmContact.contactDate)}
                     </p>
                   </div>
-
                   <div className="bg-slate-50 rounded-2xl p-6">
                     <label className="block text-base font-bold text-gray-800 mb-3">
                       ติดตามครั้งถัดไป
@@ -2425,7 +2222,6 @@ const CustomerContactDashboard = () => {
                       className="w-full bg-white rounded-xl px-4 py-3 border-2 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none text-gray-900"
                     />
                   </div>
-
                   <div className="bg-slate-50 rounded-2xl p-6">
                     <label className="block text-base font-bold text-gray-800 mb-3">
                       หมายเหตุ
@@ -2438,7 +2234,6 @@ const CustomerContactDashboard = () => {
                       className="w-full bg-white rounded-xl p-4 border-2 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none text-gray-900 resize-none"
                     />
                   </div>
-
                   <button
                     onClick={handleSaveFilmContact}
                     disabled={isSavingRemarks}
@@ -2462,7 +2257,6 @@ const CustomerContactDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Toast Notification */}
       <AnimatePresence>
         {showToast && (
@@ -2505,7 +2299,6 @@ const CustomerContactDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Call Input Modal */}
       <AnimatePresence>
         {callInputModal.isOpen && (
@@ -2528,7 +2321,6 @@ const CustomerContactDashboard = () => {
               <h3 className="text-2xl font-bold text-gray-800 mb-6">
                 บันทึกการโทร
               </h3>
-
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -2538,7 +2330,6 @@ const CustomerContactDashboard = () => {
                     </span>
                   </label>
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     ช่วงเวลา:{" "}
@@ -2547,7 +2338,6 @@ const CustomerContactDashboard = () => {
                     </span>
                   </label>
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     จำนวนโทรออก
@@ -2566,7 +2356,6 @@ const CustomerContactDashboard = () => {
                     placeholder="0"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     จำนวนที่นับ (สำเร็จ)
@@ -2586,7 +2375,6 @@ const CustomerContactDashboard = () => {
                   />
                 </div>
               </div>
-
               <div className="flex gap-3">
                 <button
                   onClick={() =>
@@ -2611,7 +2399,6 @@ const CustomerContactDashboard = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* Contact Form Modal */}
       <CustomerContactForm
         isOpen={isFormOpen}
@@ -2634,5 +2421,4 @@ const CustomerContactDashboard = () => {
     </div>
   );
 };
-
-export default CustomerContactDashboard;
+export default CustomerContactDashboard;

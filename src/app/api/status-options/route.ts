@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Pool } from "pg";
-
 // Create PostgreSQL connection pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,7 +8,6 @@ const pool = new Pool({
       ? { rejectUnauthorized: false }
       : false,
 });
-
 export async function GET(request: NextRequest) {
   try {
     // Check if DATABASE_URL is configured
@@ -24,11 +22,9 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Test connection first
     const testResult = await pool.query("SELECT 1 as test");
     console.log("✅ Database connection successful");
-
     // Try multiple schema name formats
     let query = `
       SELECT 
@@ -42,7 +38,6 @@ export async function GET(request: NextRequest) {
       WHERE is_active = true
       ORDER BY display_order ASC
     `;
-
     let result;
     try {
       // Try without schema first
@@ -93,14 +88,12 @@ export async function GET(request: NextRequest) {
         );
       }
     }
-
     // Transform data to match the format expected by the frontend
     const statusOptions = result.rows.map((row) => ({
       value: row.value,
       label: row.label,
       color: row.color,
     }));
-
     return NextResponse.json({
       success: true,
       data: statusOptions,
@@ -114,7 +107,6 @@ export async function GET(request: NextRequest) {
       detail: error.detail,
       stack: error.stack?.split("\n").slice(0, 3).join("\n"),
     });
-
     return NextResponse.json(
       {
         success: false,
@@ -126,16 +118,13 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 // POST method for adding new status option
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, data } = body;
-
     if (action === "create") {
       const { value, label, color, display_order } = data;
-
       // Insert new status option
       const query = `
         INSERT INTO "BJH-Server".status_options 
@@ -143,14 +132,12 @@ export async function POST(request: NextRequest) {
         VALUES ($1, $2, $3, $4, true)
         RETURNING *
       `;
-
       const result = await pool.query(query, [
         value,
         label,
         color,
         display_order || 999,
       ]);
-
       return NextResponse.json({
         success: true,
         data: result.rows[0],
@@ -158,7 +145,6 @@ export async function POST(request: NextRequest) {
       });
     } else if (action === "update") {
       const { id, value, label, color, display_order } = data;
-
       // Update existing status option
       const query = `
         UPDATE "BJH-Server".status_options 
@@ -166,7 +152,6 @@ export async function POST(request: NextRequest) {
         WHERE id = $5
         RETURNING *
       `;
-
       const result = await pool.query(query, [
         value,
         label,
@@ -174,7 +159,6 @@ export async function POST(request: NextRequest) {
         display_order,
         id,
       ]);
-
       return NextResponse.json({
         success: true,
         data: result.rows[0],
@@ -182,7 +166,6 @@ export async function POST(request: NextRequest) {
       });
     } else if (action === "delete") {
       const { id } = data;
-
       // Soft delete - set is_active to false
       const query = `
         UPDATE "BJH-Server".status_options 
@@ -190,9 +173,7 @@ export async function POST(request: NextRequest) {
         WHERE id = $1
         RETURNING *
       `;
-
       const result = await pool.query(query, [id]);
-
       return NextResponse.json({
         success: true,
         data: result.rows[0],
@@ -218,4 +199,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

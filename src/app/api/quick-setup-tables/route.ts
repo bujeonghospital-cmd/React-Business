@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 /**
  * GET /api/quick-setup-tables
  * สร้างตารางแบบง่ายๆ เฉพาะตารางหลัก (ไม่รวม views และ indexes ที่ซับซ้อน)
@@ -9,13 +8,11 @@ export async function GET(request: NextRequest) {
   let client;
   try {
     console.log("📋 Quick setup - Creating basic tables...");
-
     // Test connection first
     console.log("🔗 Testing database connection...");
     client = await pool.connect();
     const testResult = await client.query("SELECT NOW()");
     console.log("✅ Database connected:", testResult.rows[0].now);
-
     // Create surgery_schedule table
     console.log("📊 Creating surgery_schedule table...");
     await client.query(`
@@ -38,7 +35,6 @@ export async function GET(request: NextRequest) {
       );
     `);
     console.log("✅ surgery_schedule table created");
-
     // Create basic indexes for surgery_schedule
     console.log("📑 Creating indexes for surgery_schedule...");
     await client.query(`
@@ -50,7 +46,6 @@ export async function GET(request: NextRequest) {
         ON surgery_schedule(surgery_date);
     `);
     console.log("✅ Indexes created for surgery_schedule");
-
     // Create sale_incentive table
     console.log("💰 Creating sale_incentive table...");
     await client.query(`
@@ -70,7 +65,6 @@ export async function GET(request: NextRequest) {
       );
     `);
     console.log("✅ sale_incentive table created");
-
     // Create basic indexes for sale_incentive
     console.log("📑 Creating indexes for sale_incentive...");
     await client.query(`
@@ -82,7 +76,6 @@ export async function GET(request: NextRequest) {
         ON sale_incentive(year, month);
     `);
     console.log("✅ Indexes created for sale_incentive");
-
     // Create trigger function for updated_at
     console.log("🔧 Creating triggers...");
     await client.query(`
@@ -94,7 +87,6 @@ export async function GET(request: NextRequest) {
       END;
       $$ LANGUAGE 'plpgsql';
     `);
-
     // Create triggers
     await client.query(`
       DROP TRIGGER IF EXISTS trigger_update_surgery_schedule_updated_at 
@@ -104,7 +96,6 @@ export async function GET(request: NextRequest) {
         FOR EACH ROW 
         EXECUTE FUNCTION update_updated_at_column();
     `);
-
     await client.query(`
       DROP TRIGGER IF EXISTS trigger_update_sale_incentive_updated_at 
         ON sale_incentive;
@@ -113,7 +104,6 @@ export async function GET(request: NextRequest) {
         FOR EACH ROW 
         EXECUTE FUNCTION update_updated_at_column();
     `);
-
     // Create trigger for auto-populate day, month, year
     await client.query(`
       CREATE OR REPLACE FUNCTION extract_date_parts_sale_incentive()
@@ -126,7 +116,6 @@ export async function GET(request: NextRequest) {
       END;
       $$ LANGUAGE 'plpgsql';
     `);
-
     await client.query(`
       DROP TRIGGER IF EXISTS trigger_extract_date_parts_sale_incentive 
         ON sale_incentive;
@@ -135,11 +124,8 @@ export async function GET(request: NextRequest) {
         FOR EACH ROW 
         EXECUTE FUNCTION extract_date_parts_sale_incentive();
     `);
-
     console.log("✅ Triggers created");
-
     console.log("✅ All tables created successfully!");
-
     return NextResponse.json({
       success: true,
       message: "Database tables created successfully",
@@ -167,7 +153,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error: any) {
     console.error("❌ Error:", error);
-
     if (error.code === "42P07") {
       return NextResponse.json({
         success: true,
@@ -175,7 +160,6 @@ export async function GET(request: NextRequest) {
         note: "Tables were already created previously",
       });
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -190,4 +174,4 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   }
-}
+}

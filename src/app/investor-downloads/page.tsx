@@ -1,15 +1,12 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from "react";
 import { Download, FileText, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-
 // Custom hook for scroll animations
 const useScrollAnimation = (threshold = 0.1) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -19,17 +16,13 @@ const useScrollAnimation = (threshold = 0.1) => {
       },
       { threshold }
     );
-
     if (ref.current) {
       observer.observe(ref.current);
     }
-
     return () => observer.disconnect();
   }, [threshold]);
-
   return { ref, isVisible };
 };
-
 // Annual Report Card Component
 interface ReportCardProps {
   year: string;
@@ -38,7 +31,6 @@ interface ReportCardProps {
   pdfPath?: string | null;
   index: number;
 }
-
 const ReportCard: React.FC<ReportCardProps> = ({
   year,
   title,
@@ -47,13 +39,11 @@ const ReportCard: React.FC<ReportCardProps> = ({
   index,
 }) => {
   const isPdfAvailable = Boolean(pdfPath);
-
   const handlePdfClick = () => {
     if (pdfPath) {
       window.open(pdfPath, "_blank");
     }
   };
-
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (pdfPath) {
@@ -65,7 +55,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
       document.body.removeChild(link);
     }
   };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -146,7 +135,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
           </div>
         )}
       </div>
-
       {/* Content */}
       <div className="p-4">
         <h3
@@ -174,7 +162,6 @@ const ReportCard: React.FC<ReportCardProps> = ({
     </motion.div>
   );
 };
-
 // Form 56-1 Download Item Component
 interface DownloadItemProps {
   title: string;
@@ -185,7 +172,6 @@ interface DownloadItemProps {
   onSelect?: (selected: boolean) => void;
   filePath?: string;
 }
-
 const DownloadItem: React.FC<DownloadItemProps> = ({
   title,
   buttonText,
@@ -198,13 +184,11 @@ const DownloadItem: React.FC<DownloadItemProps> = ({
   const handleSelectChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSelect?.(e.target.checked);
   };
-
   const handleDownload = () => {
     if (filePath) {
       window.open(filePath, "_blank");
     }
   };
-
   return (
     <motion.div
       initial={{ opacity: 0, x: -30 }}
@@ -253,16 +237,13 @@ const DownloadItem: React.FC<DownloadItemProps> = ({
     </motion.div>
   );
 };
-
 // Main Page Component
 export default function InvestorDownloadsPage() {
   const [isHeroVisible, setIsHeroVisible] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
-
   useEffect(() => {
     setIsHeroVisible(true);
   }, []);
-
   const handleSelectItem = (index: number, selected: boolean) => {
     const newSelectedItems = new Set(selectedItems);
     if (selected) {
@@ -272,7 +253,6 @@ export default function InvestorDownloadsPage() {
     }
     setSelectedItems(newSelectedItems);
   };
-
   const handleSelectAll = () => {
     if (selectedItems.size === form561Items.length) {
       setSelectedItems(new Set());
@@ -280,13 +260,11 @@ export default function InvestorDownloadsPage() {
       setSelectedItems(new Set(form561Items.map((_, index) => index)));
     }
   };
-
   const handleDownloadSelected = () => {
     const selectedFiles = form561Items.filter((_, index) =>
       selectedItems.has(index)
     );
     if (selectedFiles.length === 0) return;
-
     // Show loading state or confirmation
     selectedFiles.forEach((item, index) => {
       setTimeout(() => {
@@ -295,13 +273,11 @@ export default function InvestorDownloadsPage() {
         }
       }, index * 500); // Delay each download by 500ms to prevent browser blocking
     });
-
     // Show success message
     setTimeout(() => {
       alert(`เริ่มดาวน์โหลด ${selectedFiles.length} ไฟล์แล้ว`);
     }, 100);
   };
-
   // Annual Reports data with PDF paths and thumbnails
   const annualReports = [
     {
@@ -372,7 +348,6 @@ export default function InvestorDownloadsPage() {
     },
     { year: "2556", title: "รายงานประจำปี 2556" },
   ];
-
   // Mock data for Form 56-1 and Shareholder Meeting Documents
   const form561Items = [
     {
@@ -439,7 +414,6 @@ export default function InvestorDownloadsPage() {
       filePath: "/downloads/annual-reports/form-56-1-2563-alt.pdf",
     },
   ];
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white mt-5">
       {/* Hero Section */}
@@ -454,7 +428,6 @@ export default function InvestorDownloadsPage() {
           <div className="absolute inset-0 bg-[url('/images/pattern.svg')] opacity-10" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
         </div>
-
         {/* Animated circles in background */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
@@ -483,7 +456,6 @@ export default function InvestorDownloadsPage() {
             className="absolute -bottom-1/2 -right-1/4 w-96 h-96 bg-teal-300 rounded-full blur-3xl"
           />
         </div>
-
         {/* Content */}
         <div className="relative h-full flex items-center justify-center px-4">
           <div className="max-w-4xl mx-auto text-center text-white z-10">
@@ -509,7 +481,6 @@ export default function InvestorDownloadsPage() {
             </motion.p>
           </div>
         </div>
-
         {/* Image placeholder indicator */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
@@ -520,7 +491,6 @@ export default function InvestorDownloadsPage() {
           📸 รอใส่รูปภาพ พื้นหลัง
         </motion.div>
       </motion.div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-16 space-y-16">
         {/* รายงานประจำปี Section */}
@@ -542,7 +512,6 @@ export default function InvestorDownloadsPage() {
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full" />
             </motion.h2>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {annualReports.map((report, index) => (
               <ReportCard
@@ -556,7 +525,6 @@ export default function InvestorDownloadsPage() {
             ))}
           </div>
         </motion.section>
-
         {/* แบบรายงาน 56-1 Section */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -576,7 +544,6 @@ export default function InvestorDownloadsPage() {
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full" />
             </motion.h2>
           </div>
-
           {/* Selection Controls */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -625,7 +592,6 @@ export default function InvestorDownloadsPage() {
               </div>
             </div>
           </motion.div>
-
           <div className="space-y-4">
             {form561Items.map((item, index) => (
               <DownloadItem
@@ -641,7 +607,6 @@ export default function InvestorDownloadsPage() {
             ))}
           </div>
         </motion.section>
-
         {/* IR NEWSLETTER Section - TODO */}
         {/* <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -662,7 +627,6 @@ export default function InvestorDownloadsPage() {
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full" />
             </motion.h2>
           </div>
-
           <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-12 border-2 border-dashed border-gray-300 overflow-hidden">
             <div className="absolute top-4 right-4 bg-orange-400 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg animate-pulse">
               🚧 ยังไม่ต้องทำ
@@ -676,7 +640,6 @@ export default function InvestorDownloadsPage() {
             </div>
           </div>
         </motion.section> */}
-
         {/* INVESTOR KITS Section - TODO */}
         {/* <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -697,7 +660,6 @@ export default function InvestorDownloadsPage() {
               <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full" />
             </motion.h2>
           </div>
-
           <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-12 border-2 border-dashed border-gray-300 overflow-hidden">
             <div className="absolute top-4 right-4 bg-orange-400 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg animate-pulse">
               🚧 ยังไม่ต้องทำ
@@ -714,4 +676,4 @@ export default function InvestorDownloadsPage() {
       </div>
     </div>
   );
-}
+}

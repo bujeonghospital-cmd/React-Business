@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * API สำหรับแสดงรายการ Paths ทั้งหมดในโปรเจ็ค
  * เมื่อเข้า http://localhost:3000/api/API-all-log
  * จะแสดงรายการ paths ทั้งหมดที่มีในโปรเจ็ค
  */
-
 interface PathInfo {
   path: string;
   type: "page" | "api" | "fullscreen";
   category: string;
   description: string;
 }
-
 export async function GET(request: NextRequest) {
   try {
     // รายการ paths ทั้งหมดในโปรเจ็ค
@@ -43,7 +40,6 @@ export async function GET(request: NextRequest) {
         category: "หน้าหลัก",
         description: "บริษัทในเครือ",
       },
-
       // ผลิตภัณฑ์และบริการ
       {
         path: "/our-services",
@@ -69,7 +65,6 @@ export async function GET(request: NextRequest) {
         category: "ผลิตภัณฑ์และบริการ",
         description: "รายละเอียดผลิตภัณฑ์",
       },
-
       // โรงงานและคุณภาพ
       {
         path: "/factory-technology",
@@ -89,7 +84,6 @@ export async function GET(request: NextRequest) {
         category: "โรงงานและคุณภาพ",
         description: "ใบรับรองมาตรฐาน",
       },
-
       // นักลงทุนสัมพันธ์
       {
         path: "/investor-stock-price",
@@ -127,7 +121,6 @@ export async function GET(request: NextRequest) {
         category: "นักลงทุนสัมพันธ์",
         description: "ติดต่อนักลงทุนสัมพันธ์",
       },
-
       // ข่าวสารและกิจกรรม
       {
         path: "/news-events",
@@ -153,7 +146,6 @@ export async function GET(request: NextRequest) {
         category: "ข่าวสาร",
         description: "รางวัลและความสำเร็จ",
       },
-
       // การตลาดและโฆษณา
       {
         path: "/facebook-ads-dashboard",
@@ -179,7 +171,6 @@ export async function GET(request: NextRequest) {
         category: "การตลาด",
         description: "Dashboard Google Ads",
       },
-
       // การจัดการลูกค้า
       {
         path: "/contact-dashboard",
@@ -199,7 +190,6 @@ export async function GET(request: NextRequest) {
         category: "จัดการลูกค้า",
         description: "ฟอร์มติดต่อสอบถาม",
       },
-
       // อื่นๆ
       {
         path: "/careers",
@@ -231,7 +221,6 @@ export async function GET(request: NextRequest) {
         category: "อื่นๆ",
         description: "OAuth callback",
       },
-
       // Fullscreen Pages
       {
         path: "/customer-all-data",
@@ -251,7 +240,6 @@ export async function GET(request: NextRequest) {
         category: "Fullscreen",
         description: "แสดงประสิทธิภาพตารางผ่าตัด",
       },
-
       // API Routes - การจัดการข้อมูลลูกค้า
       {
         path: "/api/customer-contacts",
@@ -271,7 +259,6 @@ export async function GET(request: NextRequest) {
         category: "Customer Data",
         description: "ดึงข้อมูล contacts จาก Film system",
       },
-
       // Google Sheets Integration
       {
         path: "/api/google-sheets-all-data",
@@ -321,7 +308,6 @@ export async function GET(request: NextRequest) {
         category: "Google Sheets",
         description: "บันทึกและดึง log การโทร AI",
       },
-
       // Yalecom (โทรศัพท์)
       {
         path: "/api/yalecom/robocall",
@@ -347,7 +333,6 @@ export async function GET(request: NextRequest) {
         category: "Yalecom",
         description: "ดึงข้อมูล queue",
       },
-
       // Webhooks
       {
         path: "/api/webhooks/yalecom-call",
@@ -361,7 +346,6 @@ export async function GET(request: NextRequest) {
         category: "Webhooks",
         description: "Webhook จัดการตารางผ่าตัด",
       },
-
       // การบันทึกการโทร
       {
         path: "/api/API-all-log",
@@ -399,7 +383,6 @@ export async function GET(request: NextRequest) {
         category: "Call Logging",
         description: "ดึงสรุปการโทรรายวัน",
       },
-
       // ตารางผ่าตัด
       {
         path: "/api/surgery-schedule",
@@ -413,7 +396,6 @@ export async function GET(request: NextRequest) {
         category: "Surgery",
         description: "ดึงตารางผ่าตัดจาก Python API",
       },
-
       // Facebook Ads
       {
         path: "/api/facebook-ads",
@@ -451,7 +433,6 @@ export async function GET(request: NextRequest) {
         category: "Facebook Ads",
         description: "ทดสอบ Facebook API",
       },
-
       // Google Ads
       {
         path: "/api/google-ads",
@@ -459,7 +440,6 @@ export async function GET(request: NextRequest) {
         category: "Google Ads",
         description: "ดึงข้อมูลโฆษณา Google",
       },
-
       // Film Data
       {
         path: "/api/film-data",
@@ -473,7 +453,6 @@ export async function GET(request: NextRequest) {
         category: "Film Data",
         description: "ดึงข้อมูล Film Development จาก Python",
       },
-
       // อื่นๆ
       {
         path: "/api/jobs",
@@ -512,7 +491,6 @@ export async function GET(request: NextRequest) {
         description: "เข้าสู่ระบบ",
       },
     ];
-
     // จัดกลุ่มตาม category
     const groupedPaths = allPaths.reduce((acc, path) => {
       if (!acc[path.category]) {
@@ -521,7 +499,6 @@ export async function GET(request: NextRequest) {
       acc[path.category].push(path);
       return acc;
     }, {} as Record<string, PathInfo[]>);
-
     // สรุปข้อมูล
     const summary = {
       total: allPaths.length,
@@ -532,7 +509,6 @@ export async function GET(request: NextRequest) {
       },
       categories: Object.keys(groupedPaths).length,
     };
-
     return NextResponse.json(
       {
         success: true,
@@ -556,7 +532,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 /**
  * OPTIONS - CORS preflight
  */
@@ -569,4 +544,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
-}
+}

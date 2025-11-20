@@ -1,18 +1,15 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-
 type MenuItem =
   | { type: "link"; label: string; href: string; right?: string }
   | { type: "action"; label: string; onClick: () => void; right?: string }
   | { type: "submenu"; label: string; items: MenuItem[] };
-
 interface DevMiniToolbarProps {
   position?: "bottom-left" | "bottom-right";
   storageKey?: string; // key สำหรับจำค่าเปิด/ปิด
   items?: MenuItem[];
 }
-
 const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
   position = "bottom-left",
   storageKey = "dev_toolbar_visible",
@@ -24,19 +21,16 @@ const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const path = usePathname();
-
   // ปิดเมนูเมื่อเปลี่ยน route
   useEffect(() => {
     setOpen(false);
     setSubmenuIndex(null);
   }, [path]);
-
   // โหลดสถานะแสดง/ซ่อนจาก localStorage
   useEffect(() => {
     const v = localStorage.getItem(storageKey);
     if (v === "hidden") setHidden(true);
   }, [storageKey]);
-
   // กดข้างนอกเพื่อปิด
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
@@ -50,7 +44,6 @@ const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
     document.addEventListener("mousedown", onDocClick);
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
-
   // คีย์ลัด toggle (Ctrl+;)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -66,7 +59,6 @@ const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [storageKey]);
-
   const defaultItems: MenuItem[] = [
     {
       type: "action",
@@ -110,14 +102,10 @@ const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
       ],
     },
   ];
-
   const data = items ?? defaultItems;
-
   if (hidden) return null;
-
   const containerPos =
     position === "bottom-left" ? "left-4 bottom-4" : "right-4 bottom-4";
-
   return (
     <div className={`fixed ${containerPos} z-[9999] select-none`}>
       {/* ปุ่มลอย */}
@@ -133,7 +121,6 @@ const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
       >
         N
       </button>
-
       {/* เมนู */}
       {open && (
         <div
@@ -231,5 +218,4 @@ const DevMiniToolbar: React.FC<DevMiniToolbarProps> = ({
     </div>
   );
 };
-
-export default DevMiniToolbar;
+export default DevMiniToolbar;

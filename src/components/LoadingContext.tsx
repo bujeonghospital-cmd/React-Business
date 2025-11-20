@@ -5,7 +5,6 @@ import React, {
   useState,
   useCallback,
 } from "react";
-
 type LoadingCtx = {
   loading: boolean;
   isLoading: boolean;
@@ -13,12 +12,9 @@ type LoadingCtx = {
   hideLoading: () => void;
   withLoading: <T>(fn: () => Promise<T>) => Promise<T>;
 };
-
 const Ctx = createContext<LoadingCtx | null>(null);
-
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
-
   const showLoading = useCallback(() => setLoading(true), []);
   const hideLoading = useCallback(() => setLoading(false), []);
   const withLoading = useCallback(async <T,>(fn: () => Promise<T>) => {
@@ -29,7 +25,6 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, []);
-
   const value = useMemo(
     () => ({
       loading,
@@ -40,12 +35,10 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
     }),
     [loading, showLoading, hideLoading, withLoading]
   );
-
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
-
 export function useLoading() {
   const ctx = useContext(Ctx);
   if (!ctx) throw new Error("useLoading must be used within LoadingProvider");
   return ctx;
-}
+}

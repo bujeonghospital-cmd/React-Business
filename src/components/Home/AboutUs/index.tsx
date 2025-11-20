@@ -3,20 +3,16 @@ import Link from "next/link";
 import { Icon } from "@iconify/react";
 import { useEffect, useRef } from "react";
 import "animate.css";
-
 const Aboutus = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
-
   useEffect(() => {
     const root = sectionRef.current;
     if (!root) return;
-
     // เติม prefix ให้ animate.css อัตโนมัติ และปล่อย fx-* ตามเดิม
     const normalizeAni = (ani: string) => {
       const tokens = ani.trim().split(/\s+/).filter(Boolean);
       const out: string[] = [];
       let usesAnimate = false;
-
       tokens.forEach((t) => {
         if (t.startsWith("animate__")) {
           out.push(t);
@@ -40,18 +36,15 @@ const Aboutus = () => {
           out.push(t);
         }
       });
-
       if (usesAnimate && !out.includes("animate__animated")) {
         out.push("animate__animated");
       }
       return out;
     };
-
     const els = root.querySelectorAll<HTMLElement>("[data-ani]");
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-
     if (prefersReduced || !("IntersectionObserver" in window)) {
       els.forEach((el) => {
         const classes = normalizeAni(el.dataset.ani || "");
@@ -61,28 +54,23 @@ const Aboutus = () => {
       });
       return;
     }
-
     // ตรวจสอบว่าเป็นมือถือหรือไม่
     const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           const el = entry.target as HTMLElement;
           const classes = normalizeAni(el.dataset.ani || "");
           const hasPlayed = el.dataset.aniPlayed === "true";
-
           if (entry.isIntersecting) {
             // ถ้าเป็นมือถือและเล่นไปแล้ว ไม่เล่นอีก
             if (isMobile && hasPlayed) return;
-
             // รีสตาร์ทแอนิเมชันให้ชัวร์
             el.classList.remove(...classes);
             // force reflow (บางเบราว์เซอร์จำเป็นเพื่อเล่นใหม่)
             void el.offsetWidth;
             el.classList.add(...classes);
             el.classList.remove("opacity-0");
-
             // ทำเครื่องหมายว่าเล่นแล้ว (สำหรับมือถือ)
             if (isMobile) {
               el.dataset.aniPlayed = "true";
@@ -98,11 +86,9 @@ const Aboutus = () => {
       },
       { threshold: 0.35, rootMargin: "0px 0px -10% 0px" }
     );
-
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, []);
-
   return (
     <section
       ref={sectionRef}
@@ -110,7 +96,6 @@ const Aboutus = () => {
       className="about-bg-image relative bg-cover bg-center md:overflow-hidden dark:bg-neutral-900"
     >
       <div className="absolute inset-0 md:hidden pointer-events-none bg-gradient-to-r from-white/70 to-white/0 dark:from-black/50 dark:to-transparent" />
-
       <div className="relative mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8">
         <div className="grid min-w-0 grid-cols-12 items-center min-h-[60svh] py-12 sm:py-16 lg:py-20">
           <div className="col-span-12 md:col-start-1 md:col-end-8 lg:col-start-1 lg:col-end-7 xl:col-start-1 xl:col-end-7 min-w-0">
@@ -127,7 +112,6 @@ const Aboutus = () => {
                 className="fx-underline mt-2 block opacity-0"
                 data-ani="fx-underline-in"
               />
-
               <p
                 className="mt-4 text-[clamp(1.1375rem,3.8vw,1.1875rem)] leading-7 break-words custom-Ash-gray dark:text-neutral-300 opacity-0"
                 data-ani="fx-subtle-in-up"
@@ -145,7 +129,6 @@ const Aboutus = () => {
                 พร้อมทั้งให้ความสำคัญกับ บรรจุภัณฑ์ที่เป็นมิตรกับสิ่งแวดล้อม
                 เพื่อการเติบโตอย่างยั่งยืน
               </p>
-
               {/* ลิงก์: เลื่อนเข้าขวา (ดีเลย์ต่อเนื่อง) */}
               <Link
                 href="/about-history"
@@ -158,7 +141,6 @@ const Aboutus = () => {
               </Link>
             </div>
           </div>
-
           {/* ช่องว่างขวา: แสดงเฉพาะ md+ */}
           <div className="hidden md:block md:col-span-5 lg:col-span-6 xl:col-span-6" />
         </div>
@@ -166,5 +148,4 @@ const Aboutus = () => {
     </section>
   );
 };
-
-export default Aboutus;
+export default Aboutus;

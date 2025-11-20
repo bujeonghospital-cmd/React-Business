@@ -1,13 +1,10 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-
 interface Action {
   action_type: string;
   value: string;
 }
-
 interface AdInsight {
   ad_id: string;
   ad_name: string;
@@ -25,39 +22,31 @@ interface AdInsight {
   date_start: string;
   date_stop: string;
 }
-
 interface ApiResponse {
   success: boolean;
   data: AdInsight[];
   error?: string;
   details?: any;
 }
-
 export default function FacebookAdsInsightsPage() {
   const [insights, setInsights] = useState<AdInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAd, setSelectedAd] = useState<AdInsight | null>(null);
-
   useEffect(() => {
     fetchInsights();
   }, []);
-
   const fetchInsights = async () => {
     try {
       setLoading(true);
       setError(null);
-
       const response = await fetch(
         "/api/facebook-ads-insights?level=ad&date_preset=today&fields=ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,actions&action_breakdowns=action_type"
       );
-
       const result: ApiResponse = await response.json();
-
       if (!response.ok || !result.success) {
         throw new Error(result.error || "ไม่สามารถดึงข้อมูลได้");
       }
-
       setInsights(result.data);
     } catch (err) {
       console.error("Error fetching insights:", err);
@@ -66,14 +55,12 @@ export default function FacebookAdsInsightsPage() {
       setLoading(false);
     }
   };
-
   const formatNumber = (value: string | number) => {
     const num = typeof value === "string" ? parseFloat(value) : value;
     return isNaN(num)
       ? "0"
       : num.toLocaleString("th-TH", { maximumFractionDigits: 2 });
   };
-
   const formatCurrency = (value: string | number) => {
     const num = typeof value === "string" ? parseFloat(value) : value;
     return isNaN(num)
@@ -83,22 +70,18 @@ export default function FacebookAdsInsightsPage() {
           maximumFractionDigits: 2,
         })}`;
   };
-
   const getTotalSpend = () => {
     return insights.reduce((sum, ad) => sum + parseFloat(ad.spend || "0"), 0);
   };
-
   const getTotalImpressions = () => {
     return insights.reduce(
       (sum, ad) => sum + parseInt(ad.impressions || "0"),
       0
     );
   };
-
   const getTotalClicks = () => {
     return insights.reduce((sum, ad) => sum + parseInt(ad.clicks || "0"), 0);
   };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
@@ -111,7 +94,6 @@ export default function FacebookAdsInsightsPage() {
       </div>
     );
   }
-
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -135,7 +117,6 @@ export default function FacebookAdsInsightsPage() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -150,7 +131,6 @@ export default function FacebookAdsInsightsPage() {
           </h1>
           <p className="text-gray-600">รายละเอียดข้อมูลโฆษณาแบบละเอียด</p>
         </motion.div>
-
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <motion.div
@@ -171,7 +151,6 @@ export default function FacebookAdsInsightsPage() {
               </div>
             </div>
           </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -190,7 +169,6 @@ export default function FacebookAdsInsightsPage() {
               </div>
             </div>
           </motion.div>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -210,7 +188,6 @@ export default function FacebookAdsInsightsPage() {
             </div>
           </motion.div>
         </div>
-
         {/* Ads Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -223,7 +200,6 @@ export default function FacebookAdsInsightsPage() {
               รายการโฆษณา ({insights.length})
             </h2>
           </div>
-
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -311,7 +287,6 @@ export default function FacebookAdsInsightsPage() {
             </table>
           </div>
         </motion.div>
-
         {/* Modal for Ad Details */}
         {selectedAd && (
           <motion.div
@@ -344,7 +319,6 @@ export default function FacebookAdsInsightsPage() {
                   </button>
                 </div>
               </div>
-
               <div className="p-6">
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-gray-50 rounded-lg p-4">
@@ -384,7 +358,6 @@ export default function FacebookAdsInsightsPage() {
                     </p>
                   </div>
                 </div>
-
                 {selectedAd.actions && selectedAd.actions.length > 0 && (
                   <div>
                     <h4 className="text-lg font-bold text-gray-800 mb-4">
@@ -407,7 +380,6 @@ export default function FacebookAdsInsightsPage() {
                     </div>
                   </div>
                 )}
-
                 {(!selectedAd.actions || selectedAd.actions.length === 0) && (
                   <div className="text-center py-8">
                     <p className="text-gray-400">ไม่มีข้อมูล Actions</p>
@@ -420,4 +392,4 @@ export default function FacebookAdsInsightsPage() {
       </div>
     </div>
   );
-}
+}

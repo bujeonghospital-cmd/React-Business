@@ -1,7 +1,5 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
-
 interface ResponsiveScaledCanvasProps {
   children: React.ReactNode;
   designWidth?: number; // ความกว้างออกแบบหลัก (Desktop)
@@ -9,7 +7,6 @@ interface ResponsiveScaledCanvasProps {
   maxScale?: number; // Scale สูงสุด
   enableMobileOptimization?: boolean; // เปิดใช้งานโหมดมือถือ
 }
-
 export default function ResponsiveScaledCanvas({
   children,
   designWidth = 1920,
@@ -21,21 +18,16 @@ export default function ResponsiveScaledCanvas({
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
-
   useEffect(() => {
     const updateScale = () => {
       if (!containerRef.current) return;
-
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-
       // ตรวจจับอุปกรณ์
       const mobileCheck = viewportWidth <= 768;
       const tabletCheck = viewportWidth > 768 && viewportWidth <= 1024;
-
       setIsMobile(mobileCheck);
       setIsTablet(tabletCheck);
-
       if (enableMobileOptimization) {
         if (mobileCheck) {
           // โหมดมือถือ: ใช้ Native Responsive (ไม่ Scale)
@@ -59,30 +51,24 @@ export default function ResponsiveScaledCanvas({
         const calculatedScale = Math.min(viewportWidth / designWidth, maxScale);
         setScale(Math.max(calculatedScale, minScale));
       }
-
       // ตั้งค่า Transform
       const scaledWidth = designWidth * scale;
       const scaledHeight = viewportHeight / scale;
-
       containerRef.current.style.transform = `scale(${scale})`;
       containerRef.current.style.transformOrigin = "top left";
       containerRef.current.style.width = `${designWidth}px`;
       containerRef.current.style.height = `${scaledHeight}px`;
     };
-
     // Initial update
     updateScale();
-
     // Update on resize
     window.addEventListener("resize", updateScale);
     window.addEventListener("orientationchange", updateScale);
-
     return () => {
       window.removeEventListener("resize", updateScale);
       window.removeEventListener("orientationchange", updateScale);
     };
   }, [designWidth, minScale, maxScale, enableMobileOptimization, scale]);
-
   return (
     <div
       ref={containerRef}
@@ -98,4 +84,4 @@ export default function ResponsiveScaledCanvas({
       {children}
     </div>
   );
-}
+}

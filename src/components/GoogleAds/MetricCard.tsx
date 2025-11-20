@@ -1,9 +1,7 @@
 // src/components/GoogleAds/MetricCard.tsx
 "use client";
-
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
-
 interface MetricCardProps {
   title: string;
   value: string | number;
@@ -15,7 +13,6 @@ interface MetricCardProps {
   color: "blue" | "green" | "purple" | "orange";
   index: number;
 }
-
 const colorClasses = {
   blue: {
     bg: "from-blue-500 to-blue-600",
@@ -42,7 +39,6 @@ const colorClasses = {
     iconBg: "bg-orange-100",
   },
 };
-
 export default function MetricCard({
   title,
   value,
@@ -52,7 +48,6 @@ export default function MetricCard({
   index,
 }: MetricCardProps) {
   const colors = colorClasses[color];
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -64,7 +59,6 @@ export default function MetricCard({
       <div
         className={`absolute inset-0 bg-gradient-to-br ${colors.bg} opacity-5`}
       />
-
       {/* Content */}
       <div className="relative p-6">
         <div className="flex items-start justify-between">
@@ -78,7 +72,6 @@ export default function MetricCard({
             >
               {value}
             </motion.p>
-
             {trend && (
               <div className="flex items-center mt-3">
                 <span
@@ -94,15 +87,13 @@ export default function MetricCard({
               </div>
             )}
           </div>
-
           <div className={`${colors.iconBg} p-3 rounded-xl`}>
             <Icon className={`w-6 h-6 ${colors.text}`} />
           </div>
         </div>
       </div>
-
       {/* Bottom accent */}
       <div className={`h-1 bg-gradient-to-r ${colors.bg}`} />
     </motion.div>
   );
-}
+}

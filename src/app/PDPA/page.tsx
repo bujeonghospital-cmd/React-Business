@@ -9,10 +9,8 @@ import {
   Users,
   ChevronRight,
 } from "lucide-react";
-
 export default function PDPAPage() {
   const [hoveredItem, setHoveredItem] = useState<number | null>(null);
-
   const pdpaDocuments = [
     {
       name: "นโยบายคุกกี้ (Cookies Policy)",
@@ -45,7 +43,6 @@ export default function PDPAPage() {
       description: "นโยบายการใช้กล้องวงจรปิดและการเก็บบันทึกภาพ",
     },
   ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50">
       {/* Header Section */}
@@ -59,7 +56,6 @@ export default function PDPAPage() {
             }}
           ></div>
         </div>
-
         <div className="relative max-w-7xl mx-auto px-6 py-16 sm:py-24">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-sm rounded-2xl mb-6 shadow-lg">
@@ -77,7 +73,6 @@ export default function PDPAPage() {
             </p>
           </div>
         </div>
-
         {/* Wave decoration */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg viewBox="0 0 1440 100" className="w-full h-auto">
@@ -89,7 +84,6 @@ export default function PDPAPage() {
           </svg>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         {/* Info Cards */}
@@ -105,7 +99,6 @@ export default function PDPAPage() {
               เราใช้มาตรการรักษาความปลอดภัยที่เหมาะสมเพื่อปกป้องข้อมูลส่วนบุคคลของคุณ
             </p>
           </div>
-
           <div className="bg-white rounded-xl p-6 shadow-sm border border-red-100 hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
               <Lock className="w-6 h-6 text-red-600" />
@@ -117,7 +110,6 @@ export default function PDPAPage() {
               คุณมีสิทธิ์ทราบว่าเราเก็บรวบรวมและใช้ข้อมูลของคุณอย่างไร
             </p>
           </div>
-
           <div className="bg-white rounded-xl p-6 shadow-sm border border-red-100 hover:shadow-md transition-shadow">
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
               <Users className="w-6 h-6 text-red-600" />
@@ -130,7 +122,6 @@ export default function PDPAPage() {
             </p>
           </div>
         </div>
-
         {/* Documents Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-red-100 overflow-hidden">
           <div className="bg-gradient-to-r from-red-50 to-white px-8 py-6 border-b border-red-100">
@@ -142,7 +133,6 @@ export default function PDPAPage() {
               ดาวน์โหลดเอกสารและนโยบายที่เกี่ยวข้องกับการคุ้มครองข้อมูลส่วนบุคคล
             </p>
           </div>
-
           <div className="p-8">
             <div className="space-y-4">
               {pdpaDocuments.map((doc, index) => {
@@ -174,7 +164,6 @@ export default function PDPAPage() {
                           }`}
                         />
                       </div>
-
                       <div className="flex-1 min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-red-600 transition-colors">
                           {doc.name}
@@ -183,7 +172,6 @@ export default function PDPAPage() {
                           {doc.description}
                         </p>
                       </div>
-
                       <a
                         href={doc.url}
                         download
@@ -198,7 +186,6 @@ export default function PDPAPage() {
                         <span className="hidden sm:inline">ดาวน์โหลด</span>
                       </a>
                     </div>
-
                     {/* <ChevronRight
                       className={`absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-red-400 transition-all duration-300 ${
                         hoveredItem === index
@@ -212,7 +199,6 @@ export default function PDPAPage() {
             </div>
           </div>
         </div>
-
         {/* Contact Section */}
         <div className="mt-16 bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-8 sm:p-12 text-center shadow-xl">
           <h3 className="text-2xl sm:text-3xl font-bold text-white mb-4">
@@ -228,7 +214,6 @@ export default function PDPAPage() {
             ติดต่อเรา
           </button>
         </div>
-
         {/* Footer Note */}
         <div className="mt-12 text-center text-sm text-gray-500">
           <p>
@@ -242,4 +227,4 @@ export default function PDPAPage() {
       </div>
     </div>
   );
-}
+}

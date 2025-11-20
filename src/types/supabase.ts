@@ -1,5 +1,4 @@
 // Supabase Types for film_data table
-
 export interface FilmData {
   id: number;
   status: string | null; // สถานะลูกค้า เช่น ไม่สนใจ, ติดตาม, เป็นลูกค้าแล้ว
@@ -28,7 +27,6 @@ export interface FilmData {
   created_at: string; // วันเวลาที่สร้างระเบียน (Auto)
   updated_at: string; // วันเวลาที่แก้ไขล่าสุด (Auto)
 }
-
 // Type for Surgery Schedule compatible with existing code
 export interface SurgeryScheduleFromSupabase {
   หมอ: string;
@@ -44,7 +42,6 @@ export interface SurgeryScheduleFromSupabase {
   date_surgery_scheduled?: string; // วันที่ได้นัดผ่าตัด (English key)
   surgery_date?: string; // วันที่ผ่าตัด (English key)
 }
-
 // Helper function to convert FilmData to SurgeryScheduleFromSupabase
 export function convertFilmDataToSurgerySchedule(
   filmData: FilmData
@@ -63,4 +60,4 @@ export function convertFilmDataToSurgerySchedule(
     date_surgery_scheduled: filmData.date_surgery_scheduled || "",
     surgery_date: filmData.surgery_date || "",
   };
-}
+}

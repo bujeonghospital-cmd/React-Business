@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-
 export async function GET(request: NextRequest) {
   try {
     const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
     const adAccountId = process.env.FACEBOOK_AD_ACCOUNT_ID;
-
     if (!accessToken) {
       return NextResponse.json(
         {
@@ -23,7 +21,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     if (!adAccountId) {
       return NextResponse.json(
         {
@@ -38,7 +35,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // ดึง query parameters จาก request
     const searchParams = request.nextUrl.searchParams;
     const level = searchParams.get("level") || "ad"; // campaign, adset, ad
@@ -46,7 +42,6 @@ export async function GET(request: NextRequest) {
     const timeRange = searchParams.get("time_range");
     const timeIncrement = searchParams.get("time_increment");
     const actionBreakdowns = searchParams.get("action_breakdowns") || "";
-
     // Fields เริ่มต้นตามระดับ
     let defaultFields: string;
     if (level === "campaign") {
@@ -60,19 +55,15 @@ export async function GET(request: NextRequest) {
       defaultFields =
         "ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,actions,reach,frequency";
     }
-
     const fields = searchParams.get("fields") || defaultFields;
-
     // สร้าง URL โดยเรียก /insights โดยตรง (วิธีที่ง่ายและเร็วกว่า)
     const apiUrl = `https://graph.facebook.com/v24.0/${adAccountId}/insights`;
-
     const params = new URLSearchParams({
       access_token: accessToken,
       level: level,
       fields: fields,
       limit: "500",
     });
-
     // เลือกใช้ date_preset หรือ time_range (ไม่สามารถใช้ทั้ง 2 อย่างพร้อมกันได้)
     if (timeRange) {
       // ใช้ time_range แทน date_preset
@@ -84,19 +75,15 @@ export async function GET(request: NextRequest) {
       // default เป็น today
       params.append("date_preset", "today");
     }
-
     // เพิ่ม time_increment ถ้ามี (1 = แยกตามวัน)
     if (timeIncrement) {
       params.append("time_increment", timeIncrement);
     }
-
     // เพิ่ม action_breakdowns ถ้ามี
     if (actionBreakdowns) {
       params.append("action_breakdowns", actionBreakdowns);
     }
-
     console.log("Fetching insights from:", `${apiUrl}?${params.toString()}`);
-
     // เรียก Facebook Graph API โดยตรงที่ /insights
     const response = await fetch(`${apiUrl}?${params.toString()}`, {
       method: "GET",
@@ -104,7 +91,6 @@ export async function GET(request: NextRequest) {
         "Content-Type": "application/json",
       },
     });
-
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Facebook API Error:", errorData);
@@ -116,10 +102,8 @@ export async function GET(request: NextRequest) {
         { status: response.status }
       );
     }
-
     const data = await response.json();
     const items = data.data || [];
-
     // คำนวณ summary
     const summary = {
       total_spend: items.reduce(
@@ -152,7 +136,6 @@ export async function GET(request: NextRequest) {
         return sum;
       }, 0),
     };
-
     return NextResponse.json({
       success: true,
       level: level,
@@ -171,4 +154,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

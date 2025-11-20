@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
-
 // In-memory cache
 let cachedData: any = null;
 let cacheTime: number = 0;
 const CACHE_DURATION = 120000; // 2 นาที (120 วินาที) - ลด API calls
-
 export async function GET(request: NextRequest) {
   // ตรวจสอบ cache ก่อน
   const now = Date.now();
@@ -22,7 +20,6 @@ export async function GET(request: NextRequest) {
   try {
     const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
     const SHEET_NAME = "Log_call_ai"; // ชื่อชีทที่ต้องการดึง
-
     if (!SPREADSHEET_ID) {
       return NextResponse.json(
         {
@@ -32,11 +29,9 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // ตรวจสอบว่ามี credentials หรือไม่
     const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
     const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
-
     if (!clientEmail || !privateKey) {
       return NextResponse.json(
         {
@@ -47,7 +42,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // Parse credentials
     const auth = new google.auth.GoogleAuth({
       credentials: {
@@ -56,17 +50,13 @@ export async function GET(request: NextRequest) {
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
-
     const sheets = google.sheets({ version: "v4", auth });
-
     // ดึงข้อมูลจาก Google Sheets
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
       range: `${SHEET_NAME}!A:Z`, // ดึงทุกคอลัมน์
     });
-
     const rows = response.data.values;
-
     if (!rows || rows.length === 0) {
       return NextResponse.json(
         {
@@ -76,24 +66,19 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       );
     }
-
     // แถวแรกคือ headers
     const headers = rows[0];
     const dataRows = rows.slice(1);
-
     // แปลงข้อมูลเป็น array of objects
     const data = dataRows.map((row, index) => {
       const rowData: { [key: string]: any } = {
         id: `log-${index + 1}`,
       };
-
       headers.forEach((header: string, colIndex: number) => {
         rowData[header] = row[colIndex] || "";
       });
-
       return rowData;
     });
-
     // อัพเดท cache
     const responseData = {
       success: true,
@@ -103,7 +88,6 @@ export async function GET(request: NextRequest) {
     };
     cachedData = responseData;
     cacheTime = Date.now();
-
     return NextResponse.json(responseData, {
       status: 200,
       headers: {
@@ -121,4 +105,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

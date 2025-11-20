@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 // In-memory cache
 const cache = new Map<
   string,
   { data: any; timestamp: number; expiresAt: number }
 >();
 const CACHE_DURATION = 30000; // 30 seconds
-
 /**
  * GET /api/surgery-schedule-db
  * ดึงข้อมูล Surgery Schedule จาก PostgreSQL Database
@@ -20,14 +18,12 @@ export async function GET(request: NextRequest) {
     const month = searchParams.get("month"); // 1-12
     const year = searchParams.get("year");
     const contactPerson = searchParams.get("contact_person");
-
     // Check cache first
     const cacheKey = `surgery-schedule-db-${month || "all"}-${year || "all"}-${
       contactPerson || "all"
     }`;
     const cached = cache.get(cacheKey);
     const now = Date.now();
-
     if (cached && now < cached.expiresAt) {
       console.log(`✅ Returning cached surgery schedule from database`);
       return NextResponse.json(cached.data, {
@@ -39,9 +35,7 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     console.log(`📡 Fetching surgery schedule from database...`);
-
     // สร้าง SQL query แบบ dynamic - ดึงจากตาราง bjh_all_leads
     let query = `
       SELECT 
@@ -76,10 +70,8 @@ export async function GET(request: NextRequest) {
       FROM postgres."BJH-Server".bjh_all_leads
       WHERE booked_surgery_date IS NOT NULL
     `;
-
     const params: any[] = [];
     let paramIndex = 1;
-
     // Filter by month and year if provided (using booked_surgery_date)
     if (month && year) {
       query += ` AND EXTRACT(MONTH FROM 
@@ -105,13 +97,11 @@ export async function GET(request: NextRequest) {
         END) = $${paramIndex++}`;
       params.push(parseInt(year));
     }
-
     // Filter by contact person if provided
     if (contactPerson && contactPerson !== "all") {
       query += ` AND contact_staff = $${paramIndex++}`;
       params.push(contactPerson);
     }
-
     // Order by date
     query += ` ORDER BY 
       CASE 
@@ -119,16 +109,13 @@ export async function GET(request: NextRequest) {
         WHEN booked_surgery_date::text ~ '^[0-9]+$' THEN DATE '1899-12-30' + booked_surgery_date::text::INTEGER
         ELSE NULL 
       END DESC NULLS LAST`;
-
     // Execute query
     const client = await pool.connect();
     try {
       const result = await client.query(query, params);
-
       console.log(
         `✅ Successfully fetched ${result.rows.length} records from database`
       );
-
       // Transform data to match expected format
       const transformedData = {
         success: true,
@@ -144,21 +131,18 @@ export async function GET(request: NextRequest) {
           },
         },
       };
-
       // Update cache with expiration time
       cache.set(cacheKey, {
         data: transformedData,
         timestamp: now,
         expiresAt: now + CACHE_DURATION,
       });
-
       // Clean old cache entries
       for (const [key, value] of cache.entries()) {
         if (now > value.expiresAt + 60000) {
           cache.delete(key);
         }
       }
-
       return NextResponse.json(transformedData, {
         status: 200,
         headers: {
@@ -172,7 +156,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error: any) {
     console.error("Error fetching surgery schedule from database:", error);
-
     // Return cached data if available even if expired
     const cached = cache.get("surgery-schedule-db");
     if (cached) {
@@ -185,7 +168,6 @@ export async function GET(request: NextRequest) {
         },
       });
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -201,7 +183,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
 /**
  * POST /api/surgery-schedule-db
  * เพิ่มข้อมูล Surgery Schedule ใหม่
@@ -209,7 +190,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-
     const {
       doctor,
       contact_person,
@@ -223,7 +203,6 @@ export async function POST(request: NextRequest) {
       status,
       notes,
     } = body;
-
     // Validate required fields
     if (!contact_person) {
       return NextResponse.json(
@@ -234,7 +213,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const client = await pool.connect();
     try {
       const query = `
@@ -245,7 +223,6 @@ export async function POST(request: NextRequest) {
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *
       `;
-
       const values = [
         doctor || null,
         contact_person,
@@ -259,12 +236,9 @@ export async function POST(request: NextRequest) {
         status || null,
         notes || null,
       ];
-
       const result = await client.query(query, values);
-
       // Clear cache
       cache.clear();
-
       return NextResponse.json(
         {
           success: true,
@@ -287,7 +261,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 /**
  * PUT /api/surgery-schedule-db
  * อัพเดทข้อมูล Surgery Schedule
@@ -296,7 +269,6 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { id, ...updateData } = body;
-
     if (!id) {
       return NextResponse.json(
         {
@@ -306,7 +278,6 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // สร้าง dynamic update query
     const fields = Object.keys(updateData);
     if (fields.length === 0) {
@@ -318,12 +289,10 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const setClause = fields
       .map((field, index) => `${field} = $${index + 2}`)
       .join(", ");
     const values = [id, ...fields.map((field) => updateData[field])];
-
     const client = await pool.connect();
     try {
       const query = `
@@ -332,9 +301,7 @@ export async function PUT(request: NextRequest) {
         WHERE id = $1
         RETURNING *
       `;
-
       const result = await client.query(query, values);
-
       if (result.rows.length === 0) {
         return NextResponse.json(
           {
@@ -344,10 +311,8 @@ export async function PUT(request: NextRequest) {
           { status: 404 }
         );
       }
-
       // Clear cache
       cache.clear();
-
       return NextResponse.json({
         success: true,
         data: result.rows[0],
@@ -367,7 +332,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
 /**
  * DELETE /api/surgery-schedule-db
  * ลบข้อมูล Surgery Schedule
@@ -376,7 +340,6 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-
     if (!id) {
       return NextResponse.json(
         {
@@ -386,12 +349,10 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const client = await pool.connect();
     try {
       const query = `DELETE FROM postgres."BJH-Server".bjh_all_leads WHERE id = $1 RETURNING id`;
       const result = await client.query(query, [id]);
-
       if (result.rows.length === 0) {
         return NextResponse.json(
           {
@@ -401,10 +362,8 @@ export async function DELETE(request: NextRequest) {
           { status: 404 }
         );
       }
-
       // Clear cache
       cache.clear();
-
       return NextResponse.json({
         success: true,
         message: "Surgery schedule deleted successfully",
@@ -423,7 +382,6 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
-
 // Handle OPTIONS request for CORS
 export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
@@ -434,4 +392,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-}
+}

@@ -34,4 +34,4 @@ export const SAMPLE_FEATURES: Feature[] = [
     title: "Green standard",
     lines: ["ปฏิบัติตามมาตรฐานสิ่งแวดล้อม", "ISO 14001"],
   },
-];
+];

@@ -1,22 +1,17 @@
 "use client";
-
 import React, { forwardRef, useEffect, useRef } from "react";
 import Link from "next/link";
 import "./TopMenu.css";
-
 type SubItem = { label: string; href: string };
 type MenuItem = { label: string; href?: string; submenu?: SubItem[] };
-
 type TopMenuProps = {
   isOpen: boolean;
   onClose: () => void;
   items: MenuItem[];
 };
-
 const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
   ({ isOpen, onClose, items }, extRef) => {
     const panelRef = useRef<HTMLDivElement>(null);
-
     // sync external ref
     const setRefs = (el: HTMLDivElement | null) => {
       panelRef.current = el;
@@ -26,7 +21,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
         (extRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
       }
     };
-
     // reset state when close
     useEffect(() => {
       if (isOpen) return;
@@ -41,7 +35,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
       });
       (document.activeElement as HTMLElement | null)?.blur?.();
     }, [isOpen]);
-
     // open-one-at-a-time accordion
     useEffect(() => {
       const root = panelRef.current;
@@ -60,7 +53,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
       return () =>
         detailsEls.forEach((d) => d.removeEventListener("toggle", onToggle));
     }, [isOpen, items]);
-
     // ESC + lock body scroll
     useEffect(() => {
       const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -73,7 +65,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
         document.body.classList.remove("overflow-hidden");
       };
     }, [isOpen, onClose]);
-
     return (
       <>
         {/* Backdrop */}
@@ -86,7 +77,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
               : "opacity-0 pointer-events-none"
           }`}
         />
-
         {/* Top sheet panel */}
         <div
           ref={setRefs}
@@ -118,7 +108,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
                 </svg>
               </button>
             </div>
-
             {/* Nav */}
             <nav className="tmenu-nav">
               {items.map((item, i) => (
@@ -147,7 +136,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
                           />
                         </svg>
                       </summary>
-
                       <div className="tmenu-sub">
                         <div className="tmenu-sub-inner">
                           <ul className="space-y-1.5 pl-2">
@@ -189,7 +177,6 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
                 </div>
               ))}
             </nav>
-
             {/* Footer: language */}
             <div
               className="tmenu-lang tmenu-anim"
@@ -220,6 +207,5 @@ const TopMenu = forwardRef<HTMLDivElement, TopMenuProps>(
     );
   }
 );
-
 TopMenu.displayName = "TopMenu";
-export default TopMenu;
+export default TopMenu;

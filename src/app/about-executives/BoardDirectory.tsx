@@ -1,23 +1,18 @@
 "use client";
 import ScaledCanvas from "../../components/ScaledCanvas";
-
 import Image from "next/image";
 import { useMemo, useState, useEffect } from "react";
-
 // ======= ปรับแต่งได้ =======
 const Video_TITLE = "คณะกรรมการ / ผู้บริหาร";
 const Video_DESC =
   "คณะกรรมการและผู้บริหาร กำหนดวิสัยทัศน์และกลยุทธ์เชิงธุรกิจ เพื่อเสริมสร้างความแข็งแกร่งและความยั่งยืนขององค์กร";
 const Video_BG_URL = "/images/Directors/bg-board-1.png";
-
 // หมวดในแถบแท็บ
 const TABS = [
   { id: "board", label: "คณะกรรมการ" },
   { id: "executive", label: "ผู้บริหาร" },
 ] as const;
-
 type TabId = (typeof TABS)[number]["id"];
-
 export type Member = {
   id: string;
   name: string;
@@ -25,7 +20,6 @@ export type Member = {
   image?: string;
   category: TabId;
 };
-
 const MEMBERS: Member[] = [
   // === คณะกรรมการ (12 คน) ===
   {
@@ -128,21 +122,17 @@ const MEMBERS: Member[] = [
     category: "executive",
   },
 ];
-
 export default function Page() {
   const [active, setActive] = useState<TabId>("board");
   const [isChanging, setIsChanging] = useState(false);
   const [mounted, setMounted] = useState(false);
-
   useEffect(() => {
     setMounted(true);
   }, []);
-
   const visibleMembers = useMemo(
     () => MEMBERS.filter((m) => m.category === active),
     [active]
   );
-
   const handleTabChange = (tabId: TabId) => {
     if (tabId === active) return;
     setIsChanging(true);
@@ -151,7 +141,6 @@ export default function Page() {
       setIsChanging(false);
     }, 150);
   };
-
   return (
     <ScaledCanvas>
       (
@@ -168,7 +157,6 @@ export default function Page() {
               transform: translateY(0);
             }
           }
-
           @keyframes fadeInDown {
             from {
               opacity: 0;
@@ -179,7 +167,6 @@ export default function Page() {
               transform: translateY(0);
             }
           }
-
           @keyframes fadeInLeft {
             from {
               opacity: 0;
@@ -190,7 +177,6 @@ export default function Page() {
               transform: translateX(0);
             }
           }
-
           @keyframes slideInRight {
             from {
               opacity: 0;
@@ -201,7 +187,6 @@ export default function Page() {
               transform: translateX(0);
             }
           }
-
           @keyframes scaleIn {
             from {
               opacity: 0;
@@ -212,7 +197,6 @@ export default function Page() {
               transform: scale(1);
             }
           }
-
           @keyframes pulse {
             0%,
             100% {
@@ -222,7 +206,6 @@ export default function Page() {
               opacity: 0.7;
             }
           }
-
           @keyframes shimmer {
             0% {
               background-position: -200% 0;
@@ -231,31 +214,24 @@ export default function Page() {
               background-position: 200% 0;
             }
           }
-
           .animate-fadeInUp {
             animation: fadeInUp 0.8s ease-out forwards;
           }
-
           .animate-fadeInDown {
             animation: fadeInDown 0.6s ease-out forwards;
           }
-
           .animate-fadeInLeft {
             animation: fadeInLeft 0.7s ease-out forwards;
           }
-
           .animate-slideInRight {
             animation: slideInRight 0.8s ease-out forwards;
           }
-
           .animate-scaleIn {
             animation: scaleIn 0.5s ease-out forwards;
           }
-
           .animate-pulse-slow {
             animation: pulse 2s ease-in-out infinite;
           }
-
           .animate-shimmer {
             background: linear-gradient(
               90deg,
@@ -266,20 +242,16 @@ export default function Page() {
             background-size: 200% 100%;
             animation: shimmer 2s linear infinite;
           }
-
           .Video-image-parallax {
             transition: transform 0.8s ease-out;
           }
-
           .Video-image-parallax:hover {
             transform: scale(1.05);
           }
-
           .tab-indicator {
             position: relative;
             overflow: hidden;
           }
-
           .tab-indicator::after {
             content: "";
             position: absolute;
@@ -292,81 +264,63 @@ export default function Page() {
             transform-origin: left;
             transition: transform 0.3s ease;
           }
-
           .tab-indicator.active::after {
             transform: scaleX(1);
           }
-
           .member-card {
             opacity: 0;
             animation: fadeInUp 0.6s ease-out forwards;
           }
-
           .member-card:hover .member-image {
             transform: scale(1.08);
           }
-
           .member-card:hover .member-info {
             background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
           }
-
           .member-image {
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           }
-
           .member-info {
             transition: all 0.3s ease;
           }
-
           .stagger-animation {
             animation-delay: calc(var(--index) * 0.05s);
           }
-
           .Video-content {
             opacity: 0;
           }
-
           .Video-content.mounted {
             animation: fadeInLeft 1s ease-out forwards;
           }
-
           .Video-bg-overlay {
             opacity: 0;
             animation: fadeIn 1.2s ease-out 0.2s forwards;
           }
-
           @keyframes fadeIn {
             to {
               opacity: 1;
             }
           }
-
           .tab-button {
             position: relative;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 18px;
           }
-
           .tab-button:hover {
             transform: translateY(-2px);
           }
-
           .tab-button.active {
             animation: scaleIn 0.3s ease-out;
           }
-
           .section-container {
             transition: opacity 0.3s ease, transform 0.3s ease;
           }
-
           .section-container.changing {
             opacity: 0;
             transform: translateY(10px);
           }
         `}</style>
-
         <Video mounted={mounted} />
-
         <main className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 pb-16">
           <div className="mt-0">
             <h2 className="sr-only">เปลี่ยนหมวด</h2>
@@ -412,7 +366,6 @@ export default function Page() {
               </div>
             </nav>
           </div>
-
           <section
             className={`mt-0 rounded-2xl border border-red-300/60 bg-white/70 p-2 sm:p-6 section-container ${
               isChanging ? "changing" : ""
@@ -455,7 +408,6 @@ export default function Page() {
                       <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     </div>
                   </div>
-
                   <div className="member-info bg-gray-100/90 px-2 sm:px-3 py-2 text-center relative overflow-hidden">
                     {/* Shimmer effect on hover */}
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 animate-shimmer" />
@@ -478,7 +430,6 @@ export default function Page() {
     </ScaledCanvas>
   );
 }
-
 function Video({ mounted }: { mounted: boolean }) {
   return (
     <section className="relative w-full overflow-hidden py-0">
@@ -494,10 +445,8 @@ function Video({ mounted }: { mounted: boolean }) {
             className="object-cover"
           />
         </div>
-
         {/* Animated gradient overlay */}
         <div className="Video-bg-overlay absolute inset-0 bg-gradient-to-r from-white/85 via-white/60 to-transparent backdrop-blur-[1px]" />
-
         {/* Animated pattern overlay */}
         <div
           className="absolute inset-0 opacity-10"
@@ -506,7 +455,6 @@ function Video({ mounted }: { mounted: boolean }) {
             animation: mounted ? "pulse 4s ease-in-out infinite" : "none",
           }}
         />
-
         {/* วางคอนเทนต์ยึดมุมซ้ายบน */}
         <div className="absolute inset-0 flex items-start justify-start py-5">
           <div className="mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
@@ -527,7 +475,6 @@ function Video({ mounted }: { mounted: boolean }) {
                   }}
                 />
               </h1>
-
               <p
                 className="mt-3 sm:mt-4 max-w-[760px] text-sm sm:text-base md:text-lg leading-relaxed text-gray-700"
                 style={{
@@ -544,4 +491,4 @@ function Video({ mounted }: { mounted: boolean }) {
       </div>
     </section>
   );
-}
+}

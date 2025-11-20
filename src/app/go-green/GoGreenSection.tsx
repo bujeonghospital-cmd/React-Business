@@ -4,12 +4,10 @@ import Image from "next/image";
 import React from "react";
 import { motion, useReducedMotion, Variants } from "framer-motion";
 import { SAMPLE_FEATURES, type Feature } from "./data"; // ปล่อย path นี้ไว้เหมือนเดิม
-
 // ===== Animation helpers =====
 function useAnims() {
   const prefersReduced = useReducedMotion();
   const dur = (d: number) => (prefersReduced ? 0 : d);
-
   const sectionFade: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -17,7 +15,6 @@ function useAnims() {
       transition: { duration: dur(0.7), ease: [0.22, 1, 0.36, 1] },
     },
   };
-
   const slideRight: Variants = {
     hidden: { opacity: 0, x: 28 },
     visible: {
@@ -26,7 +23,6 @@ function useAnims() {
       transition: { duration: dur(0.9), ease: [0.22, 1, 0.36, 1] },
     },
   };
-
   const imageZoomIn: Variants = {
     hidden: { opacity: 0, y: 16, scale: 1.03 },
     visible: {
@@ -36,7 +32,6 @@ function useAnims() {
       transition: { duration: dur(1.1), ease: [0.22, 1, 0.36, 1] },
     },
   };
-
   const gridStagger: Variants = {
     hidden: {},
     visible: {
@@ -46,7 +41,6 @@ function useAnims() {
       },
     },
   };
-
   const cardUp: Variants = {
     hidden: { opacity: 0, y: 26, scale: 0.98 },
     visible: {
@@ -56,7 +50,6 @@ function useAnims() {
       transition: { duration: dur(0.7), ease: [0.22, 1, 0.36, 1] },
     },
   };
-
   return {
     prefersReduced,
     sectionFade,
@@ -66,7 +59,6 @@ function useAnims() {
     cardUp,
   };
 }
-
 // ===== Component =====
 export default function GoGreenSection({
   imageSrc = "/images/go-green/go_green_home_page_4.png",
@@ -89,7 +81,6 @@ export default function GoGreenSection({
 }) {
   const { sectionFade, slideRight, imageZoomIn, gridStagger, cardUp } =
     useAnims();
-
   // ------- responsive ordering helpers -------
   const imageColOrder = `${textFirstOnMobile ? "order-2" : "order-1"} ${
     imagePosition === "left" ? "md:order-1" : "md:order-2"
@@ -97,7 +88,6 @@ export default function GoGreenSection({
   const textColOrder = `${textFirstOnMobile ? "order-1" : "order-2"} ${
     imagePosition === "left" ? "md:order-2" : "md:order-1"
   }`;
-
   return (
     <section
       aria-label="Go Green – sustainability overview"
@@ -122,7 +112,6 @@ export default function GoGreenSection({
             {/* soft gradient to enhance readability on mobile when stacked */}
             <div className="md:hidden absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
           </motion.div>
-
           {/* Text + feature cards column (order responsive) */}
           <motion.div
             variants={slideRight}
@@ -154,7 +143,6 @@ export default function GoGreenSection({
                 </p>
               )}
             </motion.div>
-
             <motion.div
               variants={gridStagger}
               initial="hidden"
@@ -194,11 +182,9 @@ export default function GoGreenSection({
                       />
                     </motion.div>
                   </div>
-
                   <div className="text-sm sm:text-base md:text-xl font-extrabold text-gray-800 group-focus:text-cyan-700">
                     {f.title}
                   </div>
-
                   {f.lines?.map((t: string, idx: number) => (
                     <div
                       key={idx}
@@ -215,4 +201,4 @@ export default function GoGreenSection({
       </div>
     </section>
   );
-}
+}

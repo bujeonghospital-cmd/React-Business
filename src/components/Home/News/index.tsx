@@ -2,10 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import CardItem from "./CardItem";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import Link from "next/link";
-
 const DEFAULT_CARDS_PER_PAGE = 4;
 const CARD_WIDTH_CLAMP = "clamp(280px, 88vw, 340px)"; // มือถือเต็มจอ, จอใหญ่ไม่เกิน 340px
-
 function computeCardsPerPage(w: number) {
   if (w < 640) return 1; // < sm (mobile)
   if (w < 768) return 2; // sm (small tablet)
@@ -13,7 +11,6 @@ function computeCardsPerPage(w: number) {
   if (w < 1280) return 3; // lg (small desktop)
   return 4; // ≥ xl (large desktop)
 }
-
 const TabPage = () => {
   const newsData = [
     {
@@ -41,7 +38,6 @@ const TabPage = () => {
       image: "/images/New/Board_of_Directors_Meeting.png",
     },
   ];
-
   const articleData = [
     {
       date: "13 มิถุนายน 2568",
@@ -74,7 +70,6 @@ const TabPage = () => {
       image: "/images/New/Dev_Size.png",
     },
   ];
-
   const [activeTab, setActiveTab] = useState<"news" | "article">("news");
   const [slideIndex, setSlideIndex] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -82,7 +77,6 @@ const TabPage = () => {
   const [paused, setPaused] = useState(false);
   const [direction, setDirection] = useState<"left" | "right">("right");
   const [cardsPerPage, setCardsPerPage] = useState(DEFAULT_CARDS_PER_PAGE);
-
   // คำนวณจำนวนการ์ดต่อหน้าตามขนาดหน้าต่าง
   useEffect(() => {
     const update = () => {
@@ -102,25 +96,20 @@ const TabPage = () => {
       window.removeEventListener("resize", onResize);
     };
   }, []);
-
   const data = activeTab === "news" ? newsData : articleData;
-
   // max index ตามจำนวนการ์ดต่อหน้า
   const maxIndex = useMemo(
     () => Math.max(0, data.length - cardsPerPage),
     [data.length, cardsPerPage]
   );
-
   // รีเซ็ต active ใบแรกเมื่อเปลี่ยนหน้า/แท็บ
   useEffect(() => {
     setActiveIndex(0);
   }, [slideIndex, activeTab]);
-
   // รักษา slideIndex ให้ไม่เกิน maxIndex เมื่อหน้าจอ/แท็บเปลี่ยน
   useEffect(() => {
     setSlideIndex((i) => (i > maxIndex ? maxIndex : i));
   }, [maxIndex, activeTab]);
-
   // Auto slide with smooth transition
   useEffect(() => {
     if (paused || maxIndex === 0) return;
@@ -137,7 +126,6 @@ const TabPage = () => {
     }, 4000);
     return () => clearInterval(id);
   }, [paused, maxIndex]);
-
   return (
     <div className="w-full px-2 md:px-4 max-w-6xl mx-auto relative">
       {/* Tabs */}
@@ -168,7 +156,6 @@ const TabPage = () => {
           บทความ
         </button>
       </div>
-
       {/* Slider */}
       <div
         className="
@@ -219,7 +206,6 @@ const TabPage = () => {
             className="hidden lg:!block transition-transform group-hover:-translate-x-0.5"
           />
         </button>
-
         {/* Track */}
         <div className="flex gap-3 sm:gap-4 md:gap-6 lg:gap-7 w-full justify-center track-container">
           {data
@@ -229,7 +215,6 @@ const TabPage = () => {
               const isHovered = hoverIndex === idx;
               const animationClass =
                 direction === "right" ? "slide-in-right" : "slide-in-left";
-
               return (
                 <div
                   key={slideIndex + idx}
@@ -254,7 +239,6 @@ const TabPage = () => {
               );
             })}
         </div>
-
         {/* Right Arrow - Desktop Only */}
         <button
           className="
@@ -293,7 +277,6 @@ const TabPage = () => {
           />
         </button>
       </div>
-
       {/* Dots */}
       <div className="mt-8 w-full py-4">
         <div className="flex justify-center items-center gap-2 md:gap-3">
@@ -320,7 +303,6 @@ const TabPage = () => {
           ))}
         </div>
       </div>
-
       {/* CTA */}
       <div className="flex justify-center mt-6">
         <Link href={activeTab === "news" ? "/news-events" : "/articles"}>
@@ -331,5 +313,4 @@ const TabPage = () => {
     </div>
   );
 };
-
-export default TabPage;
+export default TabPage;

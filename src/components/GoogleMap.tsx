@@ -1,7 +1,5 @@
 "use client";
-
 import React, { useEffect, useRef, useState } from "react";
-
 interface GoogleMapComponentProps {
   center: { lat: number; lng: number };
   zoom?: number;
@@ -9,7 +7,6 @@ interface GoogleMapComponentProps {
   markerTitle?: string;
   mapId?: string;
 }
-
 const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
   center,
   zoom = 15,
@@ -20,15 +17,12 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
   const [scriptLoaded, setScriptLoaded] = useState(false);
-
   // ตรวจสอบว่าอยู่ใน client-side หรือไม่
   useEffect(() => {
     setIsClient(true);
   }, []);
-
   useEffect(() => {
     if (!isClient) return;
-
     // ตรวจสอบว่ามี API Key หรือไม่
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) {
@@ -37,12 +31,10 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       );
       return;
     }
-
     // ตรวจสอบว่า script ถูกโหลดแล้วหรือยัง
     const existingScript = document.querySelector(
       `script[src*="maps.googleapis.com"]`
     );
-
     if (existingScript) {
       // รอให้ Web Components พร้อม
       if (typeof customElements !== "undefined") {
@@ -59,13 +51,11 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       }
       return;
     }
-
     // โหลด Google Maps script แบบ async
     const script = document.createElement("script");
     script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async&libraries=maps,marker&v=beta`;
     script.async = true;
     script.defer = true;
-
     script.onload = () => {
       // รอให้ Web Components ลงทะเบียนเสร็จ
       if (typeof customElements !== "undefined") {
@@ -81,7 +71,6 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
         setScriptLoaded(true);
       }
     };
-
     script.onerror = () => {
       console.error(
         "Failed to load Google Maps script - using fallback iframe"
@@ -89,17 +78,13 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       // ใช้ iframe fallback
       setScriptLoaded(false);
     };
-
     document.head.appendChild(script);
-
     return () => {
       // Cleanup not needed as script is shared across the app
     };
   }, [isClient]);
-
   useEffect(() => {
     if (!isClient || !scriptLoaded || !mapContainerRef.current) return;
-
     try {
       // ตรวจสอบว่า gmp-map element พร้อมใช้งานหรือไม่
       if (
@@ -109,7 +94,6 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
         console.warn("Google Maps Web Components not ready");
         return;
       }
-
       // สร้าง map elements
       const mapElement = document.createElement("gmp-map");
       mapElement.setAttribute("center", `${center.lat},${center.lng}`);
@@ -118,7 +102,6 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       mapElement.style.width = "100%";
       mapElement.style.height = "100%";
       mapElement.style.display = "block";
-
       // สร้าง marker
       const markerElement = document.createElement("gmp-advanced-marker");
       markerElement.setAttribute(
@@ -126,10 +109,8 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
         `${markerPosition.lat},${markerPosition.lng}`
       );
       markerElement.setAttribute("title", markerTitle);
-
       // เพิ่ม marker เข้า map
       mapElement.appendChild(markerElement);
-
       // Clear existing content and add map
       mapContainerRef.current.innerHTML = "";
       mapContainerRef.current.appendChild(mapElement);
@@ -146,7 +127,6 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
     markerTitle,
     mapId,
   ]);
-
   // แสดง fallback iframe สำหรับ SSR หรือเมื่อยังโหลด script ไม่เสร็จ
   if (!isClient || !scriptLoaded) {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -169,8 +149,6 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({
       </div>
     );
   }
-
   return <div ref={mapContainerRef} className="w-full h-full" />;
 };
-
-export default GoogleMapComponent;
+export default GoogleMapComponent;

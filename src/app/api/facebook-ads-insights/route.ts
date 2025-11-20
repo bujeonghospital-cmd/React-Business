@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-
 export async function GET(request: NextRequest) {
   try {
     const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
     const adAccountId = process.env.FACEBOOK_AD_ACCOUNT_ID;
-
     if (!accessToken) {
       return NextResponse.json(
         {
@@ -23,7 +21,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     if (!adAccountId) {
       return NextResponse.json(
         {
@@ -38,7 +35,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     // ดึง query parameters จาก request
     const searchParams = request.nextUrl.searchParams;
     const level = searchParams.get("level") || "ad";
@@ -47,7 +43,6 @@ export async function GET(request: NextRequest) {
       searchParams.get("fields") ||
       "ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,actions";
     const actionBreakdowns = searchParams.get("action_breakdowns") || "";
-
     // สร้าง URL สำหรับ Facebook Graph API
     const apiUrl = `https://graph.facebook.com/v24.0/${adAccountId}/insights`;
     const params = new URLSearchParams({
@@ -56,14 +51,11 @@ export async function GET(request: NextRequest) {
       fields: fields,
       date_preset: datePreset,
     });
-
     // เพิ่ม action_breakdowns ถ้ามี
     if (actionBreakdowns) {
       params.append("action_breakdowns", actionBreakdowns);
     }
-
     console.log("Fetching insights from:", `${apiUrl}?${params.toString()}`);
-
     // เรียก Facebook Graph API
     const response = await fetch(`${apiUrl}?${params.toString()}`, {
       method: "GET",
@@ -71,7 +63,6 @@ export async function GET(request: NextRequest) {
         "Content-Type": "application/json",
       },
     });
-
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Facebook API Error:", errorData);
@@ -83,9 +74,7 @@ export async function GET(request: NextRequest) {
         { status: response.status }
       );
     }
-
     const data = await response.json();
-
     return NextResponse.json({
       success: true,
       data: data.data || [],
@@ -102,4 +91,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

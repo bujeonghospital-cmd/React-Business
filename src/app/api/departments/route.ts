@@ -1,22 +1,17 @@
 import { NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 export async function GET() {
   let client;
-
   try {
     client = await pool.connect();
     console.log("🔍 Fetching departments from database...");
-
     const query = `
       SELECT id, name, name_full_th 
       FROM "BJH-Server".department 
       ORDER BY name_full_th ASC
     `;
-
     const result = await client.query(query);
     console.log(`✅ Found ${result.rows.length} departments`);
-
     return NextResponse.json({
       success: true,
       data: result.rows,
@@ -29,7 +24,6 @@ export async function GET() {
       code: error.code,
       detail: error.detail,
     });
-
     return NextResponse.json(
       {
         success: false,
@@ -43,4 +37,4 @@ export async function GET() {
       client.release();
     }
   }
-}
+}

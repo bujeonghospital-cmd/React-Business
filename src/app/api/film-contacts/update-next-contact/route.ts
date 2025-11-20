@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 /**
  * POST /api/film-contacts/update-next-contact
  * อัพเดทวันที่ติดต่อครั้งถัดไป (next_followup) ใน database
  */
-
 export async function POST(request: NextRequest) {
   const client = await pool.connect();
-
   try {
     const body = await request.json();
     const { id, nextContactDate } = body;
-
     if (!id) {
       return NextResponse.json(
         {
@@ -22,9 +18,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     console.log(`🔄 Updating next contact date for ID ${id}...`);
-
     // อัพเดท next_followup ใน database
     const query = `
       UPDATE postgres."BJH-Server".bjh_all_leads 
@@ -32,9 +26,7 @@ export async function POST(request: NextRequest) {
       WHERE id = $2
       RETURNING id, next_followup
     `;
-
     const result = await client.query(query, [nextContactDate || null, id]);
-
     if (result.rowCount === 0) {
       return NextResponse.json(
         {
@@ -44,9 +36,7 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
-
     console.log(`✅ Updated next contact date for ID ${id} successfully`);
-
     return NextResponse.json({
       success: true,
       message: "บันทึกวันที่ติดต่อครั้งถัดไปสำเร็จ",
@@ -55,7 +45,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("❌ Error updating next contact date:", error);
-
     return NextResponse.json(
       {
         success: false,
@@ -67,4 +56,4 @@ export async function POST(request: NextRequest) {
   } finally {
     client.release();
   }
-}
+}

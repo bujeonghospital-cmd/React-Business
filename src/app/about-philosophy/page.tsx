@@ -3,7 +3,6 @@ import Image from "next/image";
 import QueryPart from "./_components/QueryClient";
 import { Suspense } from "react";
 import { Metadata } from "next";
-
 export const metadata: Metadata = {
   title: "วิสัยทัศน์และพันธกิจ",
   description: "หน้าแสดงวิสัยทัศน์และพันธกิจ",
@@ -58,7 +57,6 @@ export default function AboutPhilosophy() {
     // "ส่งเสริมและดำเนินการให้องค์กรเป็นสถานที่ทำงานที่มีความสุขความปลอดภัย และมีการสื่อสารและการทำงานร่วมกันเป็นทีมอย่างมีประสิทธิภาพ",
     // "สร้างพันธมิตรคู่ค้าทางธุรกิจบนพื้นฐาน ความร่วมมือที่ดีเติบโตร่วมกันอย่างยั่งยืน พร้อมมีส่วนร่วมในการสนับสนุนดูแลสังคม และสิ่งแวดล้อม",
   ];
-
   // === “ค่านิยมขององค์กร” 3 หัวข้อ ===
   const values = [
     {
@@ -74,7 +72,6 @@ export default function AboutPhilosophy() {
       v: "ตรงต่อเวลา รักษาเวลา และรับฟังความคิดเห็นผู้อื่น พร้อมจะพัฒนาตนเองอยู่เสมอ",
     },
   ];
-
   return (
     <ScaledCanvas>
       <>
@@ -94,7 +91,6 @@ export default function AboutPhilosophy() {
                 className="block fx-underline fx-underline-in mt-2 w-24 ml-auto"
               />
             </div>
-
             <p
               className="mx-auto text-base sm:text-lg leading-relaxed break-words  custom-Charcoal-gray fx-subtle-in-up text-start"
               style={{ animationDelay: "120ms" }}
@@ -107,7 +103,6 @@ export default function AboutPhilosophy() {
           </div>
         </section>
         <br className="flex flex-col gap-[16px]  [&>*]:!my-0"></br>
-
         {/* ส่วนล่าง */}
         <section className="relative isolate w-full overflow-hidden">
           <Image
@@ -118,10 +113,8 @@ export default function AboutPhilosophy() {
             sizes="100vw"
             className="absolute inset-0 -z-20 object-cover object-bottom"
           />
-
           {/* ช่วยให้อ่านง่ายบนมือถือ */}
           <div className="absolute inset-0 -z-10 bg-white/75 md:bg-white/40 lg:bg-transparent" />
-
           <div className="relative mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-10 xl:px-14 py-10 sm:py-14">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 ">
               {/* พันธกิจ (8 กล่อง) */}
@@ -133,7 +126,6 @@ export default function AboutPhilosophy() {
                     className="block fx-underline fx-underline-in mt-2 w-20"
                   />
                 </h3>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 custom-Charcoal-gray">
                   {missions.map((text, i) => (
                     <div
@@ -157,7 +149,6 @@ export default function AboutPhilosophy() {
                   ))}
                 </div>
               </div>
-
               {/* ค่านิยมขององค์กร */}
               <div className="space-y-6">
                 <h3 className="my-heading sm:text-xl mb-1 text-black fx-clip-reveal">
@@ -167,7 +158,6 @@ export default function AboutPhilosophy() {
                     className="block fx-underline fx-underline-in mt-2 w-24"
                   />
                 </h3>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 custom-Charcoal-gray">
                   {values.map((val, i) => (
                     <div
@@ -194,11 +184,10 @@ export default function AboutPhilosophy() {
             </div>
           </div>
         </section>
-
         <Suspense fallback={<div className="p-6">Loading…</div>}>
           <QueryPart />
         </Suspense>
       </>
     </ScaledCanvas>
   );
-}
+}

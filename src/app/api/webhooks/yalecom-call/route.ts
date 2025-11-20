@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * Webhook สำหรับรับสาย (Incoming Call)
  * Yalecom จะส่ง webhook มาเมื่อมีสายเข้า
  */
-
 interface YalecomWebhookPayload {
   call_id?: string;
   caller_number?: string;
@@ -18,13 +16,10 @@ interface YalecomWebhookPayload {
   direction?: "inbound" | "outbound";
   event_type?: "call_started" | "call_answered" | "call_ended" | "call_ringing";
 }
-
 export async function POST(request: NextRequest) {
   try {
     const payload: YalecomWebhookPayload = await request.json();
-
     console.log("📞 Webhook received:", payload);
-
     // ========================================
     // เมื่อสายจบ (call_ended) - บันทึกลง Call Matrix
     // ========================================
@@ -41,16 +36,13 @@ export async function POST(request: NextRequest) {
         duration_seconds: 0, // ถ้า Yalecom ส่งมาให้ใช้ payload.duration
         notes: `Webhook: ${payload.event_type} - Queue: ${payload.queue_name}`,
       };
-
       // บันทึกลง Call Matrix Database
       const saveResponse = await fetch(`${getBaseUrl()}/api/call-matrix`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(callLogData),
       });
-
       const saveResult = await saveResponse.json();
-
       if (saveResult.success) {
         console.log("✅ Call log saved to database:", saveResult.data);
         return NextResponse.json({
@@ -62,7 +54,6 @@ export async function POST(request: NextRequest) {
         console.error("❌ Failed to save call log:", saveResult.error);
       }
     }
-
     // ========================================
     // สายเข้า - บันทึกลง customer_contacts
     // ========================================
@@ -78,7 +69,6 @@ export async function POST(request: NextRequest) {
         status: "received", // แท็กเป็น "รับสาย"
         notes: `สายเข้าจาก Queue ${payload.queue_extension}`,
       };
-
       // บันทึกลง customer_contacts
       const contactResponse = await fetch(
         `${getBaseUrl()}/api/customer-contacts`,
@@ -88,16 +78,13 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify(contactData),
         }
       );
-
       const contactResult = await contactResponse.json();
-
       return NextResponse.json({
         success: true,
         message: "Incoming call webhook processed",
         data: contactResult.data,
       });
     }
-
     // ========================================
     // สายออก - บันทึกลง customer_contacts
     // ========================================
@@ -113,7 +100,6 @@ export async function POST(request: NextRequest) {
         status: "outgoing", // แท็กเป็น "โทรออก"
         notes: `โทรออกจาก Agent ${payload.agent_id}`,
       };
-
       const contactResponse = await fetch(
         `${getBaseUrl()}/api/customer-contacts`,
         {
@@ -122,16 +108,13 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify(contactData),
         }
       );
-
       const contactResult = await contactResponse.json();
-
       return NextResponse.json({
         success: true,
         message: "Outbound call webhook processed",
         data: contactResult.data,
       });
     }
-
     return NextResponse.json({
       success: true,
       message: "Webhook received but not processed",
@@ -149,7 +132,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 // ฟังก์ชันช่วย: ดึง Base URL
 function getBaseUrl(): string {
   if (process.env.VERCEL_URL) {
@@ -157,7 +139,6 @@ function getBaseUrl(): string {
   }
   return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 }
-
 // รองรับ GET สำหรับทดสอบ
 export async function GET() {
   return NextResponse.json({
@@ -174,4 +155,4 @@ export async function GET() {
       "call_ringing",
     ],
   });
-}
+}

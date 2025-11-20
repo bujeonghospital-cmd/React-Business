@@ -1,19 +1,15 @@
 // src/components/GoogleAds/CampaignTable.tsx
 "use client";
-
 import { GoogleAdsCampaign } from "@/types/google-ads";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown } from "lucide-react";
-
 interface CampaignTableProps {
   campaigns: GoogleAdsCampaign[];
 }
-
 export default function CampaignTable({ campaigns }: CampaignTableProps) {
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("th-TH").format(num);
   };
-
   const formatCurrency = (num: number) => {
     return new Intl.NumberFormat("th-TH", {
       style: "currency",
@@ -21,7 +17,6 @@ export default function CampaignTable({ campaigns }: CampaignTableProps) {
       minimumFractionDigits: 2,
     }).format(num);
   };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -36,7 +31,6 @@ export default function CampaignTable({ campaigns }: CampaignTableProps) {
           ข้อมูลการทำงานของแต่ละแคมเปญ
         </p>
       </div>
-
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -125,7 +119,6 @@ export default function CampaignTable({ campaigns }: CampaignTableProps) {
           </tbody>
         </table>
       </div>
-
       {/* Footer Summary */}
       <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
         <div className="flex justify-between items-center text-sm">
@@ -140,4 +133,4 @@ export default function CampaignTable({ campaigns }: CampaignTableProps) {
       </div>
     </motion.div>
   );
-}
+}

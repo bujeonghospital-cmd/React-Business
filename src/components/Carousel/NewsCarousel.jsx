@@ -1,21 +1,17 @@
 "use client";
 import React, { useState } from "react";
-
 const carouselImages = [
   "/images/New/company-news-1.jpg",
   "/images/New/company-news-2.jpg",
   "/images/New/company-news-3.jpg",
   "/images/New/company-news-4.jpg",
 ];
-
 const NewsCarousel = () => {
   const [current, setCurrent] = useState(0);
   const length = carouselImages.length;
-
   const goToSlide = (index) => setCurrent(index);
   const prevSlide = () => setCurrent(current === 0 ? length - 1 : current - 1);
   const nextSlide = () => setCurrent(current === length - 1 ? 0 : current + 1);
-
   return (
     <div className="relative w-full" id="indicators-carousel">
       {/* Carousel wrapper */}
@@ -92,5 +88,4 @@ const NewsCarousel = () => {
     </div>
   );
 };
-
-export default NewsCarousel;
+export default NewsCarousel;

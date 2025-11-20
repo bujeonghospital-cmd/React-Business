@@ -5,23 +5,19 @@ import JobCategories from "@/components/Careers/JobCategories";
 import JobListings from "@/components/Careers/JobListings";
 import WhyJoinUs from "@/components/Careers/WhyJoinUs";
 import Container from "@/components/Container";
-
 export const metadata: Metadata = {
   title: "ร่วมงานกับเรา ",
   description:
     "โอกาสในการทำงานกับบริษัท ไทยบรรจุภัณฑ์และการพิมพ์ จำกัด (มหาชน) มากกว่า 35 ปีแห่งความเชี่ยวชาญด้านบรรจุภัณฑ์กระดาษคุณภาพสูง",
   keywords: "สมัครงาน, ร่วมงาน, อาชีพ, TPP, ไทยบรรจุภัณฑ์, งานว่าง, ตำแหน่งงาน",
 };
-
 export default function CareersPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Section */}
       <CareersHero />
-
       {/* Why Join Us Section */}
       <WhyJoinUs />
-
       {/* Job Categories */}
       <section className="py-16 bg-white">
         <Container>
@@ -36,7 +32,6 @@ export default function CareersPage() {
           <JobCategories />
         </Container>
       </section>
-
       {/* Job Listings */}
       <section className="py-16 bg-gray-50">
         <Container>
@@ -53,4 +48,4 @@ export default function CareersPage() {
       </section>
     </div>
   );
-}
+}

@@ -12,5 +12,4 @@ const CartButton = () => (
     <i className="bi bi-cart text-secondary" style={{ fontSize: 24, color: 'white' }}></i>
   </button>
 );
-
-export default CartButton;
+export default CartButton;

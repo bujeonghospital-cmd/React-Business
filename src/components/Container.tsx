@@ -1,12 +1,10 @@
 import ScaledCanvas from "./ScaledCanvas";
 // components/Container.tsx
 import React from "react";
-
 type ContainerProps = {
   children: React.ReactNode;
   className?: string;
 };
-
 export default function Container({ children, className = "" }: ContainerProps) {
   return (<ScaledCanvas>(
         <div
@@ -17,4 +15,4 @@ export default function Container({ children, className = "" }: ContainerProps) 
           {children}
         </div>
       )</ScaledCanvas>);
-}
+}

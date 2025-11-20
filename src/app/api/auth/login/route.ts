@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateEmail } from "@/utils/validateEmail";
 import pool from "@/lib/db";
 import bcrypt from "bcryptjs";
-
 interface User {
   id: number;
   name: string;
@@ -25,14 +24,11 @@ interface User {
   department_name_fix?: string;
   position_name?: string;
 }
-
 export async function POST(request: NextRequest) {
   const client = await pool.connect();
-
   try {
     const body = await request.json();
     const { email, password, rememberMe } = body;
-
     // Validate input
     if (!email || !password) {
       return NextResponse.json(
@@ -43,7 +39,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Validate password length
     if (password.length < 6) {
       return NextResponse.json(
@@ -54,7 +49,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // Find user by email or username
     const userQuery = `
       SELECT 
@@ -74,11 +68,9 @@ export async function POST(request: NextRequest) {
         AND u.delete_date IS NULL
       LIMIT 1
     `;
-
     console.log("🔍 Searching for user with:", email);
     const userResult = await client.query(userQuery, [email]);
     console.log("📊 Query result:", userResult.rows.length, "rows found");
-
     if (userResult.rows.length === 0) {
       console.log("❌ User not found for:", email);
       return NextResponse.json(
@@ -86,38 +78,31 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
-
     const user: User = userResult.rows[0];
-
     // Verify password - รองรับทั้ง bcrypt ($2b$) และ PHP password_hash ($2y$)
     let isPasswordValid = false;
-
     try {
       // แปลง $2y$ (PHP) เป็น $2b$ (Node.js) ถ้าจำเป็น
       const hashToCompare = user.password.startsWith("$2y$")
         ? user.password.replace("$2y$", "$2b$")
         : user.password;
-
       console.log("🔐 Password input:", password);
       console.log("🔑 Hash from DB:", user.password.substring(0, 20) + "...");
       console.log(
         "🔄 Hash to compare:",
         hashToCompare.substring(0, 20) + "..."
       );
-
       isPasswordValid = await bcrypt.compare(password, hashToCompare);
       console.log("✅ Password match result:", isPasswordValid);
     } catch (error) {
       console.error("❌ Password verification error:", error);
     }
-
     if (!isPasswordValid) {
       return NextResponse.json(
         { success: false, message: "รหัสผ่านไม่ถูกต้อง" },
         { status: 401 }
       );
     }
-
     // Get user avatar
     const avatarQuery = `
       SELECT path, name_file
@@ -127,20 +112,16 @@ export async function POST(request: NextRequest) {
         AND delete_date IS NULL
       LIMIT 1
     `;
-
     const avatarResult = await client.query(avatarQuery, [user.id]);
     let avatarPath = "/images/user.png";
-
     if (avatarResult.rows.length > 0) {
       const avatar = avatarResult.rows[0];
       avatarPath = `${avatar.path}${avatar.name_file}`;
     }
-
     // Generate simple token (ในการใช้งานจริงควรใช้ JWT)
     const token = Buffer.from(
       `${user.id}:${Date.now()}:${Math.random()}`
     ).toString("base64");
-
     // Update last login and token
     await client.query(
       `UPDATE "BJH-Server"."user" 
@@ -148,7 +129,6 @@ export async function POST(request: NextRequest) {
        WHERE id = $2`,
       [token, user.id]
     );
-
     // Prepare user data (exclude sensitive info)
     const userData = {
       id: user.id,
@@ -166,7 +146,6 @@ export async function POST(request: NextRequest) {
       position_name: user.position_name || "ไม่ระบุ",
       avatar: avatarPath,
     };
-
     return NextResponse.json({
       success: true,
       message: `ยินดีต้อนรับ ${user.name}`,
@@ -185,4 +164,4 @@ export async function POST(request: NextRequest) {
   } finally {
     client.release();
   }
-}
+}

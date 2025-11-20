@@ -2,34 +2,27 @@
 import ScaledCanvas from "../ScaledCanvas";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-
 export default function ScrollToTop() {
   const [isVisible, setIsVisible] = useState(false);
   const pathname = usePathname();
-
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: "smooth",
     });
   };
-
   useEffect(() => {
     const toggleVisibility = () => {
       setIsVisible(window.pageYOffset > 300);
     };
-
     window.addEventListener("scroll", toggleVisibility, { passive: true });
-
     return () => {
       window.removeEventListener("scroll", toggleVisibility);
     };
   }, []);
-
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" });
   }, [pathname]);
-
   return (
     <ScaledCanvas>
       <div className="fixed bottom-8 right-8 z-50">
@@ -45,4 +38,4 @@ export default function ScrollToTop() {
       </div>
     </ScaledCanvas>
   );
-}
+}

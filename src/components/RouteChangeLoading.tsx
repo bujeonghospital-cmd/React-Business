@@ -1,8 +1,6 @@
 "use client";
-
 import React, { useEffect, useRef } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-
 export default function RouteChangeLoading({
   minDuration = 300,
 }: {
@@ -13,7 +11,6 @@ export default function RouteChangeLoading({
   const timer = useRef<number | null>(null);
   // track previous route so we don't show on initial mount
   const prevRoute = useRef<string | null>(null);
-
   const ensureOverlay = () => {
     let el = document.getElementById("route-change-overlay");
     if (!el) {
@@ -34,33 +31,25 @@ export default function RouteChangeLoading({
     }
     return el;
   };
-
   const show = () => {
     const el = ensureOverlay();
     el.style.display = "flex";
   };
-
   const hide = () => {
     const el = ensureOverlay();
     el.style.display = "none";
   };
-
   useEffect(() => {
     const current = `${pathname ?? ""}?${searchParams?.toString() ?? ""}`;
-
     // don't show on first render — only when the route actually changes
     if (prevRoute.current === null) {
       prevRoute.current = current;
       return;
     }
-
     // if route didn't change (rare), do nothing
     if (prevRoute.current === current) return;
-
     prevRoute.current = current;
-
     show();
-
     const startedAt = Date.now();
     const scheduleHide = () => {
       const elapsed = Date.now() - startedAt;
@@ -70,9 +59,7 @@ export default function RouteChangeLoading({
         timer.current = null;
       }, wait) as unknown as number;
     };
-
     scheduleHide();
-
     return () => {
       if (timer.current) {
         window.clearTimeout(timer.current);
@@ -81,6 +68,5 @@ export default function RouteChangeLoading({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, searchParams?.toString(), minDuration]);
-
   return null;
-}
+}

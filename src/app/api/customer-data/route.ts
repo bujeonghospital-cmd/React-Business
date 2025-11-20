@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import pool from "@/lib/db";
-
 // Mapping ชื่อคอลัมน์จากภาษาอังกฤษ (ในฐานข้อมูล) เป็นภาษาไทย (สำหรับ UI)
 const columnMapping: Record<string, string> = {
   id: "id",
@@ -52,7 +51,6 @@ const columnMapping: Record<string, string> = {
   created_at: "created_at",
   updated_at: "updated_at",
 };
-
 // Reverse mapping สำหรับแปลงกลับจากภาษาไทยเป็นภาษาอังกฤษ
 const reverseColumnMapping: Record<string, string> = Object.entries(
   columnMapping
@@ -60,25 +58,20 @@ const reverseColumnMapping: Record<string, string> = Object.entries(
   acc[thai] = eng;
   return acc;
 }, {} as Record<string, string>);
-
 export async function GET(request: NextRequest) {
   let client;
   try {
     // ใช้ client แทน pool.query โดยตรง เพื่อควบคุม timeout ได้ดีขึ้น
     client = await pool.connect();
-
     // ดึงข้อมูลทั้งหมดจากตาราง bjh_all_leads ใน schema BJH-Server
     const result = await client.query(
       'SELECT * FROM "BJH-Server".bjh_all_leads ORDER BY id DESC'
     );
-
     const customers = result.rows;
-
     // แปลงชื่อคอลัมน์เป็นภาษาไทย
     const thaiHeaders = result.fields.map(
       (field) => columnMapping[field.name] || field.name
     );
-
     // แปลงข้อมูลให้อยู่ในรูปแบบ { columns: [], data: [] } เหมือน Railway API
     const formattedData = customers.map((row) => {
       const rowObj: Record<string, any> = {};
@@ -88,7 +81,6 @@ export async function GET(request: NextRequest) {
       });
       return rowObj;
     });
-
     return NextResponse.json({
       success: true,
       columns: thaiHeaders,
@@ -102,7 +94,6 @@ export async function GET(request: NextRequest) {
     console.error("Database error:", error);
     console.error("DB_HOST:", process.env.DB_HOST || "192.168.1.19");
     console.error("Error code:", error.code);
-
     // ให้ข้อความที่ชัดเจนกว่า
     let errorMessage = "Failed to connect to database";
     if (error.code === "ETIMEDOUT" || error.message.includes("timeout")) {
@@ -112,7 +103,6 @@ export async function GET(request: NextRequest) {
       errorMessage =
         "Database host not found. กรุณาตรวจสอบ DB_HOST environment variable";
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -130,35 +120,29 @@ export async function GET(request: NextRequest) {
     }
   }
 }
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, data } = body;
-
     if (action === "update") {
       // อัพเดทข้อมูลลูกค้า
       const { id, ...updateData } = data;
-
       // แปลงชื่อคอลัมน์จากภาษาไทยเป็นภาษาอังกฤษ
       const englishData: Record<string, any> = {};
       Object.entries(updateData).forEach(([thaiKey, value]) => {
         const englishKey = reverseColumnMapping[thaiKey] || thaiKey;
         englishData[englishKey] = value;
       });
-
       // สร้าง SQL query สำหรับ update
       const fields = Object.keys(englishData);
       const values = Object.values(englishData);
       const setClause = fields
         .map((field, index) => `${field} = $${index + 1}`)
         .join(", ");
-
       const query = `UPDATE "BJH-Server".bjh_all_leads SET ${setClause}, updated_at = NOW() WHERE id = $${
         fields.length + 1
       } RETURNING *`;
       const result = await pool.query(query, [...values, id]);
-
       return NextResponse.json({
         success: true,
         message: "Customer updated successfully",
@@ -172,16 +156,13 @@ export async function POST(request: NextRequest) {
         const englishKey = reverseColumnMapping[thaiKey] || thaiKey;
         englishData[englishKey] = value;
       });
-
       const fields = Object.keys(englishData);
       const values = Object.values(englishData);
       const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
-
       const query = `INSERT INTO "BJH-Server".bjh_all_leads (${fields.join(
         ", "
       )}, created_at, updated_at) VALUES (${placeholders}, NOW(), NOW()) RETURNING *`;
       const result = await pool.query(query, values);
-
       return NextResponse.json({
         success: true,
         message: "Customer created successfully",
@@ -193,13 +174,11 @@ export async function POST(request: NextRequest) {
       await pool.query('DELETE FROM "BJH-Server".bjh_all_leads WHERE id = $1', [
         id,
       ]);
-
       return NextResponse.json({
         success: true,
         message: "Customer deleted successfully",
       });
     }
-
     return NextResponse.json(
       { success: false, error: "Invalid action" },
       { status: 400 }
@@ -215,4 +194,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

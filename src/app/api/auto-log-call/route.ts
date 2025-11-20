@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-
 /**
  * API สำหรับบันทึกการโทรอัตโนมัติ
  * ใช้งานร่วมกับ Queue Status API
@@ -8,7 +7,6 @@ import { NextRequest, NextResponse } from "next/server";
  * 1. เรียกใช้ตอน agent เริ่มโทร (status = "Outbound")
  * 2. เรียกใช้ตอน agent จบสาย (status = "Waiting/Available")
  */
-
 interface AutoLogPayload {
   agent_id: string;
   customer_phone: string;
@@ -17,14 +15,11 @@ interface AutoLogPayload {
   call_status: "started" | "ended";
   timestamp?: string;
 }
-
 // เก็บข้อมูล call ที่กำลังดำเนินการ (in-memory)
 const activeCallsMap = new Map<string, any>();
-
 export async function POST(request: NextRequest) {
   try {
     const payload: AutoLogPayload = await request.json();
-
     const {
       agent_id,
       customer_phone,
@@ -33,7 +28,6 @@ export async function POST(request: NextRequest) {
       call_status,
       timestamp,
     } = payload;
-
     // Validation
     if (!agent_id || !customer_phone || !call_status) {
       return NextResponse.json(
@@ -44,10 +38,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const callKey = `${agent_id}_${customer_phone}`;
     const now = timestamp || new Date().toISOString();
-
     // ===========================================
     // กรณี: เริ่มต้นโทร (call_status = "started")
     // ===========================================
@@ -59,22 +51,18 @@ export async function POST(request: NextRequest) {
         call_type,
         start_time: now,
       });
-
       console.log(`📞 Call started: Agent ${agent_id} -> ${customer_phone}`);
-
       return NextResponse.json({
         success: true,
         message: "Call tracking started",
         call_key: callKey,
       });
     }
-
     // ===========================================
     // กรณี: จบสาย (call_status = "ended")
     // ===========================================
     if (call_status === "ended") {
       const activeCall = activeCallsMap.get(callKey);
-
       if (!activeCall) {
         return NextResponse.json(
           {
@@ -84,14 +72,12 @@ export async function POST(request: NextRequest) {
           { status: 404 }
         );
       }
-
       // คำนวณระยะเวลา
       const startTime = new Date(activeCall.start_time);
       const endTime = new Date(now);
       const durationSeconds = Math.floor(
         (endTime.getTime() - startTime.getTime()) / 1000
       );
-
       // บันทึกลง Call Matrix Database
       const callLogData = {
         agent_id: activeCall.agent_id,
@@ -104,18 +90,14 @@ export async function POST(request: NextRequest) {
         duration_seconds: durationSeconds,
         notes: "Auto-logged from Queue Status",
       };
-
       const saveResponse = await fetch(getBaseUrl() + "/api/call-matrix", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(callLogData),
       });
-
       const saveResult = await saveResponse.json();
-
       // ลบออกจาก active calls
       activeCallsMap.delete(callKey);
-
       if (saveResult.success) {
         console.log(
           `✅ Call ended & logged: Agent ${agent_id} -> ${customer_phone} (${durationSeconds}s)`
@@ -133,7 +115,6 @@ export async function POST(request: NextRequest) {
         );
       }
     }
-
     return NextResponse.json(
       {
         success: false,
@@ -149,7 +130,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
 // GET: ดูข้อมูล active calls
 export async function GET() {
   const activeCalls = Array.from(activeCallsMap.entries()).map(
@@ -158,17 +138,15 @@ export async function GET() {
       ...value,
     })
   );
-
   return NextResponse.json({
     success: true,
     active_calls_count: activeCalls.length,
     active_calls: activeCalls,
   });
 }
-
 function getBaseUrl(): string {
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
   return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-}
+}

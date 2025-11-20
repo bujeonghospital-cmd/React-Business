@@ -2,12 +2,10 @@
 import "../globals.css";
 import localFont from "next/font/local";
 import type { Metadata } from "next";
-
 export const metadata: Metadata = {
   title: "Contact Dashboard",
   description: "Real-time contact management dashboard",
 };
-
 const font = localFont({
   src: [
     {
@@ -19,7 +17,6 @@ const font = localFont({
   ],
   display: "swap",
 });
-
 export default function StandaloneLayout({
   children,
 }: {
@@ -33,4 +30,4 @@ export default function StandaloneLayout({
       </body>
     </html>
   );
-}
+}

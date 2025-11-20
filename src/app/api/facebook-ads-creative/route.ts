@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-
 export async function GET(request: NextRequest) {
   try {
     const accessToken = process.env.FACEBOOK_ACCESS_TOKEN;
     const searchParams = request.nextUrl.searchParams;
     const adId = searchParams.get("ad_id");
-
     if (!accessToken) {
       return NextResponse.json(
         {
@@ -15,7 +13,6 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
-
     if (!adId) {
       return NextResponse.json(
         {
@@ -25,7 +22,6 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
-
     // ดึงข้อมูล creative จาก ad
     const fields =
       "creative{id,thumbnail_url,image_url,video_id,object_story_spec,effective_object_story_id}";
@@ -34,14 +30,12 @@ export async function GET(request: NextRequest) {
       access_token: accessToken,
       fields: fields,
     });
-
     const response = await fetch(`${apiUrl}?${params.toString()}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
     });
-
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Facebook API Error:", errorData);
@@ -54,10 +48,8 @@ export async function GET(request: NextRequest) {
         { status: response.status }
       );
     }
-
     const data = await response.json();
     const creativeData = data.creative || null;
-
     // Try to get image from effective_object_story_id if creative doesn't have thumbnail
     if (
       creativeData &&
@@ -65,7 +57,6 @@ export async function GET(request: NextRequest) {
       !creativeData.image_url
     ) {
       const storyId = creativeData.effective_object_story_id;
-
       if (storyId) {
         try {
           const storyUrl = `https://graph.facebook.com/v24.0/${storyId}`;
@@ -74,20 +65,17 @@ export async function GET(request: NextRequest) {
             fields:
               "full_picture,picture,attachments{media,type,media_type,url}",
           });
-
           const storyResponse = await fetch(
             `${storyUrl}?${storyParams.toString()}`
           );
           if (storyResponse.ok) {
             const storyData = await storyResponse.json();
-
             // Add image URLs from post
             if (storyData.full_picture) {
               creativeData.image_url = storyData.full_picture;
             } else if (storyData.picture) {
               creativeData.image_url = storyData.picture;
             }
-
             // Try to get from attachments
             if (storyData.attachments?.data?.[0]?.media?.image?.src) {
               creativeData.thumbnail_url =
@@ -99,7 +87,6 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-
     // If still no image, try to get preview
     if (
       creativeData &&
@@ -112,7 +99,6 @@ export async function GET(request: NextRequest) {
           access_token: accessToken,
           ad_format: "DESKTOP_FEED_STANDARD",
         });
-
         const previewResponse = await fetch(
           `${previewUrl}?${previewParams.toString()}`
         );
@@ -132,7 +118,6 @@ export async function GET(request: NextRequest) {
         console.log("Could not fetch preview:", error);
       }
     }
-
     return NextResponse.json({
       success: true,
       data: creativeData,
@@ -148,4 +133,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}
