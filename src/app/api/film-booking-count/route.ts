@@ -51,13 +51,15 @@ export async function GET(request: NextRequest) {
     const schema = process.env.DB_SCHEMA || "public";
     const database = process.env.DB_NAME || "postgres";
 
-    // Query สำหรับ consult - ใช้ตาราง bjh_all_leads
-    const consultQuery = `
+    // Query สำหรับดึงข้อมูลจาก daily_bookings (มีทั้ง Consult และ Surgery)
+    const bookingsQuery = `
       SELECT 
         contact_staff,
-        booked_consult_date
-      FROM ${database}."${schema}".bjh_all_leads
-      WHERE DATE(booked_consult_date) = $1
+        booking_date,
+        booking_type,
+        booking_count
+      FROM ${database}."${schema}".daily_bookings
+      WHERE booking_date = $1
       AND contact_staff IS NOT NULL
     `;
 
@@ -67,86 +69,102 @@ export async function GET(request: NextRequest) {
     console.log("Date:", targetDate);
 
     // Execute query
-    const consultResult = await client.query(consultQuery, [targetDate]);
-    const consultData = consultResult.rows;
+    const bookingsResult = await client.query(bookingsQuery, [targetDate]);
+    const bookingsData = bookingsResult.rows;
 
     console.log("📊 Raw data fetched:", {
-      consultRows: consultData?.length || 0,
-      consultSample: consultData?.[0],
+      totalRows: bookingsData?.length || 0,
+      sample: bookingsData?.[0],
     });
 
     // นับจำนวนและเรียงลำดับตาม booking_count DESC
     const consultCounts: Record<string, number> = {};
+    const surgeryCounts: Record<string, number> = {};
 
     // Helper function: แปลง contact_staff เป็น agent_id
-    const getAgentId = (row: any): string | null => {
-      // ถ้ามี contact_staff ให้แปลง
-      if (row.contact_staff) {
-        const staffName = String(row.contact_staff).trim();
+    const getAgentId = (staffName: string): string | null => {
+      const trimmedName = staffName.trim();
 
-        // ตรวจสอบว่าตรงกับ mapping ไหม
-        if (agentNameMap[staffName]) {
-          return agentNameMap[staffName];
-        }
+      // ตรวจสอบว่าตรงกับ mapping ไหม
+      if (agentNameMap[trimmedName]) {
+        return agentNameMap[trimmedName];
+      }
 
-        // ถ้าเป็นตัวเลข 3 หลัก ให้ใช้เลย
-        if (/^\d{3}$/.test(staffName)) {
-          return staffName;
-        }
+      // ถ้าเป็นตัวเลข 3 หลัก ให้ใช้เลย
+      if (/^\d{3}$/.test(trimmedName)) {
+        return trimmedName;
+      }
 
-        // ลองหาว่ามีตัวเลข 3 หลักในชื่อไหม (เช่น "101-สา")
-        const match = staffName.match(/^(\d{3})/);
-        if (match) {
-          return match[1];
-        }
+      // ลองหาว่ามีตัวเลข 3 หลักในชื่อไหม (เช่น "101-สา")
+      const match = trimmedName.match(/^(\d{3})/);
+      if (match) {
+        return match[1];
       }
 
       return null;
     };
 
-    // นับจำนวน consult แยกตาม agent_id
-    if (Array.isArray(consultData)) {
-      consultData.forEach((row: any) => {
-        const agentId = getAgentId(row);
-        if (agentId) {
-          consultCounts[agentId] = (consultCounts[agentId] || 0) + 1;
+    // ประมวลผลข้อมูลจาก daily_bookings
+    if (Array.isArray(bookingsData)) {
+      bookingsData.forEach((row: any) => {
+        const agentId = getAgentId(String(row.contact_staff || ""));
+        const bookingType = String(row.booking_type || "").trim();
+        const bookingCount = parseInt(row.booking_count) || 0;
+
+        if (agentId && bookingCount > 0) {
+          if (bookingType === "Consult") {
+            consultCounts[agentId] = (consultCounts[agentId] || 0) + bookingCount;
+          } else if (bookingType === "Surgery") {
+            surgeryCounts[agentId] = (surgeryCounts[agentId] || 0) + bookingCount;
+          }
         }
       });
     }
 
     // เรียงลำดับตามจำนวน (DESC) - มากไปน้อย
-    const sortedConsultCounts = Object.entries(consultCounts)
-      .sort(([, a], [, b]) => b - a) // เรียงจากมากไปน้อย
-      .reduce((acc, [key, value]) => {
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, number>);
+    const sortByCount = (counts: Record<string, number>) => {
+      return Object.entries(counts)
+        .sort(([, a], [, b]) => b - a)
+        .reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {} as Record<string, number>);
+    };
+
+    const sortedConsultCounts = sortByCount(consultCounts);
+    const sortedSurgeryCounts = sortByCount(surgeryCounts);
 
     // คำนวณยอดรวม
     const totalConsults = Object.values(sortedConsultCounts).reduce(
       (sum, count) => sum + count,
       0
     );
+    const totalSurgeries = Object.values(sortedSurgeryCounts).reduce(
+      (sum, count) => sum + count,
+      0
+    );
 
-    console.log("✅ Film booking count loaded from SQL (ORDER BY DESC):", {
+    console.log("✅ Booking count loaded from daily_bookings (ORDER BY DESC):", {
       date: targetDate,
       consultCounts: sortedConsultCounts,
+      surgeryCounts: sortedSurgeryCounts,
       totalConsults,
-      rawConsultRows: consultData?.length || 0,
+      totalSurgeries,
+      rawRows: bookingsData?.length || 0,
     });
 
     return NextResponse.json({
       success: true,
       date: targetDate,
       consultCounts: sortedConsultCounts,
-      surgeryCounts: {}, // ไม่มีข้อมูล surgery ในตาราง bjh_all_leads
+      surgeryCounts: sortedSurgeryCounts,
       summary: {
         totalConsults,
-        totalSurgeries: 0,
+        totalSurgeries,
         totalAgentsWithConsults: Object.keys(sortedConsultCounts).length,
-        totalAgentsWithSurgeries: 0,
+        totalAgentsWithSurgeries: Object.keys(sortedSurgeryCounts).length,
       },
-      source: "postgresql_bjh_all_leads_ordered_by_booking_count_desc",
+      source: "postgresql_daily_bookings_ordered_by_booking_count_desc",
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
