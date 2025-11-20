@@ -1035,87 +1035,115 @@ const CustomerContactDashboard = () => {
     }
   };
 
-  // Fetch Film Data - จำนวนนับ (O) และจำนวนผ่า (P) จาก Python API
+  // Fetch Film Data - จำนวนนับ (O) และจำนวนผ่า (P) จาก SQL API (ORDER BY booking_count DESC)
   const fetchFilmData = async () => {
     try {
-      // ใช้ Film Data Contacts API (today=true เพื่อดึงเฉพาะวันนี้)
-      const result = await fetchFilmDataContacts(selectedDate, true, true);
+      // ใช้ SQL API ใหม่ที่เรียงลำดับด้วย ORDER BY booking_count DESC
+      const params = new URLSearchParams();
+      params.append("date", selectedDate);
+      params.append("today", "true");
+
+      const response = await fetch(
+        `/api/film-booking-count?${params.toString()}`
+      );
+      const result = await response.json();
 
       if (result.success) {
-        // แปลงข้อมูลเป็นจำนวนแยกตาม Agent
-        const { consultCounts, surgeryCounts } =
-          transformFilmDataToAgentCounts(result);
-
         // ตั้งค่าจำนวน consult และนัดผ่าตัด
-        setFilmDataCounts(consultCounts);
-        setFilmDataSurgeryCounts(surgeryCounts);
+        setFilmDataCounts(result.consultCounts || {});
+        setFilmDataSurgeryCounts(result.surgeryCounts || {});
 
-        console.log("✅ Film data loaded from Python API:", result);
-        console.log("  - Consult counts by agent:", consultCounts);
-        console.log("  - Surgery counts by agent:", surgeryCounts);
-        console.log("  - Total records:", result.total);
-        console.log("  - Count summary:", result.count_summary);
+        console.log(
+          "✅ Film data loaded from SQL API (ORDER BY booking_count DESC):",
+          result
+        );
+        console.log("  - Consult counts by agent:", result.consultCounts);
+        console.log("  - Surgery counts by agent:", result.surgeryCounts);
+        console.log("  - Summary:", result.summary);
       } else {
-        // API ตอบกลับมาแต่ไม่ success (เช่น quota exceeded, error)
+        // API ตอบกลับมาแต่ไม่ success
         console.warn(
-          "⚠️ Film data API returned error:",
+          "⚠️ Film data SQL API returned error:",
           result.error || result
         );
 
-        // ถ้าเป็น quota exceeded ให้ใช้ข้อมูลเก่าหรือข้ามไป
-        if (result.error && result.error.includes("Quota exceeded")) {
-          console.log(
-            "📊 Google Sheets quota exceeded - keeping existing data or empty"
+        // Fallback: ลอง Python API (เดิม)
+        console.log("⚠️ Trying fallback to Python API...");
+        try {
+          const pythonResult = await fetchFilmDataContacts(
+            selectedDate,
+            true,
+            true
           );
-          // ไม่ต้องทำอะไร ใช้ข้อมูลเก่าที่มีอยู่ หรือเป็นค่าว่าง
-          setFilmDataCounts({});
-          setFilmDataSurgeryCounts({});
-        } else {
-          console.error(
-            "❌ Failed to fetch Film data from Python API:",
-            result
-          );
-          // Fallback: ลอง Google Sheets API
-          console.log("⚠️ Trying fallback to Google Sheets API...");
-          try {
-            const response = await fetch(
+
+          if (pythonResult.success) {
+            const { consultCounts, surgeryCounts } =
+              transformFilmDataToAgentCounts(pythonResult);
+
+            setFilmDataCounts(consultCounts);
+            setFilmDataSurgeryCounts(surgeryCounts);
+
+            console.log(
+              "✅ Film data loaded from Python API (fallback):",
+              pythonResult
+            );
+          } else {
+            // Fallback ที่ 2: ลอง Google Sheets API
+            console.log("⚠️ Trying fallback to Google Sheets API...");
+            const gsResponse = await fetch(
               `/api/google-sheets-film-data?date=${selectedDate}`
             );
-            const fallbackResult = await response.json();
+            const gsResult = await gsResponse.json();
 
-            if (fallbackResult.success) {
-              setFilmDataCounts(fallbackResult.agentCounts || {});
-              setFilmDataSurgeryCounts(fallbackResult.surgeryCounts || {});
+            if (gsResult.success) {
+              setFilmDataCounts(gsResult.agentCounts || {});
+              setFilmDataSurgeryCounts(gsResult.surgeryCounts || {});
               console.log(
-                "✅ Film data loaded from Google Sheets (fallback):",
-                fallbackResult
+                "✅ Film data loaded from Google Sheets (fallback 2):",
+                gsResult
               );
+            } else {
+              // ไม่มีข้อมูล - ตั้งค่าเป็นว่าง
+              setFilmDataCounts({});
+              setFilmDataSurgeryCounts({});
             }
-          } catch (fallbackError) {
-            console.error("❌ Fallback also failed:", fallbackError);
           }
+        } catch (fallbackError) {
+          console.error("❌ All fallbacks failed:", fallbackError);
+          setFilmDataCounts({});
+          setFilmDataSurgeryCounts({});
         }
       }
     } catch (error) {
-      console.error("❌ Error fetching Film data:", error);
+      console.error("❌ Error fetching Film data from SQL API:", error);
 
-      // Fallback: ลอง Google Sheets API
+      // Fallback: ลอง Python API
       try {
-        const response = await fetch(
-          `/api/google-sheets-film-data?date=${selectedDate}`
+        const pythonResult = await fetchFilmDataContacts(
+          selectedDate,
+          true,
+          true
         );
-        const fallbackResult = await response.json();
 
-        if (fallbackResult.success) {
-          setFilmDataCounts(fallbackResult.agentCounts || {});
-          setFilmDataSurgeryCounts(fallbackResult.surgeryCounts || {});
+        if (pythonResult.success) {
+          const { consultCounts, surgeryCounts } =
+            transformFilmDataToAgentCounts(pythonResult);
+
+          setFilmDataCounts(consultCounts);
+          setFilmDataSurgeryCounts(surgeryCounts);
+
           console.log(
-            "✅ Film data loaded from Google Sheets (fallback):",
-            fallbackResult
+            "✅ Film data loaded from Python API (error fallback):",
+            pythonResult
           );
+        } else {
+          setFilmDataCounts({});
+          setFilmDataSurgeryCounts({});
         }
       } catch (fallbackError) {
-        console.error("❌ Fallback also failed:", fallbackError);
+        console.error("❌ Error fallback also failed:", fallbackError);
+        setFilmDataCounts({});
+        setFilmDataSurgeryCounts({});
       }
     }
   };
