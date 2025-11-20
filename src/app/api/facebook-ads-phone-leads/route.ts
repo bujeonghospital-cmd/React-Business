@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
       queryParams.push(dateParam);
       query += ` AND ct.assigned_at::date = $${queryParams.length}`;
     } else {
-      // Default to current date
+      // If no date param, use CURRENT_DATE by default
       query += ` AND ct.assigned_at::date = CURRENT_DATE`;
     }
     // Add ad_id filter if provided
@@ -137,4 +137,4 @@ export async function GET(request: NextRequest) {
       client.release();
     }
   }
-}
+}

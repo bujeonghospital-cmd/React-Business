@@ -207,6 +207,10 @@ export default function FacebookAdsManagerPage() {
     Map<string, { [date: string]: number }>
   >(new Map());
   const [phoneLeadsLoading, setPhoneLeadsLoading] = useState(false);
+  const [topAdsPhoneLeads, setTopAdsPhoneLeads] = useState<Map<string, number>>(
+    new Map()
+  );
+  const [topAdsPhoneLeadsLoading, setTopAdsPhoneLeadsLoading] = useState(false);
   // Helper function to check if local video exists
   const getLocalVideoPath = (videoId: string | undefined): string | null => {
     if (!videoId) return null;
@@ -249,6 +253,29 @@ export default function FacebookAdsManagerPage() {
       setCreativesLoading(false);
     }
   }, []);
+
+  const fetchTopAdsPhoneLeads = useCallback(async (adIds: string[]) => {
+    try {
+      setTopAdsPhoneLeadsLoading(true);
+      const adIdsParam = adIds.join(",");
+      const response = await fetch(
+        `/api/facebook-ads-phone-leads?ad_ids=${adIdsParam}`
+      );
+      const result = await response.json();
+      if (result.success && result.data) {
+        const phoneLeadsMap = new Map<string, number>();
+        Object.keys(result.data).forEach((adId) => {
+          phoneLeadsMap.set(adId, result.data[adId]);
+        });
+        setTopAdsPhoneLeads(new Map(phoneLeadsMap));
+      }
+    } catch (error) {
+      setTopAdsPhoneLeads(new Map());
+    } finally {
+      setTopAdsPhoneLeadsLoading(false);
+    }
+  }, []);
+
   const fetchInsights = useCallback(
     async (isBackgroundRefresh = false) => {
       try {
@@ -338,6 +365,8 @@ export default function FacebookAdsManagerPage() {
           .map((item) => item.ad_id);
         if (allAdIds.length > 0) {
           fetchAdCreatives(allAdIds);
+          // Fetch phone leads for TOP 10 Ads
+          fetchTopAdsPhoneLeads(allAdIds);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "เกิดข้อผิดพลาด");
@@ -347,7 +376,14 @@ export default function FacebookAdsManagerPage() {
         }
       }
     },
-    [dateRange, viewMode, customDateStart, customDateEnd, fetchAdCreatives]
+    [
+      dateRange,
+      viewMode,
+      customDateStart,
+      customDateEnd,
+      fetchAdCreatives,
+      fetchTopAdsPhoneLeads,
+    ]
   );
   const fetchGoogleSheetsData = useCallback(async () => {
     try {
@@ -511,6 +547,7 @@ export default function FacebookAdsManagerPage() {
     },
     []
   );
+
   const fetchDailySummaryData = useCallback(async () => {
     try {
       setDailySummaryLoading(true);
@@ -1637,7 +1674,11 @@ export default function FacebookAdsManagerPage() {
                               )}
                             </td>
                             <td className="py-2 px-1 text-center font-semibold text-purple-700 text-xl">
-                              {getResultsByActionType(ad.actions, "lead")}
+                              {topAdsPhoneLeadsLoading ? (
+                                <span className="text-sm">⏳</span>
+                              ) : (
+                                topAdsPhoneLeads.get(ad.ad_id) || 0
+                              )}
                             </td>
                             <td className="py-2 px-1 text-center text-gray-700 text-xl">
                               {(() => {
@@ -1865,4 +1906,4 @@ export default function FacebookAdsManagerPage() {
       </div>
     </div>
   );
-}
+}
