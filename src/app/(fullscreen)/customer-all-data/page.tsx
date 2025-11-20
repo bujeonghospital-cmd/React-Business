@@ -112,6 +112,9 @@ const CustomerAllDataPage = () => {
     string,
     any
   > | null>(null);
+  const [statusOptions, setStatusOptions] = useState<
+    Array<{ value: string; label: string; color: string }>
+  >([]);
 
   const fetchData = async () => {
     try {
@@ -252,6 +255,33 @@ const CustomerAllDataPage = () => {
     }
   };
 
+  const fetchStatusOptions = async () => {
+    try {
+      const response = await fetch("/api/status-options");
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setStatusOptions(result.data);
+      } else {
+        console.error("Failed to fetch status options:", result.error);
+        // Fallback to default if API fails
+        setStatusOptions([
+          {
+            value: "all",
+            label: "ทั้งหมด",
+            color: "bg-gray-200 text-gray-800",
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching status options:", error);
+      // Fallback to default if API fails
+      setStatusOptions([
+        { value: "all", label: "ทั้งหมด", color: "bg-gray-200 text-gray-800" },
+      ]);
+    }
+  };
+
   useEffect(() => {
     // Check authentication and get user data
     const checkAuth = () => {
@@ -266,6 +296,7 @@ const CustomerAllDataPage = () => {
 
     checkAuth();
     fetchData();
+    fetchStatusOptions();
   }, []);
 
   const handleSort = (column: string) => {
@@ -630,93 +661,6 @@ const CustomerAllDataPage = () => {
     { value: "ลิงหน้า", label: "ลิงหน้า" },
     { value: "Skin", label: "Skin" },
     { value: "ตื่อ", label: "ตื่อ" },
-  ];
-
-  const statusOptions = [
-    { value: "all", label: "ทั้งหมด", color: "bg-gray-200 text-gray-800" },
-    // { value: "สถานะ", label: "สถานะ", color: "bg-yellow-400 text-black" },
-    {
-      value: "ซื้อแล้ว รอนัดหมาย (Online)",
-      label: "ซื้อแล้ว รอนัดหมาย (Online)",
-      color: "bg-green-500 text-black",
-    },
-    {
-      value: "นัดแล้ว",
-      label: "นัดแล้ว",
-      color: "bg-white text-gray-900 border border-gray-300",
-    },
-    {
-      value: "เป็นลูกค้าแล้ว",
-      label: "เป็นลูกค้าแล้ว",
-      color: "bg-blue-900 text-black",
-    },
-    {
-      value: "Consult แล้วรอตัดสินใจ",
-      label: "Consult แล้วรอตัดสินใจ",
-      color: "bg-purple-500 text-black",
-    },
-    { value: "ยกเลิกนัด", label: "ยกเลิกนัด", color: "bg-gray-500 text-black" },
-    {
-      value: "เลื่อน นัดรอนัดใหม่",
-      label: "เลื่อน นัดรอนัดใหม่",
-      color: "bg-blue-600 text-black",
-    },
-    {
-      value: "โอนราคาแล้ว",
-      label: "โอนราคาแล้ว",
-      color: "bg-purple-400 text-black",
-    },
-    { value: "ติดตาม", label: "ติดตาม", color: "bg-red-500 text-black" },
-    {
-      value: "สนใจ รอนัดหมาย (Online)",
-      label: "สนใจ รอนัดหมาย (Online)",
-      color: "bg-yellow-500 text-black",
-    },
-    {
-      value: "ไม่สนใจ",
-      label: "ไม่สนใจ",
-      color: "bg-orange-500 text-black",
-    },
-    {
-      value: "สนใจ รอนัดหมาย",
-      label: "สนใจ รอนัดหมาย",
-      color: "bg-teal-500 text-black",
-    },
-    {
-      value: "ติดตาม",
-      label: "ติดตาม",
-      color: "bg-pink-400 text-black",
-    },
-    {
-      value: "นัด Consult",
-      label: "นัด Consult",
-      color: "bg-indigo-500 text-black",
-    },
-    {
-      value: "นัดพร้อมทำ",
-      label: "นัดพร้อมทำ",
-      color: "bg-gray-400 text-black",
-    },
-    {
-      value: "Consultแล้วรอทำ",
-      label: "Consultแล้วรอทำ",
-      color: "bg-gray-500 text-black",
-    },
-    {
-      value: "ลูกค้าติดปัญหา",
-      label: "ลูกค้าติดปัญหา",
-      color: "bg-gray-400 text-black",
-    },
-    {
-      value: "นัด Consult (VDO)",
-      label: "นัด Consult (VDO)",
-      color: "bg-gray-500 text-black",
-    },
-    {
-      value: "เบอร์ติดต่อไม่ได้",
-      label: "เบอร์ติดต่อไม่ได้",
-      color: "bg-gray-400 text-black",
-    },
   ];
 
   useEffect(() => {

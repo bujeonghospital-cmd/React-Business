@@ -1853,64 +1853,98 @@ export default function FacebookAdsManagerPage() {
                                 <div
                                   className="relative group cursor-pointer flex justify-center items-center"
                                   onClick={() => {
-                                    // ดึง video_id ที่ถูกต้อง
-                                    const videoId =
-                                      creative?.object_story_spec?.video_data
-                                        ?.video_id || creative?.video_id;
-
-                                    console.log("🖱️ Clicked ad:", ad.ad_id);
-                                    console.log("🎬 Video ID:", videoId);
-                                    console.log("📦 Creative:", creative);
-
-                                    // เปิด modal เพื่อแสดงวิดีโอ (local หรือ Facebook)
                                     setSelectedAdForPreview(ad);
                                     setShowVideoModal(true);
                                   }}
-                                  title={
-                                    creative?.object_story_spec?.video_data
-                                      ?.video_id || creative?.video_id
-                                      ? `🎬 คลิกเพื่อดูวิดีโอใน Facebook (Video ID: ${
-                                          creative?.object_story_spec
-                                            ?.video_data?.video_id ||
-                                          creative?.video_id
-                                        })`
-                                      : creative
-                                      ? `Creative ID: ${creative.id} (ไม่มีวิดีโอ)`
-                                      : "No creative data"
-                                  }
                                 >
-                                  {creative &&
-                                  (creative.thumbnail_url ||
-                                    creative.image_url) ? (
-                                    <div className="w-20 h-20 flex-shrink-0">
-                                      <img
-                                        src={
-                                          creative.thumbnail_url ||
-                                          creative.image_url
-                                        }
-                                        alt="Ad preview"
-                                        className="w-full h-full object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
-                                        onClick={() => {
-                                          setSelectedAdForPreview(ad);
-                                          setShowVideoModal(true);
-                                        }}
-                                        onError={(e) => {
-                                          console.error(
-                                            "Image load error for ad:",
-                                            ad.ad_id
-                                          );
-                                          e.currentTarget.src =
-                                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
-                                        }}
-                                      />
-                                    </div>
-                                  ) : (
-                                    <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
-                                      <span className="text-gray-400 text-xs">
-                                        📷
-                                      </span>
-                                    </div>
-                                  )}
+                                  {(() => {
+                                    const videoId =
+                                      creative?.object_story_spec?.video_data
+                                        ?.video_id || creative?.video_id;
+                                    const localVideoPath = videoId
+                                      ? `/images/video/${videoId}.mp4`
+                                      : null;
+                                    const thumbnailUrl =
+                                      creative?.thumbnail_url ||
+                                      creative?.image_url;
+
+                                    // แสดงวิดีโอจาก local ก่อน (ถ้ามี)
+                                    if (localVideoPath) {
+                                      return (
+                                        <div className="w-20 h-20 flex-shrink-0">
+                                          <video
+                                            src={localVideoPath}
+                                            className="w-full h-full object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                                            autoPlay
+                                            loop
+                                            muted
+                                            playsInline
+                                            onLoadedMetadata={(e) => {
+                                              const video = e.currentTarget;
+                                              // เล่น 3 วินาทีแรก แล้ววนลูป
+                                              video.addEventListener(
+                                                "timeupdate",
+                                                function () {
+                                                  if (this.currentTime >= 3) {
+                                                    this.currentTime = 0;
+                                                  }
+                                                }
+                                              );
+                                            }}
+                                            onError={(e) => {
+                                              console.error(
+                                                `❌ [Video Error] Failed to load: ${localVideoPath}`
+                                              );
+                                              // ถ้าไม่มีวิดีโอ ให้แสดงรูปภาพแทน
+                                              e.currentTarget.style.display =
+                                                "none";
+                                              if (thumbnailUrl) {
+                                                const img =
+                                                  document.createElement("img");
+                                                img.src = thumbnailUrl;
+                                                img.alt = "Ad preview";
+                                                img.className =
+                                                  "w-full h-full object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow";
+                                                e.currentTarget.parentElement?.appendChild(
+                                                  img
+                                                );
+                                              }
+                                            }}
+                                          />
+                                        </div>
+                                      );
+                                    }
+
+                                    // ถ้าไม่มีวิดีโอ ให้แสดงรูปภาพ
+                                    if (thumbnailUrl) {
+                                      return (
+                                        <div className="w-20 h-20 flex-shrink-0">
+                                          <img
+                                            src={thumbnailUrl}
+                                            alt="Ad preview"
+                                            className="w-full h-full object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                                            onError={(e) => {
+                                              console.error(
+                                                "Image load error for ad:",
+                                                ad.ad_id
+                                              );
+                                              e.currentTarget.src =
+                                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
+                                            }}
+                                          />
+                                        </div>
+                                      );
+                                    }
+
+                                    // ถ้าไม่มีทั้งวิดีโอและรูปภาพ
+                                    return (
+                                      <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        <span className="text-gray-400 text-xs">
+                                          📷
+                                        </span>
+                                      </div>
+                                    );
+                                  })()}
                                 </div>
                               </td>
                               <td className="py-2 px-1 text-center text-gray-700 font-semibold text-xl">
