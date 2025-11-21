@@ -60,6 +60,13 @@ interface ApiResponse {
     totalColumns: number;
   };
 }
+
+interface TableSizeOption {
+  id: number;
+  size_value: number;
+  size_label: string;
+  sort_order: number;
+}
 const CustomerAllDataPage = () => {
   const [tableData, setTableData] = useState<TableData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,6 +117,11 @@ const CustomerAllDataPage = () => {
   const [statusOptions, setStatusOptions] = useState<
     Array<{ value: string; label: string; color: string }>
   >([]);
+  const [tableSizeOptions, setTableSizeOptions] = useState<TableSizeOption[]>(
+    []
+  );
+  const [showTableSizeMenu, setShowTableSizeMenu] = useState(false);
+  const [tableSize, setTableSize] = useState<number>(500);
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -265,6 +277,20 @@ const CustomerAllDataPage = () => {
       ]);
     }
   };
+
+  const fetchTableSizeOptions = async () => {
+    try {
+      const response = await fetch("/api/table-size-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setTableSizeOptions(result.data);
+      } else {
+        console.error("Failed to fetch table size options:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching table size options:", error);
+    }
+  };
   useEffect(() => {
     // Check authentication and get user data
     const checkAuth = () => {
@@ -279,6 +305,7 @@ const CustomerAllDataPage = () => {
     checkAuth();
     fetchData();
     fetchStatusOptions();
+    fetchTableSizeOptions();
   }, []);
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -596,6 +623,23 @@ const CustomerAllDataPage = () => {
     return filteredAndSortedData.slice(startIndex, endIndex);
   }, [filteredAndSortedData, currentPage, itemsPerPage]);
   const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
+
+  // ฟังก์ชันสำหรับปิดตัวกรองทั้งหมด
+  const closeAllFilterMenus = () => {
+    setShowFilterMenu(false);
+    setShowStatusMenu(false);
+    setShowProductMenu(false);
+    setShowContactMenu(false);
+    setShowFollowUpLastMenu(false);
+    setShowFollowUpNextMenu(false);
+    setShowConsultMenu(false);
+    setShowSurgeryMenu(false);
+    setShowGetNameMenu(false);
+    setShowGetConsultApptMenu(false);
+    setShowGetSurgeryApptMenu(false);
+    setShowTableSizeMenu(false);
+  };
+
   const contactOptions = [
     { value: "all", label: "ทั้งหมด" },
     { value: "สา", label: "สา" },
@@ -685,7 +729,10 @@ const CustomerAllDataPage = () => {
             {/* Filter Column */}
             <div className="relative group">
               <button
-                onClick={() => setShowFilterMenu(!showFilterMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowFilterMenu(!showFilterMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
               >
                 <Filter className="w-4 h-4" />
@@ -739,7 +786,10 @@ const CustomerAllDataPage = () => {
             {/* Status Filter */}
             <div className="relative group">
               <button
-                onClick={() => setShowStatusMenu(!showStatusMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowStatusMenu(!showStatusMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-600 hover:to-cyan-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
               >
                 <span>
@@ -790,7 +840,10 @@ const CustomerAllDataPage = () => {
             {/* Product Filter */}
             <div className="relative group">
               <button
-                onClick={() => setShowProductMenu(!showProductMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowProductMenu(!showProductMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
               >
                 <span>
@@ -844,7 +897,10 @@ const CustomerAllDataPage = () => {
                 currentUser.role_tag === "admin") && (
                 <div className="relative group">
                   <button
-                    onClick={() => setShowContactMenu(!showContactMenu)}
+                    onClick={() => {
+                      closeAllFilterMenus();
+                      setShowContactMenu(!showContactMenu);
+                    }}
                     className="px-4 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
                   >
                     <span>
@@ -895,7 +951,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 1: Follow Up Last */}
             <div className="relative group">
               <button
-                onClick={() => setShowFollowUpLastMenu(!showFollowUpLastMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowFollowUpLastMenu(!showFollowUpLastMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -960,7 +1019,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 2: Follow Up Next */}
             <div className="relative group">
               <button
-                onClick={() => setShowFollowUpNextMenu(!showFollowUpNextMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowFollowUpNextMenu(!showFollowUpNextMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -1025,7 +1087,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 3: Consult */}
             <div className="relative group">
               <button
-                onClick={() => setShowConsultMenu(!showConsultMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowConsultMenu(!showConsultMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-fuchsia-500 to-fuchsia-600 hover:from-fuchsia-600 hover:to-fuchsia-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -1090,7 +1155,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 4: Surgery */}
             <div className="relative group">
               <button
-                onClick={() => setShowSurgeryMenu(!showSurgeryMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowSurgeryMenu(!showSurgeryMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -1155,7 +1223,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 5: Get Name */}
             <div className="relative group">
               <button
-                onClick={() => setShowGetNameMenu(!showGetNameMenu)}
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowGetNameMenu(!showGetNameMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -1220,9 +1291,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 6: Get Consult Appt */}
             <div className="relative group">
               <button
-                onClick={() =>
-                  setShowGetConsultApptMenu(!showGetConsultApptMenu)
-                }
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowGetConsultApptMenu(!showGetConsultApptMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -1287,9 +1359,10 @@ const CustomerAllDataPage = () => {
             {/* Date Filter 7: Get Surgery Appt */}
             <div className="relative group">
               <button
-                onClick={() =>
-                  setShowGetSurgeryApptMenu(!showGetSurgeryApptMenu)
-                }
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowGetSurgeryApptMenu(!showGetSurgeryApptMenu);
+                }}
                 className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
               >
                 <svg
@@ -1364,7 +1437,70 @@ const CustomerAllDataPage = () => {
               <option value="2000">2000 แถว</option>
               <option value="3000">3000 แถว</option>
             </select>
-            {/* Refresh */}
+            {/* Table Size */}
+            <div className="relative group">
+              <button
+                onClick={() => {
+                  closeAllFilterMenus();
+                  setShowTableSizeMenu(!showTableSizeMenu);
+                }}
+                className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                  />
+                </svg>
+                <span>ขยายตาราง ({tableSize}px)</span>
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    showTableSizeMenu ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
+                </svg>
+              </button>
+              {showTableSizeMenu && tableSizeOptions.length > 0 && (
+                <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 min-w-[180px] overflow-hidden">
+                  <div className="max-h-64 overflow-y-auto">
+                    {tableSizeOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        onClick={() => {
+                          setTableSize(option.size_value);
+                          setShowTableSizeMenu(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-100 text-sm font-medium ${
+                          tableSize === option.size_value
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-white text-gray-700 hover:bg-amber-50 hover:text-amber-700"
+                        }`}
+                      >
+                        {tableSize === option.size_value && "✓ "}
+                        {option.size_label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button
               onClick={fetchData}
               disabled={isLoading}
@@ -1794,12 +1930,12 @@ const CustomerAllDataPage = () => {
           )}
         </div>
         {tableData.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4 flex-1 flex flex-col">
+          <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4">
             <div
-              className="overflow-x-auto overflow-y-auto flex-1 custom-scrollbar custom-scrollbar-horizontal"
-              style={{ order: -1, maxHeight: "calc(100vh - 400px)" }}
+              className="overflow-x-auto overflow-y-auto custom-scrollbar custom-scrollbar-horizontal"
+              style={{ maxHeight: `calc(100vh + ${tableSize}px)` }}
             >
-              <table className="w-full border-collapse text-sm">
+              <table className="w-full border-collapse text-sm table-auto">
                 <thead className="sticky top-0 z-30 bg-yellow-300">
                   <tr className="bg-yellow-300 border border-gray-400">
                     {tableData[0].headers.map((header, idx) => (
@@ -1807,7 +1943,7 @@ const CustomerAllDataPage = () => {
                         key={idx}
                         onClick={() => handleSort(header)}
                         className="px-3 py-2 text-center text-xs font-bold text-gray-900 border-r border-gray-400 whitespace-nowrap cursor-pointer hover:bg-yellow-400 transition-colors"
-                        style={{ fontSize: "11px", minWidth: "150px" }}
+                        style={{ fontSize: "11px" }}
                       >
                         <div className="flex items-center justify-center gap-1">
                           <span>{header}</span>
@@ -1877,7 +2013,7 @@ const CustomerAllDataPage = () => {
                             <td
                               key={colIdx}
                               className="px-3 py-2 text-xs text-gray-900 border-r border-gray-300 text-center align-middle"
-                              style={{ fontSize: "11px", minWidth: "150px" }}
+                              style={{ fontSize: "11px" }}
                             >
                               {hasValue ? (
                                 <span className="block">{String(value)}</span>
