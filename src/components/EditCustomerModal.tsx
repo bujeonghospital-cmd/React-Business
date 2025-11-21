@@ -230,11 +230,14 @@ export const EditCustomerModal = ({
           message: "ข้อมูลลูกค้าได้รับการอัปเดตเรียบร้อยแล้ว",
         });
 
-        // Wait for animation then close
+        // Wait for notification to display then close
         setTimeout(() => {
-          onSave(customerData);
-          onClose();
-        }, 1000);
+          setNotification((prev) => ({ ...prev, isOpen: false }));
+          setTimeout(() => {
+            onSave(customerData);
+            onClose();
+          }, 300); // Wait for fade out animation
+        }, 2000); // Show notification for 2 seconds
       } else {
         setNotification({
           isOpen: true,
