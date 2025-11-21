@@ -33,6 +33,7 @@ import {
   FaBriefcase,
   FaPhoneAlt,
   FaSignOutAlt,
+  FaCog,
 } from "react-icons/fa";
 
 interface MenuItem {
@@ -100,25 +101,29 @@ export default function FullscreenHomePage() {
       color: "from-blue-500 to-blue-700",
       gradient: "bg-gradient-to-br from-blue-50 to-blue-100",
       subItems: [
-        { title: "เปิด OPD", icon: <FaUserMd />, link: "/opd" },
+        { title: "เปิด OPD", icon: <FaUserMd />, link: "/opd", status: "⚙️" },
         {
           title: "ทำ Consent Form",
           icon: <FaFileSignature />,
+          status: "⚙️",
           link: "/consent-form",
         },
         {
           title: "ดูประวัติบริการทั้งหมด",
           icon: <FaHistory />,
+          status: "⚙️",
           link: "/service-history",
         },
         {
           title: "ระบบ Stock คีย์ / ตัดได้",
           icon: <FaBoxes />,
+          status: "⚙️",
           link: "/stock-management",
         },
         {
           title: "สรุปนัดลูกผ่าตัด (CRM)",
           icon: <FaCalendarCheck />,
+          status: "⚙️",
           link: "/surgery-schedule",
         },
       ],
@@ -139,11 +144,13 @@ export default function FullscreenHomePage() {
         {
           title: "สถานะ ชื่อ เบอร์",
           icon: <FaPhone />,
+          status: "⚙️",
           link: "/customer-contacts",
         },
         {
           title: "สถานะ Consult แล้ว",
           icon: <FaComments />,
+          status: "⚙️",
           link: "/consulted-customers",
         },
       ],
@@ -176,17 +183,19 @@ export default function FullscreenHomePage() {
         {
           title: "Call Tracking",
           icon: <FaClipboardList />,
-          status: "",
+          status: "⚙️",
           link: "/call-tracking",
         },
         {
           title: "Chatbot Performance",
           icon: <FaComments />,
+          status: "⚙️",
           link: "/chatbot-performance",
         },
         {
           title: "Service Flow Performance",
           icon: <FaFlask />,
+          status: "⚙️",
           link: "/service-flow",
         },
       ],
@@ -201,11 +210,13 @@ export default function FullscreenHomePage() {
         {
           title: "รวม File ทั้งหมด (Clip รูป)",
           icon: <FaImage />,
+          status: "⚙️",
           link: "/marketing-files",
         },
         {
           title: "ตั้ง AI Chatbot",
           icon: <FaRobot />,
+          status: "⚙️",
           link: "/ai-chatbot-setup",
         },
       ],
@@ -220,21 +231,25 @@ export default function FullscreenHomePage() {
         {
           title: "เอกสารลูกค้า Consent PDPA",
           icon: <FaShieldAlt />,
+          status: "⚙️",
           link: "/documents/consent-pdpa",
         },
         {
           title: "เอกสารทางกฎหมาย",
           icon: <FaFileAlt />,
+          status: "⚙️",
           link: "/documents/legal",
         },
         {
           title: "เอกสารบริษัท",
           icon: <FaBuilding />,
+          status: "⚙️",
           link: "/documents/company",
         },
         {
           title: "สัญญา Influencer",
           icon: <FaHandshake />,
+          status: "⚙️",
           link: "/documents/influencer",
         },
       ],
@@ -246,7 +261,12 @@ export default function FullscreenHomePage() {
       color: "from-teal-500 to-cyan-700",
       gradient: "bg-gradient-to-br from-teal-50 to-cyan-100",
       subItems: [
-        { title: "Peak", icon: <FaCoins />, link: "/accounting/peak" },
+        {
+          title: "Peak",
+          icon: <FaCoins />,
+          link: "/accounting/peak",
+          status: "⚙️",
+        },
       ],
     },
   ];
@@ -479,26 +499,47 @@ export default function FullscreenHomePage() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.3, delay: subIndex * 0.05 }}
-                        whileHover={{ scale: 1.02, x: 5 }}
-                        className="bg-white rounded-lg p-4 shadow-md cursor-pointer hover:shadow-lg transition-all duration-200"
+                        whileHover={{
+                          scale: 1.05,
+                          x: 10,
+                          boxShadow:
+                            "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                        className="group bg-white rounded-lg p-4 shadow-md cursor-pointer hover:shadow-2xl transition-all duration-300 hover:bg-gradient-to-r hover:from-white hover:to-gray-50 border-2 border-transparent hover:border-gray-200 relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent before:translate-x-[-100%] hover:before:translate-x-[100%] before:transition-transform before:duration-700"
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSubItemClick(subItem.link);
                         }}
                       >
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <div
+                          <div className="flex items-center space-x-3 group-hover:scale-105 transition-transform">
+                            <motion.div
+                              whileHover={{
+                                rotate: [0, -10, 10, -10, 0],
+                                scale: 1.2,
+                              }}
+                              transition={{ duration: 0.5 }}
                               className={`text-2xl bg-gradient-to-r ${menu.color} bg-clip-text text-transparent`}
                             >
                               {subItem.icon}
-                            </div>
-                            <span className="font-medium text-gray-800">
+                            </motion.div>
+                            <span className="font-medium text-gray-800 group-hover:text-gray-900 transition-colors">
                               {subItem.title}
                             </span>
                           </div>
                           {subItem.status && (
-                            <span className="text-xl">{subItem.status}</span>
+                            <motion.span
+                              animate={{ rotate: 360 }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
+                              className="text-xl inline-block"
+                            >
+                              {subItem.status}
+                            </motion.span>
                           )}
                         </div>
                       </motion.div>
