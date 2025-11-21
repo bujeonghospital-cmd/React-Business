@@ -7,12 +7,22 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   // Check authentication for protected routes
   const token = request.cookies.get("authToken")?.value;
+
   // Protected paths that require authentication
-  const isProtectedPath =
-    pathname.includes("customer-all-data") ||
-    pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/(fullscreen)");
-  // Public paths
+  const protectedPaths = [
+    "/facebook-ads-manager",
+    "/performance-surgery-schedule",
+    "/customer-contact-dashboard",
+    "/customer-all-data",
+    "/dashboard",
+    "/home",
+  ];
+
+  const isProtectedPath = protectedPaths.some((path) =>
+    pathname.startsWith(path)
+  );
+
+  // Public paths that don't require authentication
   const isPublicPath =
     pathname === "/login" ||
     pathname === "/register" ||
@@ -22,8 +32,9 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/api") ||
     pathname.startsWith("/images") ||
     pathname.startsWith("/downloads");
+
   // If accessing protected path without token, redirect to login
-  if (isProtectedPath && !token && !isPublicPath) {
+  if (isProtectedPath && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
@@ -54,4 +65,4 @@ export const config = {
     // ไม่รวม static files และ API routes
     "/((?!api|_next/static|_next/image|favicon.ico|images|downloads|TPP.ico).*)",
   ],
-};
+};
