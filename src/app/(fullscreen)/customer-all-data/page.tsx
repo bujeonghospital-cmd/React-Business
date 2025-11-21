@@ -302,7 +302,7 @@ const CustomerAllDataPage = () => {
   };
   const handleSaveRow = () => {
     if (editedRow) {
-      alert("ข้อมูลถูกบันทึกสำเร็จ (เพิ่มแอป API สำหรับบันทึกลงฐานข้อมูล)");
+      // Data saved successfully
     }
   };
   const exportToCSV = () => {
@@ -386,15 +386,14 @@ const CustomerAllDataPage = () => {
       });
       const result = await response.json();
       if (result.success) {
-        alert("บันทึกข้อมูลสำเร็จ");
         setIsEditModalOpen(false);
         // รีโหลดข้อมูลใหม่
         await fetchData();
       } else {
-        alert(`เกิดข้อผิดพลาด: ${result.error}`);
+        console.error(`เกิดข้อผิดพลาด: ${result.error}`);
       }
     } catch (error) {
-      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+      console.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
     }
   };
   const filteredAndSortedData = useMemo(() => {

@@ -1043,16 +1043,14 @@ const CustomerContactDashboard = () => {
         });
         if (result.success) {
           console.log("✅ บันทึกสำเร็จผ่าน Python API:", result);
-          alert("บันทึกข้อมูลสำเร็จ");
           setCallInputModal({ isOpen: false, agentId: "", hourSlot: "" });
           setCallInputValues({ outgoing: "", successful: "" });
           await fetchCallMatrixYaleSummary(); // Refresh table
         } else {
           console.error("❌ บันทึกล้มเหลว:", result.error);
-          alert("เกิดข้อผิดพลาด: " + result.error);
         }
       } else {
-        alert("กรุณากรอกจำนวนที่นับ (สำเร็จ)");
+        console.warn("กรุณากรอกจำนวนที่นับ (สำเร็จ)");
       }
     } catch (error) {
       console.error("❌ Error saving call input:", error);
@@ -2421,4 +2419,4 @@ const CustomerContactDashboard = () => {
     </div>
   );
 };
-export default CustomerContactDashboard;
+export default CustomerContactDashboard;

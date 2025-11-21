@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, Save } from "lucide-react";
+import { X, Save, Loader2 } from "lucide-react";
 import { NotificationPopup } from "./NotificationPopup";
 
 interface CustomerData {
@@ -31,6 +31,7 @@ export const EditCustomerModal = ({
   const [countryOptions, setCountryOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{
     isOpen: boolean;
     type: "success" | "error";
@@ -50,8 +51,6 @@ export const EditCustomerModal = ({
       if (result.success && result.data) {
         setStatusOptions(result.data);
       } else {
-        console.error("❌ Failed to fetch status options:", result.error);
-        console.error("Details:", result.details);
         // Use fallback data when database is not accessible
         setStatusOptions([
           {
@@ -97,8 +96,6 @@ export const EditCustomerModal = ({
       if (result.success && result.data) {
         setSourceOptions(result.data);
       } else {
-        console.error("❌ Failed to fetch source options:", result.error);
-        console.error("Details:", result.details);
         // Use fallback data
         setSourceOptions([
           { value: "Facebook", label: "Facebook" },
@@ -130,8 +127,6 @@ export const EditCustomerModal = ({
       if (result.success && result.data) {
         setProductOptions(result.data);
       } else {
-        console.error("❌ Failed to fetch product options:", result.error);
-        console.error("Details:", result.details);
         // Use fallback data
         setProductOptions([
           { value: "ตีตัวไล่ตัว", label: "ตีตัวไล่ตัว" },
@@ -169,8 +164,6 @@ export const EditCustomerModal = ({
       if (result.success && result.data) {
         setCountryOptions(result.data);
       } else {
-        console.error("❌ Failed to fetch country options:", result.error);
-        console.error("Details:", result.details);
         // Use fallback data
         setCountryOptions([
           { value: "ไทย", label: "ไทย" },
@@ -214,6 +207,7 @@ export const EditCustomerModal = ({
     });
   };
   const handleSave = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/customer-data", {
         method: "POST",
@@ -240,7 +234,7 @@ export const EditCustomerModal = ({
         setTimeout(() => {
           onSave(customerData);
           onClose();
-        }, 3000);
+        }, 1000);
       } else {
         setNotification({
           isOpen: true,
@@ -250,9 +244,11 @@ export const EditCustomerModal = ({
             result.error ||
             "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง",
         });
+        setTimeout(() => {
+          setNotification((prev) => ({ ...prev, isOpen: false }));
+        }, 3000);
       }
     } catch (error) {
-      console.error("Error saving customer:", error);
       setNotification({
         isOpen: true,
         type: "error",
@@ -260,6 +256,11 @@ export const EditCustomerModal = ({
         message:
           "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต",
       });
+      setTimeout(() => {
+        setNotification((prev) => ({ ...prev, isOpen: false }));
+      }, 3000);
+    } finally {
+      setIsLoading(false);
     }
   };
   if (!isOpen) return null;
@@ -783,16 +784,27 @@ export const EditCustomerModal = ({
         <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6 flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+            disabled={isLoading}
+            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ยกเลิก
           </button>
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition"
+            disabled={isLoading}
+            className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            <Save className="w-4 h-4" />
-            บันทึก
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                กำลังบันทึก...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                บันทึก
+              </>
+            )}
           </button>
         </div>
       </div>
