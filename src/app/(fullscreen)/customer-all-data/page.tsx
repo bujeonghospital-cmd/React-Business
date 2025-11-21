@@ -1840,11 +1840,33 @@ const CustomerAllDataPage = () => {
                       <tr
                         key={rowIndex}
                         onClick={() => handleEditCustomer(row)}
-                        className={`border border-gray-300 hover:bg-blue-50 transition-all cursor-pointer ${
+                        className={`border border-gray-300 transition-all duration-200 cursor-pointer group ${
                           isSelected
-                            ? "ring-4 ring-blue-500 bg-blue-100"
+                            ? "ring-4 ring-indigo-500 shadow-lg"
                             : bgColor
                         }`}
+                        style={{
+                          background: isSelected
+                            ? "linear-gradient(to right, #dbeafe, #e0e7ff)"
+                            : undefined,
+                          boxShadow: isSelected
+                            ? "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
+                            : undefined,
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background =
+                              "linear-gradient(to right, #dbeafe, #e0e7ff)";
+                            e.currentTarget.style.boxShadow =
+                              "0 4px 6px -1px rgba(0, 0, 0, 0.1)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isSelected) {
+                            e.currentTarget.style.background = "";
+                            e.currentTarget.style.boxShadow = "";
+                          }
+                        }}
                       >
                         {tableData[0].headers.map((header, colIdx) => {
                           const value = row[header];
@@ -1884,4 +1906,4 @@ const CustomerAllDataPage = () => {
     </>
   );
 };
-export default CustomerAllDataPage;
+export default CustomerAllDataPage;

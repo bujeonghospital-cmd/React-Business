@@ -151,4 +151,27 @@ class ApiService {
       return 0;
     }
   }
+
+  // Fetch Daily Summary (Last 30 days)
+  Future<List<AdInsight>> fetchDailySummary() async {
+    try {
+      var url =
+          '$baseUrl/facebook-ads-campaigns?level=ad&date_preset=last_30d&time_increment=1';
+
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return (data['data'] as List)
+              .map((item) => AdInsight.fromJson(item))
+              .toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Error fetching daily summary: $e');
+      return [];
+    }
+  }
 }

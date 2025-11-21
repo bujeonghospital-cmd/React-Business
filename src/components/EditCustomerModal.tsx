@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
+import { NotificationPopup } from "./NotificationPopup";
+
 interface CustomerData {
   [key: string]: any;
 }
@@ -17,9 +19,86 @@ export const EditCustomerModal = ({
   onSave,
 }: EditCustomerModalProps) => {
   const [customerData, setCustomerData] = useState<CustomerData>({});
+  const [statusOptions, setStatusOptions] = useState<
+    Array<{ value: string; label: string; color: string }>
+  >([]);
+  const [sourceOptions, setSourceOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [productOptions, setProductOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [countryOptions, setCountryOptions] = useState<
+    Array<{ value: string; label: string }>
+  >([]);
+  const [notification, setNotification] = useState<{
+    isOpen: boolean;
+    type: "success" | "error";
+    title: string;
+    message: string;
+  }>({
+    isOpen: false,
+    type: "success",
+    title: "",
+    message: "",
+  });
+
+  const fetchStatusOptions = async () => {
+    try {
+      const response = await fetch("/api/status-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setStatusOptions(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching status options:", error);
+    }
+  };
+
+  const fetchSourceOptions = async () => {
+    try {
+      const response = await fetch("/api/source-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setSourceOptions(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching source options:", error);
+    }
+  };
+
+  const fetchProductOptions = async () => {
+    try {
+      const response = await fetch("/api/product-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setProductOptions(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching product options:", error);
+    }
+  };
+
+  const fetchCountryOptions = async () => {
+    try {
+      const response = await fetch("/api/country-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setCountryOptions(result.data);
+      }
+    } catch (error) {
+      console.error("Error fetching country options:", error);
+    }
+  };
   useEffect(() => {
     if (initialData) {
       setCustomerData({ ...initialData });
+    }
+    if (isOpen) {
+      fetchStatusOptions();
+      fetchSourceOptions();
+      fetchProductOptions();
+      fetchCountryOptions();
     }
   }, [initialData, isOpen]);
   const handleFieldChange = (fieldName: string, value: any) => {
@@ -28,9 +107,54 @@ export const EditCustomerModal = ({
       [fieldName]: value,
     });
   };
-  const handleSave = () => {
-    onSave(customerData);
-    onClose();
+  const handleSave = async () => {
+    try {
+      const response = await fetch("/api/customer-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "update",
+          data: customerData,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setNotification({
+          isOpen: true,
+          type: "success",
+          title: "✨ บันทึกสำเร็จ!",
+          message: "ข้อมูลลูกค้าได้รับการอัปเดตเรียบร้อยแล้ว",
+        });
+
+        // Wait for animation then close
+        setTimeout(() => {
+          onSave(customerData);
+          onClose();
+        }, 3000);
+      } else {
+        setNotification({
+          isOpen: true,
+          type: "error",
+          title: "❌ บันทึกไม่สำเร็จ!",
+          message:
+            result.error ||
+            "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving customer:", error);
+      setNotification({
+        isOpen: true,
+        type: "error",
+        title: "❌ บันทึกไม่สำเร็จ!",
+        message:
+          "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต",
+      });
+    }
   };
   if (!isOpen) return null;
   // ฟิลด์แถวที่ 1: ข้อมูลพื้นฐาน (สีฟ้า)
@@ -112,9 +236,14 @@ export const EditCustomerModal = ({
   ];
   // ฟิลด์เพิ่มเติม
   const extraFields = [
-    { value: "เวลาให้เรียกรถ", label: "เวลาให้เรียกรถ", color: "bg-cyan-500" },
-    { value: "Lat", label: "Lat", color: "bg-cyan-500" },
-    { value: "Long", label: "Long", color: "bg-cyan-500" },
+    {
+      value: "เวลาให้เรียกรถ",
+      label: "เวลาให้เรียกรถ",
+      color: "bg-cyan-500",
+      isTime: true,
+    },
+    { value: "Lat", label: "Lat", color: "bg-cyan-500", isTime: false },
+    { value: "Long", label: "Long", color: "bg-cyan-500", isTime: false },
   ];
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -152,7 +281,7 @@ export const EditCustomerModal = ({
                       onChange={(e) =>
                         handleFieldChange(actualFieldName, e.target.value)
                       }
-                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none"
+                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-gray-900 font-medium placeholder:text-gray-500"
                     />
                   </div>
                 );
@@ -167,6 +296,125 @@ export const EditCustomerModal = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {additionalInfoFields.map((field) => {
                 const actualFieldName = getActualFieldName(field.value);
+
+                // Special handling for สถานะ field - use dropdown with colors
+                if (field.label === "สถานะ") {
+                  const selectedStatus = statusOptions.find(
+                    (opt) => opt.value === customerData[actualFieldName]
+                  );
+                  return (
+                    <div key={field.value}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label} ⭐
+                      </label>
+                      <select
+                        value={customerData[actualFieldName] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(actualFieldName, e.target.value)
+                        }
+                        className="w-full px-4 py-2 border border-indigo-300 bg-white rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
+                        style={{
+                          backgroundColor: selectedStatus?.color
+                            ? `${selectedStatus.color}15`
+                            : "white",
+                        }}
+                      >
+                        <option value="">เลือกสถานะ</option>
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedStatus && (
+                        <div className="mt-2">
+                          <span
+                            className="inline-block px-3 py-1 rounded-full text-xs font-semibold text-black shadow-sm"
+                            style={{ backgroundColor: selectedStatus.color }}
+                          >
+                            {selectedStatus.label}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Special handling for แหล่งที่มา field - use dropdown
+                if (field.label === "แหล่งที่มา") {
+                  return (
+                    <div key={field.value}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label} ⭐
+                      </label>
+                      <select
+                        value={customerData[actualFieldName] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(actualFieldName, e.target.value)
+                        }
+                        className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none font-medium text-gray-900"
+                      >
+                        <option value="">เลือกแหล่งที่มา</option>
+                        {sourceOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+
+                // Special handling for ผลิตภัณฑ์ที่สนใจ field - use dropdown
+                if (field.label === "ผลิตภัณฑ์ที่สนใจ") {
+                  return (
+                    <div key={field.value}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label} ⭐
+                      </label>
+                      <select
+                        value={customerData[actualFieldName] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(actualFieldName, e.target.value)
+                        }
+                        className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none font-medium text-gray-900"
+                      >
+                        <option value="">เลือกผลิตภัณฑ์</option>
+                        {productOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+
+                // Special handling for ประเทศ field - use dropdown
+                if (field.label === "ประเทศ") {
+                  return (
+                    <div key={field.value}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label} ⭐
+                      </label>
+                      <select
+                        value={customerData[actualFieldName] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(actualFieldName, e.target.value)
+                        }
+                        className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none font-medium text-gray-900"
+                      >
+                        <option value="">เลือกประเทศ</option>
+                        {countryOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                }
+
                 return (
                   <div key={field.value}>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -178,7 +426,7 @@ export const EditCustomerModal = ({
                       onChange={(e) =>
                         handleFieldChange(actualFieldName, e.target.value)
                       }
-                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none"
+                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-gray-900 font-medium placeholder:text-gray-500"
                     />
                   </div>
                 );
@@ -193,18 +441,50 @@ export const EditCustomerModal = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {contactFollowUpFields.map((field) => {
                 const actualFieldName = getActualFieldName(field.value);
+                const isDateField = field.label.includes("วันที่");
+
+                if (field.label === "ผู้ติดต่อ") {
+                  return (
+                    <div key={field.value}>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {field.label}
+                      </label>
+                      <input
+                        type="text"
+                        value={customerData[actualFieldName] || ""}
+                        onChange={(e) =>
+                          handleFieldChange(actualFieldName, e.target.value)
+                        }
+                        className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-gray-900 font-medium placeholder:text-gray-500"
+                      />
+                    </div>
+                  );
+                }
+
+                // Format date value for input (YYYY-MM-DD)
+                const formatDateForInput = (dateValue: any) => {
+                  if (!dateValue) return "";
+                  const date = new Date(dateValue);
+                  if (isNaN(date.getTime())) return "";
+                  return date.toISOString().split("T")[0];
+                };
+
                 return (
                   <div key={field.value}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <span>📅</span>
                       {field.label}
                     </label>
                     <input
-                      type="text"
-                      value={customerData[actualFieldName] || ""}
+                      type="date"
+                      value={formatDateForInput(customerData[actualFieldName])}
                       onChange={(e) =>
                         handleFieldChange(actualFieldName, e.target.value)
                       }
-                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none"
+                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-gray-900 font-medium hover:border-cyan-400 transition-colors cursor-pointer"
+                      style={{
+                        colorScheme: "light",
+                      }}
                     />
                   </div>
                 );
@@ -219,22 +499,40 @@ export const EditCustomerModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {consultFields.map((field) => {
                 const actualFieldName = getActualFieldName(field.value);
+                const isDateField = field.label.includes("วันที่");
+                const isAmountField = field.label === "ยอดนำเสนอ";
+
+                // Format date value for input (YYYY-MM-DD)
+                const formatDateForInput = (dateValue: any) => {
+                  if (!dateValue) return "";
+                  const date = new Date(dateValue);
+                  if (isNaN(date.getTime())) return "";
+                  return date.toISOString().split("T")[0];
+                };
+
                 return (
                   <div key={field.value}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      {isDateField && <span>📅</span>}
+                      {isAmountField && <span>💰</span>}
                       {field.label}
                     </label>
                     <input
-                      type="text"
-                      value={customerData[actualFieldName] || ""}
+                      type={isDateField ? "date" : "text"}
+                      value={
+                        isDateField
+                          ? formatDateForInput(customerData[actualFieldName])
+                          : customerData[actualFieldName] || ""
+                      }
                       onChange={(e) =>
                         handleFieldChange(actualFieldName, e.target.value)
                       }
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none text-gray-900 font-medium placeholder:text-gray-500 transition-colors ${
                         field.color === "bg-red-600"
-                          ? "border-red-300 bg-red-50 focus:ring-red-500"
-                          : "border-cyan-300 bg-cyan-50 focus:ring-cyan-500"
-                      }`}
+                          ? "border-red-300 bg-red-50 focus:ring-red-500 hover:border-red-400"
+                          : "border-cyan-300 bg-cyan-50 focus:ring-cyan-500 hover:border-cyan-400"
+                      } ${isDateField ? "cursor-pointer" : ""}`}
+                      style={isDateField ? { colorScheme: "light" } : {}}
                     />
                   </div>
                 );
@@ -249,22 +547,63 @@ export const EditCustomerModal = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {surgeryFields.map((field) => {
                 const actualFieldName = getActualFieldName(field.value);
+                const isDateField = field.label.includes("วันที่");
+                const isTimeField = field.label.includes("เวลา");
+                const isDoctorField = field.label === "หมอ";
+
+                // Format date value for input (YYYY-MM-DD)
+                const formatDateForInput = (dateValue: any) => {
+                  if (!dateValue) return "";
+                  const date = new Date(dateValue);
+                  if (isNaN(date.getTime())) return "";
+                  return date.toISOString().split("T")[0];
+                };
+
+                // Format time value for input (HH:MM)
+                const formatTimeForInput = (timeValue: any) => {
+                  if (!timeValue) return "";
+                  // If it's already in HH:MM format, return as is
+                  if (
+                    typeof timeValue === "string" &&
+                    timeValue.match(/^\d{2}:\d{2}/)
+                  ) {
+                    return timeValue.substring(0, 5);
+                  }
+                  return timeValue;
+                };
+
                 return (
                   <div key={field.value}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      {isDateField && <span>📅</span>}
+                      {isTimeField && <span>⏰</span>}
+                      {isDoctorField && <span>👨‍⚕️</span>}
                       {field.label}
                     </label>
                     <input
-                      type="text"
-                      value={customerData[actualFieldName] || ""}
+                      type={
+                        isDateField ? "date" : isTimeField ? "time" : "text"
+                      }
+                      value={
+                        isDateField
+                          ? formatDateForInput(customerData[actualFieldName])
+                          : isTimeField
+                          ? formatTimeForInput(customerData[actualFieldName])
+                          : customerData[actualFieldName] || ""
+                      }
                       onChange={(e) =>
                         handleFieldChange(actualFieldName, e.target.value)
                       }
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 outline-none text-gray-900 font-medium placeholder:text-gray-500 transition-colors ${
                         field.color === "bg-red-600"
-                          ? "border-red-300 bg-red-50 focus:ring-red-500"
-                          : "border-cyan-300 bg-cyan-50 focus:ring-cyan-500"
-                      }`}
+                          ? "border-red-300 bg-red-50 focus:ring-red-500 hover:border-red-400"
+                          : "border-cyan-300 bg-cyan-50 focus:ring-cyan-500 hover:border-cyan-400"
+                      } ${isDateField || isTimeField ? "cursor-pointer" : ""}`}
+                      style={
+                        isDateField || isTimeField
+                          ? { colorScheme: "light" }
+                          : {}
+                      }
                     />
                   </div>
                 );
@@ -279,18 +618,42 @@ export const EditCustomerModal = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {extraFields.map((field) => {
                 const actualFieldName = getActualFieldName(field.value);
+
+                // Format time value for input (HH:MM)
+                const formatTimeForInput = (timeValue: any) => {
+                  if (!timeValue) return "";
+                  // If it's already in HH:MM format, return as is
+                  if (
+                    typeof timeValue === "string" &&
+                    timeValue.match(/^\d{2}:\d{2}/)
+                  ) {
+                    return timeValue.substring(0, 5);
+                  }
+                  return timeValue;
+                };
+
                 return (
                   <div key={field.value}>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      {field.isTime && <span>⏰</span>}
+                      {field.label === "Lat" && <span>📍</span>}
+                      {field.label === "Long" && <span>📍</span>}
                       {field.label}
                     </label>
                     <input
-                      type="text"
-                      value={customerData[actualFieldName] || ""}
+                      type={field.isTime ? "time" : "text"}
+                      value={
+                        field.isTime
+                          ? formatTimeForInput(customerData[actualFieldName])
+                          : customerData[actualFieldName] || ""
+                      }
                       onChange={(e) =>
                         handleFieldChange(actualFieldName, e.target.value)
                       }
-                      className="w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none"
+                      className={`w-full px-4 py-2 border border-cyan-300 bg-cyan-50 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none text-gray-900 font-medium placeholder:text-gray-500 hover:border-cyan-400 transition-colors ${
+                        field.isTime ? "cursor-pointer" : ""
+                      }`}
+                      style={field.isTime ? { colorScheme: "light" } : {}}
                     />
                   </div>
                 );
@@ -305,7 +668,7 @@ export const EditCustomerModal = ({
             <textarea
               value={customerData["หมายเหตุ"] || ""}
               onChange={(e) => handleFieldChange("หมายเหตุ", e.target.value)}
-              className="w-full px-4 py-2 border border-yellow-400 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none min-h-[150px] bg-yellow-50"
+              className="w-full px-4 py-2 border border-yellow-400 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none min-h-[150px] bg-yellow-50 text-gray-900 font-medium placeholder:text-gray-500"
               placeholder="พิมพ์หมายเหตุ..."
             />
           </div>
@@ -327,6 +690,15 @@ export const EditCustomerModal = ({
           </button>
         </div>
       </div>
+
+      {/* Notification Popup */}
+      <NotificationPopup
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        type={notification.type}
+        title={notification.title}
+        message={notification.message}
+      />
     </div>
   );
-};
+};

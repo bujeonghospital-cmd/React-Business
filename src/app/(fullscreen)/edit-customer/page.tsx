@@ -25,6 +25,24 @@ const EditCustomerPage = () => {
   const [customerData, setCustomerData] = useState<CustomerData>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [statusOptions, setStatusOptions] = useState<
+    Array<{ value: string; label: string; color: string }>
+  >([]);
+
+  const fetchStatusOptions = async () => {
+    try {
+      const response = await fetch("/api/status-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setStatusOptions(result.data);
+      } else {
+        console.error("Failed to fetch status options:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching status options:", error);
+    }
+  };
+
   useEffect(() => {
     // ดึงข้อมูลจาก URL params หรือ localStorage
     const params = new URLSearchParams(window.location.search);
@@ -36,6 +54,10 @@ const EditCustomerPage = () => {
         setCustomerData(JSON.parse(savedData));
       }
     }
+
+    // โหลดรายการสถานะ
+    fetchStatusOptions();
+
     setIsLoading(false);
   }, []);
   const handleFieldChange = (fieldName: string, value: any) => {
@@ -388,7 +410,57 @@ const EditCustomerPage = () => {
               </div>
             </div>
           </div>
-          {/* Section 5: หมายเหตุ */}
+
+          {/* Section 5: ข้อมูลเพิ่มเติม */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-200 hover:shadow-xl">
+            <div className="bg-gradient-to-r from-indigo-500 to-violet-600 px-6 py-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <FileText className="w-6 h-6" />
+                ข้อมูลเพิ่มเติม
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-500" />
+                    สถานะ ⭐
+                  </label>
+                  <select
+                    value={customerData["สถานะ"] || ""}
+                    onChange={(e) => handleFieldChange("สถานะ", e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-indigo-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 group-hover:border-indigo-400 bg-white font-medium"
+                  >
+                    <option value="">เลือกสถานะ</option>
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {customerData["สถานะ"] && statusOptions.length > 0 && (
+                    <div className="mt-3">
+                      {(() => {
+                        const selectedStatus = statusOptions.find(
+                          (opt) => opt.value === customerData["สถานะ"]
+                        );
+                        return selectedStatus ? (
+                          <span
+                            className="inline-block px-4 py-2 rounded-full text-sm font-semibold text-white shadow-md"
+                            style={{ backgroundColor: selectedStatus.color }}
+                          >
+                            {selectedStatus.label}
+                          </span>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 6: หมายเหตุ */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden transform transition-all duration-200 hover:shadow-xl">
             <div className="bg-gradient-to-r from-amber-500 to-yellow-600 px-6 py-4">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -437,4 +509,4 @@ const EditCustomerPage = () => {
     </div>
   );
 };
-export default EditCustomerPage;
+export default EditCustomerPage;

@@ -131,7 +131,14 @@ export async function POST(request: NextRequest) {
       const englishData: Record<string, any> = {};
       Object.entries(updateData).forEach(([thaiKey, value]) => {
         const englishKey = reverseColumnMapping[thaiKey] || thaiKey;
-        englishData[englishKey] = value;
+        // กรองฟิลด์ที่ไม่ควรอัปเดต
+        if (
+          englishKey !== "id" &&
+          englishKey !== "created_at" &&
+          englishKey !== "updated_at"
+        ) {
+          englishData[englishKey] = value;
+        }
       });
       // สร้าง SQL query สำหรับ update
       const fields = Object.keys(englishData);
@@ -139,7 +146,7 @@ export async function POST(request: NextRequest) {
       const setClause = fields
         .map((field, index) => `${field} = $${index + 1}`)
         .join(", ");
-      const query = `UPDATE "BJH-Server".bjh_all_leads SET ${setClause}, updated_at = NOW() WHERE id = $${
+      const query = `UPDATE "BJH-Server".bjh_all_leads SET ${setClause} WHERE id = $${
         fields.length + 1
       } RETURNING *`;
       const result = await pool.query(query, [...values, id]);
@@ -161,7 +168,7 @@ export async function POST(request: NextRequest) {
       const placeholders = fields.map((_, index) => `$${index + 1}`).join(", ");
       const query = `INSERT INTO "BJH-Server".bjh_all_leads (${fields.join(
         ", "
-      )}, created_at, updated_at) VALUES (${placeholders}, NOW(), NOW()) RETURNING *`;
+      )}) VALUES (${placeholders}) RETURNING *`;
       const result = await pool.query(query, values);
       return NextResponse.json({
         success: true,
@@ -194,4 +201,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+}

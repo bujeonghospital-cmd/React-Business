@@ -23,6 +23,7 @@ class _FacebookAdsDashboardState extends State<FacebookAdsDashboard> {
   int _googleAdsCount = 0;
   double _facebookBalance = 0;
   int _phoneCount = 0;
+  List<AdInsight> _dailySummary = [];
 
   @override
   void initState() {
@@ -40,6 +41,7 @@ class _FacebookAdsDashboardState extends State<FacebookAdsDashboard> {
     setState(() => _isLoading = true);
 
     try {
+      // Load main data first
       final results = await Future.wait([
         _apiService.fetchFacebookAds(level: 'ad', datePreset: _dateRange),
         _apiService.fetchGoogleSheetsData(datePreset: _dateRange),
@@ -48,22 +50,41 @@ class _FacebookAdsDashboardState extends State<FacebookAdsDashboard> {
         _apiService.fetchPhoneCount(),
       ]);
 
-      setState(() {
-        _insights = results[0] as List<AdInsight>;
-        _googleSheetsCount = results[1] as int;
-        _googleAdsCount = results[2] as int;
-        _facebookBalance = results[3] as double;
-        _phoneCount = results[4] as int;
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() {
+          _insights = results[0] as List<AdInsight>;
+          _googleSheetsCount = results[1] as int;
+          _googleAdsCount = results[2] as int;
+          _facebookBalance = results[3] as double;
+          _phoneCount = results[4] as int;
+          _isLoading = false;
+        });
+      }
+
+      // Load daily summary separately to avoid memory issues
+      _loadDailySummary();
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text('เกิดข้อผิดพลาด: $e'), backgroundColor: Colors.red),
         );
       }
+    }
+  }
+
+  Future<void> _loadDailySummary() async {
+    try {
+      final summary = await _apiService.fetchDailySummary();
+      if (mounted) {
+        setState(() {
+          _dailySummary = summary;
+        });
+      }
+    } catch (e) {
+      // Silent fail for daily summary
+      debugPrint('Error loading daily summary: $e');
     }
   }
 
@@ -73,10 +94,6 @@ class _FacebookAdsDashboardState extends State<FacebookAdsDashboard> {
 
   int get _totalMessagingConnection {
     return _insights.fold(0, (sum, ad) => sum + ad.totalMessagingConnection);
-  }
-
-  double get _totalSpend {
-    return _insights.fold(0.0, (sum, ad) => sum + ad.spend);
   }
 
   List<AdInsight> get _topAds {
@@ -168,6 +185,9 @@ class _FacebookAdsDashboardState extends State<FacebookAdsDashboard> {
               ),
             ),
           ),
+
+          // Daily Summary Section
+          _buildDailySummarySection(),
 
           // Report Ad Table
           _buildAdTable(),
@@ -567,6 +587,253 @@ class _FacebookAdsDashboardState extends State<FacebookAdsDashboard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDailySummarySection() {
+    // Group data by date
+    final Map<String, Map<String, dynamic>> dailyData = {};
+
+    for (var ad in _dailySummary) {
+      final date = ad.dateStart;
+      if (!dailyData.containsKey(date)) {
+        dailyData[date] = {
+          'leads': 0,
+          'connection': 0,
+          'impressions': 0,
+          'clicks': 0,
+          'spend': 0.0,
+        };
+      }
+
+      dailyData[date]!['leads'] += ad.messagingFirstReply;
+      dailyData[date]!['connection'] += ad.totalMessagingConnection;
+      dailyData[date]!['impressions'] += ad.impressions;
+      dailyData[date]!['clicks'] += ad.clicks;
+      dailyData[date]!['spend'] += ad.spend;
+    }
+
+    // Sort by date (newest first)
+    final sortedDates = dailyData.keys.toList()..sort((a, b) => b.compareTo(a));
+    final last30Days = sortedDates.take(30).toList();
+
+    return SliverToBoxAdapter(
+      child: Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today,
+                      color: Colors.white, size: 28),
+                  const SizedBox(width: 12),
+                  const Text(
+                    '📅 สรุปรายวัน (ย้อนหลัง 30 วัน)',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${last30Days.length} วัน',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Table Content
+            if (_dailySummary.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(48),
+                child: Column(
+                  children: [
+                    Icon(Icons.inbox_outlined,
+                        size: 64, color: Colors.grey[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'ไม่มีข้อมูลสรุปรายวัน',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: MaterialStateProperty.all(
+                    Colors.grey[100],
+                  ),
+                  columns: const [
+                    DataColumn(
+                      label: Text(
+                        'วันที่',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        '💬 Leads',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        '📊 Connection',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        '👁️ Impressions',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        '👆 Clicks',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        '💰 Cost',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                  rows: last30Days.map((date) {
+                    final data = dailyData[date]!;
+                    final isEven = last30Days.indexOf(date) % 2 == 0;
+
+                    return DataRow(
+                      color: MaterialStateProperty.all(
+                        isEven ? Colors.grey[50] : Colors.white,
+                      ),
+                      cells: [
+                        DataCell(
+                          Text(
+                            date,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            data['leads'].toString(),
+                            style: const TextStyle(
+                              color: Color(0xFF3B82F6),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            data['connection'].toString(),
+                            style: const TextStyle(
+                              color: Color(0xFF10B981),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            NumberFormat('#,##0').format(data['impressions']),
+                            style: const TextStyle(
+                              color: Color(0xFFF59E0B),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            data['clicks'].toString(),
+                            style: const TextStyle(
+                              color: Color(0xFF8B5CF6),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            '฿${NumberFormat('#,##0.00').format(data['spend'])}',
+                            style: const TextStyle(
+                              color: Color(0xFFEF4444),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
