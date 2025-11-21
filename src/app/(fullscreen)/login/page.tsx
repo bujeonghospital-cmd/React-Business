@@ -141,7 +141,7 @@ export default function LoginPage() {
         >
           <Link href="/" className="inline-block">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
-              PAKKU GROUP
+              HJH BANHKOK
             </h1>
           </Link>
         </motion.div>
