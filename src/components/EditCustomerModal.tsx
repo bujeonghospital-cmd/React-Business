@@ -49,9 +49,44 @@ export const EditCustomerModal = ({
       const result = await response.json();
       if (result.success && result.data) {
         setStatusOptions(result.data);
+      } else {
+        console.error("❌ Failed to fetch status options:", result.error);
+        console.error("Details:", result.details);
+        // Use fallback data when database is not accessible
+        setStatusOptions([
+          {
+            value: "ติดตามต่อเนื่อง",
+            label: "ติดตามต่อเนื่อง",
+            color: "#FFD700",
+          },
+          { value: "ปิดการขาย", label: "ปิดการขาย", color: "#90EE90" },
+          { value: "ยกเลิก", label: "ยกเลิก", color: "#FFB6C1" },
+          { value: "รอตอบกลับ", label: "รอตอบกลับ", color: "#87CEEB" },
+          {
+            value: "ได้นัด Consult",
+            label: "ได้นัด Consult",
+            color: "#FFA500",
+          },
+          { value: "ได้นัดผ่าตัด", label: "ได้นัดผ่าตัด", color: "#FF6347" },
+          { value: "ผ่าตัดแล้ว", label: "ผ่าตัดแล้ว", color: "#32CD32" },
+        ]);
       }
     } catch (error) {
       console.error("Error fetching status options:", error);
+      // Use fallback data on network error
+      setStatusOptions([
+        {
+          value: "ติดตามต่อเนื่อง",
+          label: "ติดตามต่อเนื่อง",
+          color: "#FFD700",
+        },
+        { value: "ปิดการขาย", label: "ปิดการขาย", color: "#90EE90" },
+        { value: "ยกเลิก", label: "ยกเลิก", color: "#FFB6C1" },
+        { value: "รอตอบกลับ", label: "รอตอบกลับ", color: "#87CEEB" },
+        { value: "ได้นัด Consult", label: "ได้นัด Consult", color: "#FFA500" },
+        { value: "ได้นัดผ่าตัด", label: "ได้นัดผ่าตัด", color: "#FF6347" },
+        { value: "ผ่าตัดแล้ว", label: "ผ่าตัดแล้ว", color: "#32CD32" },
+      ]);
     }
   };
 
@@ -61,9 +96,30 @@ export const EditCustomerModal = ({
       const result = await response.json();
       if (result.success && result.data) {
         setSourceOptions(result.data);
+      } else {
+        console.error("❌ Failed to fetch source options:", result.error);
+        console.error("Details:", result.details);
+        // Use fallback data
+        setSourceOptions([
+          { value: "Facebook", label: "Facebook" },
+          { value: "Instagram", label: "Instagram" },
+          { value: "Google Ads", label: "Google Ads" },
+          { value: "Line", label: "Line" },
+          { value: "Walk-in", label: "Walk-in" },
+          { value: "Referral", label: "Referral" },
+        ]);
       }
     } catch (error) {
       console.error("Error fetching source options:", error);
+      // Use fallback data
+      setSourceOptions([
+        { value: "Facebook", label: "Facebook" },
+        { value: "Instagram", label: "Instagram" },
+        { value: "Google Ads", label: "Google Ads" },
+        { value: "Line", label: "Line" },
+        { value: "Walk-in", label: "Walk-in" },
+        { value: "Referral", label: "Referral" },
+      ]);
     }
   };
 
@@ -73,9 +129,36 @@ export const EditCustomerModal = ({
       const result = await response.json();
       if (result.success && result.data) {
         setProductOptions(result.data);
+      } else {
+        console.error("❌ Failed to fetch product options:", result.error);
+        console.error("Details:", result.details);
+        // Use fallback data
+        setProductOptions([
+          { value: "ตีตัวไล่ตัว", label: "ตีตัวไล่ตัว" },
+          { value: "Sub brow lift", label: "Sub brow lift" },
+          { value: "แก้ตาหมื่อตอนและแก้ว", label: "แก้ตาหมื่อตอนและแก้ว" },
+          { value: "ตาสองชั้น", label: "ตาสองชั้น" },
+          { value: "เสริมจมูก", label: "เสริมจมูก" },
+          { value: "แก้จมูก", label: "แก้จมูก" },
+          { value: "เสริมตาขาว", label: "เสริมตาขาว" },
+          { value: "ลิฟหน้า", label: "ลิฟหน้า" },
+          { value: "Skin", label: "Skin" },
+        ]);
       }
     } catch (error) {
       console.error("Error fetching product options:", error);
+      // Use fallback data
+      setProductOptions([
+        { value: "ตีตัวไล่ตัว", label: "ตีตัวไล่ตัว" },
+        { value: "Sub brow lift", label: "Sub brow lift" },
+        { value: "แก้ตาหมื่อตอนและแก้ว", label: "แก้ตาหมื่อตอนและแก้ว" },
+        { value: "ตาสองชั้น", label: "ตาสองชั้น" },
+        { value: "เสริมจมูก", label: "เสริมจมูก" },
+        { value: "แก้จมูก", label: "แก้จมูก" },
+        { value: "เสริมตาขาว", label: "เสริมตาขาว" },
+        { value: "ลิฟหน้า", label: "ลิฟหน้า" },
+        { value: "Skin", label: "Skin" },
+      ]);
     }
   };
 
@@ -85,9 +168,32 @@ export const EditCustomerModal = ({
       const result = await response.json();
       if (result.success && result.data) {
         setCountryOptions(result.data);
+      } else {
+        console.error("❌ Failed to fetch country options:", result.error);
+        console.error("Details:", result.details);
+        // Use fallback data
+        setCountryOptions([
+          { value: "ไทย", label: "ไทย" },
+          { value: "จีน", label: "จีน" },
+          { value: "ญี่ปุ่น", label: "ญี่ปุ่น" },
+          { value: "เกาหลี", label: "เกาหลี" },
+          { value: "สิงคโปร์", label: "สิงคโปร์" },
+          { value: "มาเลเซีย", label: "มาเลเซีย" },
+          { value: "อื่นๆ", label: "อื่นๆ" },
+        ]);
       }
     } catch (error) {
       console.error("Error fetching country options:", error);
+      // Use fallback data
+      setCountryOptions([
+        { value: "ไทย", label: "ไทย" },
+        { value: "จีน", label: "จีน" },
+        { value: "ญี่ปุ่น", label: "ญี่ปุ่น" },
+        { value: "เกาหลี", label: "เกาหลี" },
+        { value: "สิงคโปร์", label: "สิงคโปร์" },
+        { value: "มาเลเซีย", label: "มาเลเซีย" },
+        { value: "อื่นๆ", label: "อื่นๆ" },
+      ]);
     }
   };
   useEffect(() => {
