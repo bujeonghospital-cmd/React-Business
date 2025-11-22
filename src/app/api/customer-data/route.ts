@@ -161,7 +161,17 @@ export async function POST(request: NextRequest) {
       const englishData: Record<string, any> = {};
       Object.entries(data).forEach(([thaiKey, value]) => {
         const englishKey = reverseColumnMapping[thaiKey] || thaiKey;
-        englishData[englishKey] = value;
+        // กรอง id, created_at, updated_at ออก เพื่อให้ database สร้างให้เอง
+        if (
+          englishKey !== "id" &&
+          englishKey !== "created_at" &&
+          englishKey !== "updated_at" &&
+          value !== "" &&
+          value !== null &&
+          value !== undefined
+        ) {
+          englishData[englishKey] = value;
+        }
       });
       const fields = Object.keys(englishData);
       const values = Object.values(englishData);
