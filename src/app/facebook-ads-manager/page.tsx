@@ -257,27 +257,85 @@ export default function FacebookAdsManagerPage() {
     }
   }, []);
 
-  const fetchTopAdsPhoneLeads = useCallback(async (adIds: string[]) => {
-    try {
-      setTopAdsPhoneLeadsLoading(true);
-      const adIdsParam = adIds.join(",");
-      const response = await fetch(
-        `/api/facebook-ads-phone-leads?ad_ids=${adIdsParam}`
-      );
-      const result = await response.json();
-      if (result.success && result.data) {
-        const phoneLeadsMap = new Map<string, number>();
-        Object.keys(result.data).forEach((adId) => {
-          phoneLeadsMap.set(adId, result.data[adId]);
-        });
-        setTopAdsPhoneLeads(new Map(phoneLeadsMap));
+  const fetchTopAdsPhoneLeads = useCallback(
+    async (adIds: string[]) => {
+      try {
+        setTopAdsPhoneLeadsLoading(true);
+        const adIdsParam = adIds.join(",");
+
+        // Calculate date range based on current dateRange state
+        const today = new Date();
+        let startDate: string;
+        let endDate: string = today.toISOString().split("T")[0];
+
+        if (dateRange === "custom" && customDateStart && customDateEnd) {
+          startDate = customDateStart;
+          endDate = customDateEnd;
+        } else {
+          let start: Date;
+          switch (dateRange) {
+            case "today":
+              startDate = endDate;
+              break;
+            case "yesterday":
+              const yesterday = new Date(today);
+              yesterday.setDate(yesterday.getDate() - 1);
+              startDate = endDate = yesterday.toISOString().split("T")[0];
+              break;
+            case "last_7d":
+              start = new Date(today);
+              start.setDate(start.getDate() - 7);
+              startDate = start.toISOString().split("T")[0];
+              break;
+            case "last_14d":
+              start = new Date(today);
+              start.setDate(start.getDate() - 14);
+              startDate = start.toISOString().split("T")[0];
+              break;
+            case "last_30d":
+              start = new Date(today);
+              start.setDate(start.getDate() - 30);
+              startDate = start.toISOString().split("T")[0];
+              break;
+            case "this_month":
+              start = new Date(today.getFullYear(), today.getMonth(), 1);
+              startDate = start.toISOString().split("T")[0];
+              break;
+            case "last_month":
+              start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+              const lastMonthEnd = new Date(
+                today.getFullYear(),
+                today.getMonth(),
+                0
+              );
+              startDate = start.toISOString().split("T")[0];
+              endDate = lastMonthEnd.toISOString().split("T")[0];
+              break;
+            default:
+              startDate = endDate;
+          }
+        }
+
+        // ใช้ API ใหม่ที่ query จาก SQL โดยแมพกับ fb_ad_id และ filter ตามวันที่
+        const response = await fetch(
+          `/api/facebook-ads-phone-leads-sql?ad_ids=${adIdsParam}&date_start=${startDate}&date_end=${endDate}`
+        );
+        const result = await response.json();
+        if (result.success && result.data) {
+          const phoneLeadsMap = new Map<string, number>();
+          Object.keys(result.data).forEach((adId) => {
+            phoneLeadsMap.set(adId, result.data[adId]);
+          });
+          setTopAdsPhoneLeads(new Map(phoneLeadsMap));
+        }
+      } catch (error) {
+        setTopAdsPhoneLeads(new Map());
+      } finally {
+        setTopAdsPhoneLeadsLoading(false);
       }
-    } catch (error) {
-      setTopAdsPhoneLeads(new Map());
-    } finally {
-      setTopAdsPhoneLeadsLoading(false);
-    }
-  }, []);
+    },
+    [dateRange, customDateStart, customDateEnd]
+  );
 
   const fetchInsights = useCallback(
     async (isBackgroundRefresh = false, retryCount = 0) => {
