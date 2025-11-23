@@ -141,8 +141,8 @@ const CustomerAllDataPage = () => {
       }
       // API ตอนนี้ return format: { success: true, columns: [...], data: [{...}, {...}], ... }
       // ข้อมูลเป็น array of objects แล้ว ไม่ต้องแปลง
-      // เอา 'id' ออกจาก headers เพราะไม่ต้องแสดงในตาราง
-      const headers = result.columns.filter((col: string) => col !== "id");
+      // รวม 'id' ใน headers เพื่อแสดงในตาราง
+      const headers = result.columns;
       const formattedData = result.data;
       const tables = [
         {
@@ -174,6 +174,7 @@ const CustomerAllDataPage = () => {
         });
         // Define the desired column order for consistency between table and form
         const columnOrder = [
+          "id",
           "สถานะ",
           "แหล่งที่มา",
           "ผลิตภัณฑ์ที่สนใจ",
