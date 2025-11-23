@@ -31,16 +31,9 @@ export const EditCustomerModal = ({
   const [countryOptions, setCountryOptions] = useState<
     Array<{ value: string; label: string }>
   >([]);
-  const [contactPersonOptions] = useState<
+  const [contactPersonOptions, setContactPersonOptions] = useState<
     Array<{ value: string; label: string }>
-  >([
-    { value: "ว่าน", label: "ว่าน" },
-    { value: "จีน", label: "จีน" },
-    { value: "สา", label: "สา" },
-    { value: "เจ", label: "เจ" },
-    { value: "พิดยา", label: "พิดยา" },
-    { value: "มุก", label: "มุก" },
-  ]);
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState<{
     isOpen: boolean;
@@ -199,6 +192,38 @@ export const EditCustomerModal = ({
       ]);
     }
   };
+
+  const fetchContactPersonOptions = async () => {
+    try {
+      const response = await fetch("/api/contact-person-options");
+      const result = await response.json();
+      if (result.success && result.data) {
+        setContactPersonOptions(result.data);
+      } else {
+        // Use fallback data
+        setContactPersonOptions([
+          { value: "ว่าน", label: "ว่าน" },
+          { value: "จีน", label: "จีน" },
+          { value: "สา", label: "สา" },
+          { value: "เจ", label: "เจ" },
+          { value: "พิดยา", label: "พิดยา" },
+          { value: "มุก", label: "มุก" },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching contact person options:", error);
+      // Use fallback data
+      setContactPersonOptions([
+        { value: "ว่าน", label: "ว่าน" },
+        { value: "จีน", label: "จีน" },
+        { value: "สา", label: "สา" },
+        { value: "เจ", label: "เจ" },
+        { value: "พิดยา", label: "พิดยา" },
+        { value: "มุก", label: "มุก" },
+      ]);
+    }
+  };
+
   useEffect(() => {
     console.log(
       "📋 EditCustomerModal - isOpen:",
@@ -214,6 +239,7 @@ export const EditCustomerModal = ({
       fetchSourceOptions();
       fetchProductOptions();
       fetchCountryOptions();
+      fetchContactPersonOptions();
     }
   }, [initialData, isOpen]);
   const handleFieldChange = (fieldName: string, value: any) => {
@@ -223,6 +249,9 @@ export const EditCustomerModal = ({
     });
   };
   const handleSave = async () => {
+    // Prevent duplicate submissions
+    if (isLoading) return;
+
     setIsLoading(true);
     try {
       const response = await fetch("/api/customer-data", {
