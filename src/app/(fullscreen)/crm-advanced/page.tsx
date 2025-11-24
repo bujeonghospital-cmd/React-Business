@@ -765,34 +765,64 @@ export default function CRMAdvancedPage() {
                 <table className="w-full border-collapse table-fixed">
                   <thead>
                     <tr className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500">
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px" }}
+                      >
                         เวลาที่นัด
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide "
+                        style={{ width: "200px" }}
+                      >
                         สถานะ
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide "
+                        style={{ width: "200px" }}
+                      >
                         ชื่อลูกค้า
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px" }}
+                      >
                         เบอร์โทร
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px" }}
+                      >
                         ผลิตภัณฑ์ที่สนใจ
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px" }}
+                      >
                         หมอ
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide "
+                        style={{ width: "200px" }}
+                      >
                         ชื่อผู้ติดต่อ
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px", textAlign: "center" }}
+                      >
                         ยอดนำเสนอ
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px", textAlign: "center" }}
+                      >
                         ติดดาว
                       </th>
-                      <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                      <th
+                        className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide"
+                        style={{ width: "200px" }}
+                      >
                         ประเทศ
                       </th>
                       <th className="px-6 py-5 text-left text-sm font-bold text-white tracking-wide">
@@ -833,7 +863,10 @@ export default function CRMAdvancedPage() {
                         <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-300">
                           {record.contact_staff}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-300 text-right">
+                        <td
+                          className="px-6 py-4 text-sm text-gray-800 border-r border-gray-300 text-right"
+                          style={{ textAlign: "center" }}
+                        >
                           {record.proposed_amount.toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-300 bg-gradient-to-r from-amber-100 to-yellow-100">
