@@ -629,6 +629,16 @@ const CustomerAllDataPage = () => {
           if (!rowDate || isNaN(rowDate.getTime())) return false;
           const start = startDate ? new Date(startDate) : null;
           const end = endDate ? new Date(endDate) : null;
+
+          // Set time to start of day for comparison
+          if (start) {
+            start.setHours(0, 0, 0, 0);
+          }
+          if (end) {
+            end.setHours(23, 59, 59, 999);
+          }
+          rowDate.setHours(0, 0, 0, 0);
+
           if (start && end) {
             return rowDate >= start && rowDate <= end;
           } else if (start) {

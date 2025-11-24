@@ -33,15 +33,27 @@ export default function CRMAdvancedPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
   const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [selectedDateRecords, setSelectedDateRecords] = useState<CRMRecord[]>(
+    []
+  );
+  const [selectedDateStr, setSelectedDateStr] = useState<string>("");
+  const [showPopup, setShowPopup] = useState(false);
 
   // ดึงข้อมูลจาก API - เริ่มต้นด้วยวันนี้
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
+    setStartDate(today);
     fetchRecords(today, today);
   }, []);
+
+  // ค้นหาอัตโนมัติเมื่อเปลี่ยนวันที่
+  useEffect(() => {
+    if (startDate && viewMode === "table") {
+      fetchRecords(startDate, startDate);
+    }
+  }, [startDate]);
 
   // โหลดข้อมูลตามเดือนที่เลือกในปฏิทิน
   useEffect(() => {
@@ -105,10 +117,7 @@ export default function CRMAdvancedPage() {
   };
 
   const handleDateFilter = () => {
-    if (startDate && endDate) {
-      fetchRecords(startDate, endDate);
-    } else if (startDate) {
-      // ถ้ามีแค่วันเริ่มต้น ใช้เป็นวันเดียว
+    if (startDate) {
       fetchRecords(startDate, startDate);
     } else {
       // ถ้าไม่กรอกวันที่ ให้ใช้วันนี้
@@ -120,7 +129,6 @@ export default function CRMAdvancedPage() {
   const handleResetFilter = () => {
     const today = new Date().toISOString().split("T")[0];
     setStartDate(today);
-    setEndDate(today);
     setSelectedDate("");
     if (viewMode === "calendar") {
       // ถ้าอยู่ในโหมดปฏิทิน ให้โหลดข้อมูลของเดือนปัจจุบัน
@@ -174,9 +182,67 @@ export default function CRMAdvancedPage() {
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
     setStartDate(dateStr);
-    setEndDate(dateStr);
-    // เรียก API ใหม่เพื่อดึงข้อมูลของวันที่เลือกตาม SQL query ที่กำหนด
-    fetchRecords(dateStr, dateStr);
+    const dayRecords = getRecordsForDate(dateStr);
+    if (dayRecords.length > 0) {
+      setSelectedDateRecords(dayRecords);
+      setSelectedDateStr(dateStr);
+      setShowPopup(true);
+    } else {
+      // ถ้าไม่มีข้อมูล ให้เรียก API เพื่อดึงข้อมูลของวันนั้น
+      fetchRecords(dateStr, dateStr);
+    }
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
+    setSelectedDateRecords([]);
+    setSelectedDateStr("");
+  };
+
+  const getDayColor = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay();
+
+    // สีประจำวัน (ตามความเชื่อไทย)
+    const dayColors = {
+      0: {
+        bg: "bg-red-400/30",
+        border: "border-red-400",
+        text: "text-red-200",
+      }, // อาทิตย์ - แดง
+      1: {
+        bg: "bg-yellow-400/30",
+        border: "border-yellow-400",
+        text: "text-yellow-200",
+      }, // จันทร์ - เหลือง
+      2: {
+        bg: "bg-pink-400/30",
+        border: "border-pink-400",
+        text: "text-pink-200",
+      }, // อังคาร - ชมพู
+      3: {
+        bg: "bg-green-400/30",
+        border: "border-green-400",
+        text: "text-green-200",
+      }, // พุธ - เขียว
+      4: {
+        bg: "bg-orange-400/30",
+        border: "border-orange-400",
+        text: "text-orange-200",
+      }, // พฤหัสบดี - ส้ม
+      5: {
+        bg: "bg-blue-400/30",
+        border: "border-blue-400",
+        text: "text-blue-200",
+      }, // ศุกร์ - ฟ้า
+      6: {
+        bg: "bg-purple-400/30",
+        border: "border-purple-400",
+        text: "text-purple-200",
+      }, // เสาร์ - ม่วง
+    };
+
+    return dayColors[dayOfWeek as keyof typeof dayColors];
   };
 
   const renderCalendar = () => {
@@ -199,20 +265,22 @@ export default function CRMAdvancedPage() {
       const isToday = dateStr === today;
       const isSelected = dateStr === selectedDate;
       const hasRecords = dayRecords.length > 0;
+      const dayColor = getDayColor(dateStr);
 
       days.push(
         <div
           key={day}
           onClick={() => handleDateClick(dateStr)}
           className={`
-            min-h-[100px] p-2 border border-white/20 cursor-pointer transition-all
-            ${isToday ? "bg-blue-400/30 ring-2 ring-yellow-400" : ""}
-            ${isSelected ? "bg-blue-500/40 ring-2 ring-white" : ""}
-            ${hasRecords ? "bg-green-400/20" : "bg-white/5"}
-            hover:bg-white/20 hover:shadow-lg
+            min-h-[100px] p-2 border-2 cursor-pointer transition-all
+            ${isToday ? "ring-4 ring-yellow-400 ring-offset-2" : ""}
+            ${isSelected ? "ring-4 ring-white ring-offset-2" : ""}
+            ${dayColor.bg} ${dayColor.border}
+            ${hasRecords ? "shadow-lg" : ""}
+            hover:shadow-xl hover:scale-105
           `}
         >
-          <div className="font-bold text-white text-sm mb-1">{day}</div>
+          <div className={`font-bold ${dayColor.text} text-sm mb-1`}>{day}</div>
           {hasRecords && (
             <div className="space-y-1">
               <div className="text-xs bg-emerald-500 text-white px-2 py-1 rounded-full font-bold">
@@ -266,147 +334,95 @@ export default function CRMAdvancedPage() {
         </button>
       </div>
 
-      {/* View Mode Toggle */}
+      {/* View Mode Toggle and Date Filter */}
       <div className="px-8 pb-4">
-        <div className="flex justify-end gap-2">
-          <button
-            onClick={() => setViewMode("table")}
-            className={`px-6 py-2 rounded-lg transition-all shadow-lg font-medium flex items-center gap-2 ${
-              viewMode === "table"
-                ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
-                : "bg-white/20 text-white hover:bg-white/30"
-            }`}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              />
-            </svg>
-            แสดงแบบตาราง
-          </button>
-          <button
-            onClick={() => setViewMode("calendar")}
-            className={`px-6 py-2 rounded-lg transition-all shadow-lg font-medium flex items-center gap-2 ${
-              viewMode === "calendar"
-                ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
-                : "bg-white/20 text-white hover:bg-white/30"
-            }`}
-          >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            แสดงแบบปฏิทิน
-          </button>
-        </div>
-      </div>
-
-      {/* Date Filter Section */}
-      <div className="px-8 pb-4">
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
-          <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-              />
-            </svg>
-            กรองข้อมูลตามวันที่
-          </h3>
-          <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[200px]">
+        <div className="flex justify-between items-end gap-4 flex-wrap">
+          {/* Date Picker */}
+          <div className="flex items-end gap-2">
+            <div>
               <label className="block text-white text-sm font-medium mb-2">
-                วันที่เริ่มต้น
+                {/* เลือกวันที่ */}
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg bg-white/90 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="px-4 py-2 rounded-lg bg-white/90 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-white text-sm font-medium mb-2">
-                วันที่สิ้นสุด
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg bg-white/90 text-gray-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={handleDateFilter}
-                className="px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl font-medium"
+            <button
+              onClick={handleResetFilter}
+              className="px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl font-medium flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                  ค้นหา
-                </span>
-              </button>
-              <button
-                onClick={handleResetFilter}
-                className="px-6 py-2 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white rounded-lg transition-all shadow-lg hover:shadow-xl font-medium"
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              รีเซ็ต
+            </button>
+          </div>
+
+          {/* View Mode Buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`px-6 py-2 rounded-lg transition-all shadow-lg font-medium flex items-center gap-2 ${
+                viewMode === "table"
+                  ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                <span className="flex items-center gap-2">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                  รีเซ็ต
-                </span>
-              </button>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              แสดงแบบตาราง
+            </button>
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`px-6 py-2 rounded-lg transition-all shadow-lg font-medium flex items-center gap-2 ${
+                viewMode === "calendar"
+                  ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              แสดงแบบปฏิทิน
+            </button>
           </div>
         </div>
       </div>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 shadow-2xl">
         <div className="max-w-full px-8 py-8">
@@ -652,30 +668,72 @@ export default function CRMAdvancedPage() {
                 </div>
 
                 {/* Legend */}
-                <div className="mt-6 flex flex-wrap gap-4 justify-center">
-                  <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-                    <div className="w-4 h-4 bg-green-400/40 rounded"></div>
-                    <span className="text-white text-sm font-medium">
-                      มีนัดหมาย
-                    </span>
+                <div className="mt-6 space-y-3">
+                  <div className="text-center text-white font-bold text-lg mb-3">
+                    🌈 สีประจำวัน
                   </div>
-                  <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-                    <div className="w-4 h-4 bg-blue-400/40 ring-2 ring-yellow-400 rounded"></div>
-                    <span className="text-white text-sm font-medium">
-                      วันนี้
-                    </span>
+                  <div className="grid grid-cols-7 gap-2">
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg ">
+                      <div className="w-8 h-8 bg-red-400/50 border-2 border-red-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        อาทิตย์
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-yellow-400/50 border-2 border-yellow-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        จันทร์
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-pink-400/50 border-2 border-pink-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        อังคาร
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-green-400/50 border-2 border-green-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        พุธ
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-orange-400/50 border-2 border-orange-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        พฤหัส
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-400/50 border-2 border-blue-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        ศุกร์
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-purple-400/50 border-2 border-purple-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        เสาร์
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
-                    <div className="w-4 h-4 bg-blue-500/40 ring-2 ring-white rounded"></div>
-                    <span className="text-white text-sm font-medium">
-                      วันที่เลือก
-                    </span>
+                  <div className="flex flex-wrap gap-3 justify-center mt-4">
+                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                      <div className="w-4 h-4 bg-white/50 ring-4 ring-yellow-400 rounded"></div>
+                      <span className="text-white text-sm font-medium">
+                        วันนี้
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                      <div className="w-4 h-4 bg-white/50 ring-4 ring-white rounded"></div>
+                      <span className="text-white text-sm font-medium">
+                        วันที่เลือก
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
-
           {/* Table Container */}
           {viewMode === "table" && (
             <div className="overflow-x-auto w-full">
@@ -714,7 +772,7 @@ export default function CRMAdvancedPage() {
                         สถานะ
                       </th>
                       <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
-                        ชื่อผู้ติดต่อ
+                        ชื่อลูกค้า
                       </th>
                       <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
                         เบอร์โทร
@@ -726,7 +784,7 @@ export default function CRMAdvancedPage() {
                         หมอ
                       </th>
                       <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
-                        ผู้ติดตาม
+                        ชื่อผู้ติดต่อ
                       </th>
                       <th className="px-6 py-5 text-left text-sm font-bold text-white border-r border-white/20 tracking-wide">
                         ยอดนำเสนอ
@@ -817,7 +875,6 @@ export default function CRMAdvancedPage() {
               )}
             </div>
           )}
-
           {/* Footer Summary */}
           {viewMode === "table" && (
             <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 px-8 py-6 border-t-4 border-indigo-600">
@@ -844,8 +901,223 @@ export default function CRMAdvancedPage() {
               </div>
             </div>
           )}
+          )
         </div>
       </div>
+
+      {/* Popup Modal */}
+      {showPopup && selectedDateRecords.length > 0 && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={closePopup}
+        >
+          <div
+            className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Popup Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    นัดหมายวันที่{" "}
+                    {new Date(selectedDateStr).toLocaleDateString("th-TH", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </h2>
+                  <p className="text-blue-100 text-sm mt-1">
+                    ทั้งหมด {selectedDateRecords.length} รายการ
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={closePopup}
+                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-all"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Popup Content */}
+            <div className="p-6 space-y-3 max-h-[calc(90vh-200px)] overflow-y-auto">
+              {selectedDateRecords.map((record, index) => (
+                <div
+                  key={record.id}
+                  className="bg-gradient-to-r from-white to-blue-50 rounded-xl shadow-lg p-5 border-2 border-blue-200 hover:shadow-xl transition-all"
+                >
+                  {/* Header Row */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-3 py-1 rounded-full text-xs font-bold">
+                          #{index + 1}
+                        </span>
+                        {record.star_flag && (
+                          <svg
+                            className="w-5 h-5 text-yellow-500 fill-current"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                          </svg>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-bold text-blue-600">
+                        {record.customer_name}
+                      </h3>
+                      <p className="text-sm text-gray-600">{record.phone}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block px-3 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full text-xs font-bold">
+                        {record.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-gray-600 font-medium">
+                        ⏰ เวลานัดหมาย
+                      </p>
+                      <p className="text-gray-800 font-bold">
+                        {record.appointmentTime}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium">👨‍⚕️ แพทย์</p>
+                      <p className="text-gray-800 font-bold">{record.doctor}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium">💊 ผลิตภัณฑ์</p>
+                      <p className="text-gray-800 font-bold">
+                        {record.interested_product}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium">🌍 ประเทศ</p>
+                      <p className="text-gray-800 font-bold">
+                        {record.country}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium">👤 ผู้ติดต่อ</p>
+                      <p className="text-gray-800 font-bold">
+                        {record.contact_staff}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium">💰 ยอดเสนอ</p>
+                      <p className="text-purple-600 font-bold text-lg">
+                        {record.proposed_amount.toLocaleString()} ฿
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Note */}
+                  {record.note && (
+                    <div className="mt-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                      <p className="text-xs text-gray-600 font-medium mb-1">
+                        📝 หมายเหตุ
+                      </p>
+                      <p className="text-sm text-gray-800">{record.note}</p>
+                    </div>
+                  )}
+
+                  {/* Dates */}
+                  {(record.surgery_date || record.consult_date) && (
+                    <div className="mt-3 flex gap-2 text-xs">
+                      {record.surgery_date && (
+                        <div className="bg-red-100 px-3 py-1 rounded-full">
+                          <span className="text-red-700 font-bold">
+                            🏥 ผ่าตัด:{" "}
+                            {new Date(record.surgery_date).toLocaleDateString(
+                              "th-TH"
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {record.consult_date && (
+                        <div className="bg-blue-100 px-3 py-1 rounded-full">
+                          <span className="text-blue-700 font-bold">
+                            📅 ปรึกษา:{" "}
+                            {new Date(record.consult_date).toLocaleDateString(
+                              "th-TH"
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Summary */}
+              <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 border-2 border-purple-300">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-gray-600 font-medium">
+                      รวมทั้งหมด
+                    </p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {selectedDateRecords.length} รายการ
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600 font-medium">
+                      รวมยอดเสนอ
+                    </p>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {selectedDateRecords
+                        .reduce((sum, r) => sum + r.proposed_amount, 0)
+                        .toLocaleString()}{" "}
+                      ฿
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Popup Footer */}
+            <div className="bg-gray-100 p-4 rounded-b-2xl flex justify-end">
+              <button
+                onClick={closePopup}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg font-bold shadow-lg transition-all"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

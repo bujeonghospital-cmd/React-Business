@@ -216,6 +216,9 @@ export default function FacebookAdsManagerPage() {
     new Map()
   );
   const [topAdsPhoneLeadsLoading, setTopAdsPhoneLeadsLoading] = useState(false);
+  const [topAdsLimit, setTopAdsLimit] = useState<5 | 10 | 15 | 20 | 30 | "all">(
+    20
+  );
   // Helper function to check if local video exists
   const getLocalVideoPath = (videoId: string | undefined): string | null => {
     if (!videoId) return null;
@@ -1560,37 +1563,60 @@ export default function FacebookAdsManagerPage() {
           {/* Right Section - TOP 5 Ads Performance */}
           <div className="lg:col-span-6">
             <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 border border-gray-100">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-3">
-                <h2 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2">
-                  🏆 TOP 20 Ads
+              <div className="flex flex-col gap-3 mb-3 sm:mb-4">
+                <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-2">
+                  🏆 TOP {topAdsLimit === "all" ? "ทั้งหมด" : topAdsLimit} Ads
                 </h2>
-                <div className="flex gap-2 w-full sm:w-auto">
-                  <button
-                    onClick={() => setTopAdsSortBy("leads")}
-                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
-                      topAdsSortBy === "leads"
-                        ? "bg-purple-600 text-white shadow-lg"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
+                  {/* Sort By Buttons */}
+                  <div className="flex gap-2 flex-1">
+                    <button
+                      onClick={() => setTopAdsSortBy("leads")}
+                      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                        topAdsSortBy === "leads"
+                          ? "bg-purple-600 text-white shadow-lg"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
+                    >
+                      <span className="hidden sm:inline">
+                        💬 Total Inbox (มาก → น้อย)
+                      </span>
+                      <span className="sm:hidden">💬 Inbox</span>
+                    </button>
+                    <button
+                      onClick={() => setTopAdsSortBy("cost")}
+                      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                        topAdsSortBy === "cost"
+                          ? "bg-purple-600 text-white shadow-lg"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
+                    >
+                      <span className="hidden sm:inline">
+                        💰 ต้นทุน (น้อย → มาก)
+                      </span>
+                      <span className="sm:hidden">💰 Cost</span>
+                    </button>
+                  </div>
+                  {/* Top Ads Limit Dropdown */}
+                  <select
+                    value={topAdsLimit}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setTopAdsLimit(
+                        value === "all"
+                          ? "all"
+                          : (Number(value) as 5 | 10 | 15 | 20 | 30)
+                      );
+                    }}
+                    className="flex-1 sm:flex-none sm:min-w-[140px] px-3 py-2 rounded-lg font-medium text-xs sm:text-sm bg-gradient-to-r from-yellow-400 to-orange-400 text-gray-800 hover:from-yellow-500 hover:to-orange-500 transition-all border-2 border-yellow-500 shadow-lg cursor-pointer"
                   >
-                    <span className="hidden sm:inline">
-                      💬 Total Inbox (มาก → น้อย)
-                    </span>
-                    <span className="sm:hidden">💬 Inbox</span>
-                  </button>
-                  <button
-                    onClick={() => setTopAdsSortBy("cost")}
-                    className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
-                      topAdsSortBy === "cost"
-                        ? "bg-purple-600 text-white shadow-lg"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    <span className="hidden sm:inline">
-                      💰 ต้นทุน (น้อย → มาก)
-                    </span>
-                    <span className="sm:hidden">💰 Cost</span>
-                  </button>
+                    <option value={5}>⭐ Top 5</option>
+                    <option value={10}>⭐ Top 10</option>
+                    <option value={15}>⭐ Top 15</option>
+                    <option value={20}>⭐ Top 20</option>
+                    <option value={30}>⭐ Top 30</option>
+                    <option value="all">⭐ Top ทั้งหมด</option>
+                  </select>
                 </div>
               </div>
               <div className="overflow-x-auto">
@@ -1674,7 +1700,7 @@ export default function FacebookAdsManagerPage() {
                           return valueA - valueB;
                         }
                       })
-                      .slice(0, 20)
+                      .slice(0, topAdsLimit === "all" ? undefined : topAdsLimit)
                       .map((ad, index) => {
                         const creative = adCreatives.get(ad.ad_id);
                         console.log(
