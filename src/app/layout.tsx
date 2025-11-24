@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     "Thai Packaging & Printing PCL — packaging & printing solutions.",
   robots: { index: true, follow: true },
   alternates: { canonical: "/" },
-  icons: { icon: "/TPP.ico" },
+  icons: { icon: "/BJH.ico", apple: "/BJH.png" },
   // เพิ่ม Open Graph ช่วยแชร์สวยและช่วย Search Engine
   openGraph: {
     type: "website",
@@ -57,6 +57,11 @@ export default function RootLayout({
   return (
     <html lang="th" suppressHydrationWarning>
       <head>
+        {/* Google Site Verification */}
+        <meta
+          name="google-site-verification"
+          content="flGnNhb1Ui0L9FS0V80ePdbJw7VeQWIuNXjtDV2R6nU"
+        />
         {/* JSON-LD: Organization (ปรับ URL รูปโลโก้ให้ตรงไฟล์จริงของคุณ) */}
         <script
           type="application/ld+json"
@@ -67,13 +72,14 @@ export default function RootLayout({
               "@type": "Organization",
               name: "Thai Packaging & Printing PCL",
               url: "https://tpp-thanakon.store",
-              logo: "https://tpp-thanakon.store/TPP.png",
+              logo: "https://tpp-thanakon.store/BJH.png",
             }),
           }}
         />
       </head>
       <body
-        className={`about-bg-image-background min-h-dvh overflow-x-hidden antialiased ${font.className}`}>
+        className={`about-bg-image-background min-h-dvh overflow-x-hidden antialiased ${font.className}`}
+      >
         <Providers>
           <Suspense fallback={null}>
             <HomeBackground />
@@ -110,4 +116,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+}
