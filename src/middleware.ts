@@ -8,36 +8,28 @@ export function middleware(request: NextRequest) {
   // Check authentication for protected routes
   const token = request.cookies.get("authToken")?.value;
 
-  // Protected paths that require authentication
-  const protectedPaths = [
-    "/facebook-ads-manager",
-    "/performance-surgery-schedule",
-    "/customer-contact-dashboard",
-    "/customer-all-data",
-    "/dashboard",
-    "/home",
-  ];
-
-  const isProtectedPath = protectedPaths.some((path) =>
-    pathname.startsWith(path)
-  );
-
   // Public paths that don't require authentication
+  const publicPaths = ["/login", "/register", "/forgot-password", "/"];
+
   const isPublicPath =
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/forgot-password" ||
-    pathname === "/" ||
+    publicPaths.includes(pathname) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/images") ||
-    pathname.startsWith("/downloads");
+    pathname.startsWith("/downloads") ||
+    pathname.startsWith("/static") ||
+    pathname.includes(".");
 
-  // If accessing protected path without token, redirect to login
-  if (isProtectedPath && !token) {
+  // If accessing any path without token (except public paths), redirect to login
+  if (!isPublicPath && !token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // If already logged in and trying to access login page, redirect to home
+  if (token && pathname === "/login") {
+    return NextResponse.redirect(new URL("/home", request.url));
   }
   // ตรวจสอบว่า URL มี locale prefix หรือไม่
   const pathnameHasLocale = locales.some(
