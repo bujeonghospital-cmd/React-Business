@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       SELECT 
         id,
         contact_staff as contact_person,
-        contact_staff as ผู้ติดต่อ,
+        contact_staff AS ผู้ติดต่อ,
         TO_CHAR(
           CASE 
             WHEN booked_surgery_date::text ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$' 
@@ -73,30 +73,7 @@ export async function GET(request: NextRequest) {
     const params: any[] = [];
     let paramIndex = 1;
     // Filter by month and year if provided (using booked_surgery_date)
-    if (month && year) {
-      query += ` AND EXTRACT(MONTH FROM 
-        CASE 
-          WHEN booked_surgery_date::text ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$' THEN TO_DATE(booked_surgery_date::text, 'DD/MM/YYYY')
-          WHEN booked_surgery_date::text ~ '^[0-9]+$' THEN DATE '1899-12-30' + booked_surgery_date::text::INTEGER
-          ELSE NULL 
-        END) = $${paramIndex++}`;
-      params.push(parseInt(month));
-      query += ` AND EXTRACT(YEAR FROM 
-        CASE 
-          WHEN booked_surgery_date::text ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$' THEN TO_DATE(booked_surgery_date::text, 'DD/MM/YYYY')
-          WHEN booked_surgery_date::text ~ '^[0-9]+$' THEN DATE '1899-12-30' + booked_surgery_date::text::INTEGER
-          ELSE NULL 
-        END) = $${paramIndex++}`;
-      params.push(parseInt(year));
-    } else if (year) {
-      query += ` AND EXTRACT(YEAR FROM 
-        CASE 
-          WHEN booked_surgery_date::text ~ '^[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}$' THEN TO_DATE(booked_surgery_date::text, 'DD/MM/YYYY')
-          WHEN booked_surgery_date::text ~ '^[0-9]+$' THEN DATE '1899-12-30' + booked_surgery_date::text::INTEGER
-          ELSE NULL 
-        END) = $${paramIndex++}`;
-      params.push(parseInt(year));
-    }
+
     // Filter by contact person if provided
     if (contactPerson && contactPerson !== "all") {
       query += ` AND contact_staff = $${paramIndex++}`;
@@ -392,4 +369,4 @@ export async function OPTIONS(request: NextRequest) {
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
-}
+}

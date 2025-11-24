@@ -74,7 +74,10 @@ export function parseDatabaseDate(dateStr: string): Date | null {
   try {
     // Try ISO format first (YYYY-MM-DD)
     if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
-      const date = new Date(cleanStr);
+      const parts = cleanStr.split("-").map(Number);
+      const [year, month, day] = parts;
+      // Create date at noon local time to avoid timezone issues
+      const date = new Date(year, month - 1, day, 12, 0, 0, 0);
       if (!isNaN(date.getTime())) {
         return date;
       }
@@ -86,11 +89,12 @@ export function parseDatabaseDate(dateStr: string): Date | null {
       const day = first;
       const month = second;
       if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-        const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+        // Create date at noon local time to avoid timezone issues
+        const date = new Date(year, month - 1, day, 12, 0, 0, 0);
         if (
-          date.getUTCFullYear() === year &&
-          date.getUTCMonth() === month - 1 &&
-          date.getUTCDate() === day
+          date.getFullYear() === year &&
+          date.getMonth() === month - 1 &&
+          date.getDate() === day
         ) {
           return date;
         }
@@ -151,9 +155,9 @@ export function calculateDailyRevenueByPersonNClinic(
       }
       return;
     }
-    if (date.getUTCMonth() === month && date.getUTCFullYear() === year) {
+    if (date.getMonth() === month && date.getFullYear() === year) {
       matchedCount++;
-      const day = date.getUTCDate();
+      const day = date.getDate();
       // ใช้ staff_display_name (nickname จาก n_staff)
       const person = (item.staff_display_name || "").trim() || "ไม่ระบุ";
       // ใช้ income จาก n_income
@@ -199,8 +203,8 @@ export function calculateDailyRevenueByPersonNClinic(
       skippedWrongMonth++;
       if (skippedWrongMonth <= 3) {
         console.log(`⏭️ Skipped (wrong month): ${dateStr}`, {
-          parsedMonth: date.getUTCMonth() + 1,
-          parsedYear: date.getUTCFullYear(),
+          parsedMonth: date.getMonth() + 1,
+          parsedYear: date.getFullYear(),
           targetMonth: month + 1,
           targetYear: year,
         });

@@ -58,7 +58,10 @@ export function parseDatabaseDate(dateStr: string): Date | null {
   try {
     // Try ISO format first (YYYY-MM-DD)
     if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
-      const date = new Date(cleanStr);
+      const parts = cleanStr.split("-").map(Number);
+      const [year, month, day] = parts;
+      // Create date at noon local time to avoid timezone issues
+      const date = new Date(year, month - 1, day, 12, 0, 0, 0);
       if (!isNaN(date.getTime())) {
         return date;
       }
@@ -72,13 +75,13 @@ export function parseDatabaseDate(dateStr: string): Date | null {
       const month = second;
       // Validate the date
       if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-        // Use UTC to avoid timezone issues
-        const date = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+        // Create date at noon local time to avoid timezone issues
+        const date = new Date(year, month - 1, day, 12, 0, 0, 0);
         // Double check that the date is valid
         if (
-          date.getUTCFullYear() === year &&
-          date.getUTCMonth() === month - 1 &&
-          date.getUTCDate() === day
+          date.getFullYear() === year &&
+          date.getMonth() === month - 1 &&
+          date.getDate() === day
         ) {
           return date;
         }
@@ -117,9 +120,9 @@ export function countDatabaseSurgeriesByDateAndPerson(
       processedCount++;
       const date = parseDatabaseDate(surgeryScheduledDate);
       if (date) {
-        if (date.getUTCMonth() === month && date.getUTCFullYear() === year) {
+        if (date.getMonth() === month && date.getFullYear() === year) {
           matchedCount++;
-          const day = date.getUTCDate();
+          const day = date.getDate();
           // ใช้คอลัมน์ E "ผู้ติดต่อ" จากข้อมูล
           const person =
             (item.contact_person || item.ผู้ติดต่อ || "").trim() || "ไม่ระบุ";
@@ -161,9 +164,9 @@ export function countDatabaseSurgeriesByActualDateAndPerson(
       processedCount++;
       const date = parseDatabaseDate(surgeryDate);
       if (date) {
-        if (date.getUTCMonth() === month && date.getUTCFullYear() === year) {
+        if (date.getMonth() === month && date.getFullYear() === year) {
           matchedCount++;
-          const day = date.getUTCDate();
+          const day = date.getDate();
           // ใช้ contact_person หรือ ผู้ติดต่อ จากข้อมูล
           const person =
             (item.contact_person || item.ผู้ติดต่อ || "").trim() || "ไม่ระบุ";
@@ -241,9 +244,9 @@ export function calculateDatabaseRevenueByDateAndPerson(
       processedCount++;
       const date = parseDatabaseDate(surgeryDate);
       if (date) {
-        if (date.getUTCMonth() === month && date.getUTCFullYear() === year) {
+        if (date.getMonth() === month && date.getFullYear() === year) {
           matchedCount++;
-          const day = date.getUTCDate();
+          const day = date.getDate();
           // ใช้ contact_staff จากข้อมูล
           const person =
             (item.contact_person || item.ผู้ติดต่อ || "").trim() || "ไม่ระบุ";
@@ -266,4 +269,4 @@ export function calculateDatabaseRevenueByDateAndPerson(
     }, total revenue: ${totalRevenue.toLocaleString()} บาท`
   );
   return revenueMap;
-}
+}
