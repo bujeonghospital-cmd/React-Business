@@ -1,13 +1,9 @@
-"use client";
-
-import { DefaultSeo } from "next-seo";
-import { SEO_CONFIG } from "@/lib/seo.config";
-
 /**
  * Default SEO Component
- * ใช้สำหรับตั้งค่า SEO เริ่มต้นทั้งหมด
- * ใส่ไว้ใน layout.tsx หรือ _app.tsx
+ * สำหรับ Next.js 15 App Router ใช้ Metadata API ใน layout.tsx แทน
+ * Component นี้ไม่จำเป็นต้องใช้แล้ว แต่เก็บไว้เพื่อ backward compatibility
  */
 export default function DefaultSEO() {
-  return <DefaultSeo {...SEO_CONFIG} />;
+  // Next.js 15 App Router ใช้ metadata export ใน layout.tsx แทน
+  return null;
 }

@@ -17,8 +17,8 @@ import NavProgress from "@/components/NavProgress";
 import HomeBackground from "@/components/HomeBackground";
 import { Suspense } from "react";
 import Providers from "./providers";
-import { DefaultSEO } from "@/components/SEO";
 // ====== SEO / Metadata ======
+// Note: Next.js 15 App Router uses Metadata API instead of next-seo
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.bjhbangkok.com"),
   title: {
@@ -194,7 +194,6 @@ export default function RootLayout({
       <body
         className={`about-bg-image-background min-h-dvh overflow-x-hidden antialiased ${font.className}`}
       >
-        <DefaultSEO />
         <Providers>
           <Suspense fallback={null}>
             <HomeBackground />

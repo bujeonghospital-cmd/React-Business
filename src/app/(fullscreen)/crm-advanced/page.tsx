@@ -2472,7 +2472,6 @@ export default function CRMAdvancedPage() {
                       <div className="mt-3 flex gap-2">
                         <button
                           onClick={() => {
-                            setEditingAttendance(att);
                             setAttendanceForm({
                               employee_id: att.employee_id,
                               work_date: att.work_date,
