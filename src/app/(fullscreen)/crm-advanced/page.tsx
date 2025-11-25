@@ -26,6 +26,31 @@ interface CRMRecord {
   displayDate?: string;
 }
 
+interface HREmployee {
+  id?: number;
+  full_name: string;
+  role: string;
+  yearly_leave_quota: number;
+  leave_remaining: number;
+  work_start_time: string;
+  work_end_time: string;
+  is_active: boolean;
+}
+
+interface HRAttendance {
+  id?: number;
+  employee_id: number;
+  employee_name?: string;
+  status_rank?: string;
+  work_date: string;
+  time_in: string;
+  time_out: string;
+  status: string;
+  work_hours: number;
+  overtime_hours: number;
+  note: string;
+}
+
 export default function CRMAdvancedPage() {
   const router = useRouter();
   const [records, setRecords] = useState<CRMRecord[]>([]);
@@ -33,13 +58,45 @@ export default function CRMAdvancedPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
-  const [viewMode, setViewMode] = useState<"table" | "calendar">("table");
+  const [viewMode, setViewMode] = useState<"table" | "calendar" | "calendar2">(
+    "table"
+  );
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [currentMonth2, setCurrentMonth2] = useState<Date>(new Date());
   const [selectedDateRecords, setSelectedDateRecords] = useState<CRMRecord[]>(
     []
   );
   const [selectedDateStr, setSelectedDateStr] = useState<string>("");
   const [showPopup, setShowPopup] = useState(false);
+  const [showEmployeeForm, setShowEmployeeForm] = useState(false);
+  const [employeeForm, setEmployeeForm] = useState<HREmployee>({
+    full_name: "",
+    role: "",
+    yearly_leave_quota: 10,
+    leave_remaining: 10,
+    work_start_time: "08:00",
+    work_end_time: "19:00",
+    is_active: true,
+  });
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
+  const [employees, setEmployees] = useState<HREmployee[]>([]);
+  const [attendances, setAttendances] = useState<HRAttendance[]>([]);
+  const [attendanceForm, setAttendanceForm] = useState<HRAttendance>({
+    employee_id: 0,
+    work_date: "",
+    time_in: "08:00",
+    time_out: "17:00",
+    status: "PRESENT",
+    work_hours: 8.0,
+    overtime_hours: 0,
+    note: "",
+  });
+  const [showAttendancePopup, setShowAttendancePopup] = useState(false);
+  const [selectedDateAttendances, setSelectedDateAttendances] = useState<
+    HRAttendance[]
+  >([]);
+  const [selectedAttendanceDateStr, setSelectedAttendanceDateStr] =
+    useState<string>("");
 
   // ดึงข้อมูลจาก API - เริ่มต้นด้วยวันนี้
   useEffect(() => {
@@ -61,6 +118,53 @@ export default function CRMAdvancedPage() {
       fetchRecordsByMonth(currentMonth);
     }
   }, [currentMonth, viewMode]);
+
+  // โหลดข้อมูลตามเดือนที่เลือกในปฏิทิน 2
+  useEffect(() => {
+    if (viewMode === "calendar2") {
+      fetchRecordsByMonth(currentMonth2);
+      fetchEmployees();
+      fetchAttendances(currentMonth2);
+    }
+  }, [currentMonth2, viewMode]);
+
+  // โหลดรายชื่อพนักงาน
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch("/api/hr-employees");
+      const data = await response.json();
+      if (data.success) {
+        setEmployees(data.data.filter((emp: HREmployee) => emp.is_active));
+      }
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
+  };
+
+  // โหลดข้อมูลการเข้างานตามเดือน
+  const fetchAttendances = async (date: Date) => {
+    try {
+      const month = (date.getMonth() + 1).toString();
+      const year = date.getFullYear().toString();
+
+      console.log("Fetching attendances for:", { month, year });
+
+      const response = await fetch(
+        `/api/hr-attendance?month=${month}&year=${year}`
+      );
+      const data = await response.json();
+      console.log("Attendance API response:", data);
+
+      if (data.success) {
+        setAttendances(data.data);
+        console.log("Set attendances:", data.data);
+      } else {
+        console.error("API Error:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching attendances:", error);
+    }
+  };
 
   const fetchRecords = async (start?: string, end?: string) => {
     try {
@@ -133,6 +237,9 @@ export default function CRMAdvancedPage() {
     if (viewMode === "calendar") {
       // ถ้าอยู่ในโหมดปฏิทิน ให้โหลดข้อมูลของเดือนปัจจุบัน
       fetchRecordsByMonth(currentMonth);
+    } else if (viewMode === "calendar2") {
+      // ถ้าอยู่ในโหมดปฏิทิน 2 ให้โหลดข้อมูลของเดือนปัจจุบัน
+      fetchRecordsByMonth(currentMonth2);
     } else {
       // ถ้าอยู่ในโหมดตาราง ให้โหลดข้อมูลวันนี้
       fetchRecords(today, today);
@@ -179,6 +286,18 @@ export default function CRMAdvancedPage() {
     );
   };
 
+  const handlePrevMonth2 = () => {
+    setCurrentMonth2(
+      new Date(currentMonth2.getFullYear(), currentMonth2.getMonth() - 1)
+    );
+  };
+
+  const handleNextMonth2 = () => {
+    setCurrentMonth2(
+      new Date(currentMonth2.getFullYear(), currentMonth2.getMonth() + 1)
+    );
+  };
+
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
     setStartDate(dateStr);
@@ -199,8 +318,141 @@ export default function CRMAdvancedPage() {
     setSelectedDateStr("");
   };
 
+  const handleEmployeeFormChange = (
+    field: keyof HREmployee,
+    value: string | number | boolean
+  ) => {
+    setEmployeeForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSaveEmployee = async () => {
+    try {
+      const response = await fetch("/api/hr-employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(employeeForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("บันทึกข้อมูลพนักงานสำเร็จ!");
+        setShowEmployeeForm(false);
+        fetchEmployees();
+        // Reset form
+        setEmployeeForm({
+          full_name: "",
+          role: "",
+          yearly_leave_quota: 10,
+          leave_remaining: 10,
+          work_start_time: "08:00",
+          work_end_time: "19:00",
+          is_active: true,
+        });
+      } else {
+        alert("เกิดข้อผิดพลาด: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error saving employee:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    }
+  };
+
+  const handleAttendanceFormChange = (
+    field: keyof HRAttendance,
+    value: string | number
+  ) => {
+    setAttendanceForm((prev) => {
+      const updated = {
+        ...prev,
+        [field]: value,
+      };
+
+      // คำนวณชั่วโมงทำงานอัตโนมัติ
+      if (field === "time_in" || field === "time_out") {
+        if (updated.time_in && updated.time_out) {
+          const timeIn = new Date(`2000-01-01T${updated.time_in}`);
+          const timeOut = new Date(`2000-01-01T${updated.time_out}`);
+          const diffMs = timeOut.getTime() - timeIn.getTime();
+          const hours = diffMs / (1000 * 60 * 60);
+          updated.work_hours = Math.max(0, parseFloat(hours.toFixed(2)));
+
+          // คำนวณ OT (เกิน 8 ชั่วโมง)
+          updated.overtime_hours = Math.max(
+            0,
+            parseFloat((hours - 8).toFixed(2))
+          );
+        }
+      }
+
+      return updated;
+    });
+  };
+
+  const handleSaveAttendance = async () => {
+    try {
+      if (!attendanceForm.employee_id || !attendanceForm.work_date) {
+        alert("กรุณาเลือกพนักงานและวันที่");
+        return;
+      }
+
+      const response = await fetch("/api/hr-attendance", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(attendanceForm),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert("บันทึกข้อมูลการเข้างานสำเร็จ!");
+        setShowAttendanceForm(false);
+        fetchAttendances(currentMonth2);
+        // Reset form
+        setAttendanceForm({
+          employee_id: 0,
+          work_date: "",
+          time_in: "08:00",
+          time_out: "17:00",
+          status: "PRESENT",
+          work_hours: 8.0,
+          overtime_hours: 0,
+          note: "",
+        });
+      } else {
+        alert("เกิดข้อผิดพลาด: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error saving attendance:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    }
+  };
+
+  // ดึงข้อมูลการเข้างานของวันที่เลือก
+  const getAttendancesForDate = (dateStr: string) => {
+    const filtered = attendances.filter((att) => {
+      // แปลง work_date ให้เป็นรูปแบบ YYYY-MM-DD โดยใช้ local time
+      const workDate = new Date(att.work_date);
+      const attDate = `${workDate.getFullYear()}-${String(
+        workDate.getMonth() + 1
+      ).padStart(2, "0")}-${String(workDate.getDate()).padStart(2, "0")}`;
+      return attDate === dateStr;
+    });
+    console.log(`Attendances for ${dateStr}:`, filtered);
+    return filtered;
+  };
+
   const getDayColor = (dateStr: string) => {
-    const date = new Date(dateStr);
+    // สร้าง Date object แบบ local time เพื่อหลีกเลี่ยงปัญหา timezone
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
     const dayOfWeek = date.getDay();
 
     // สีประจำวัน (ตามความเชื่อไทย)
@@ -300,6 +552,101 @@ export default function CRMAdvancedPage() {
                   +{dayRecords.length - 2} เพิ่มเติม
                 </div>
               )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  // Render Calendar 2 (สำหรับตารางเข้างาน)
+  const renderCalendar2 = () => {
+    const { daysInMonth, startingDayOfWeek, year, month } =
+      getDaysInMonth(currentMonth2);
+    const days = [];
+    const today = new Date().toISOString().split("T")[0];
+
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(<div key={`empty-${i}`} className="p-2"></div>);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(
+        day
+      ).padStart(2, "0")}`;
+      const dayAttendances = getAttendancesForDate(dateStr);
+      const isToday = dateStr === today;
+      const isSelected = dateStr === selectedDate;
+      const hasAttendances = dayAttendances.length > 0;
+      const dayColor = getDayColor(dateStr);
+
+      days.push(
+        <div
+          key={day}
+          onClick={() => {
+            setSelectedDate(dateStr);
+            setAttendanceForm((prev) => ({ ...prev, work_date: dateStr }));
+            if (hasAttendances) {
+              setSelectedDateAttendances(dayAttendances);
+              setSelectedAttendanceDateStr(dateStr);
+              setShowAttendancePopup(true);
+            }
+          }}
+          className={`
+            min-h-[120px] p-2 border-2 cursor-pointer transition-all
+            ${isToday ? "ring-4 ring-yellow-400 ring-offset-2" : ""}
+            ${isSelected ? "ring-4 ring-emerald-400 ring-offset-2" : ""}
+            ${dayColor.bg} ${dayColor.border}
+            ${hasAttendances ? "shadow-lg" : ""}
+            hover:shadow-xl hover:scale-105
+          `}
+        >
+          <div className={`font-bold ${dayColor.text} text-sm mb-1`}>{day}</div>
+          {hasAttendances ? (
+            <div className="space-y-1">
+              <div className="text-xs bg-teal-500 text-white px-2 py-1 rounded-full font-bold">
+                {dayAttendances.length} คน
+              </div>
+              {dayAttendances.slice(0, 2).map((att) => {
+                const statusColors: Record<string, string> = {
+                  PRESENT: "bg-green-100 text-green-800",
+                  LATE: "bg-yellow-100 text-yellow-800",
+                  LEAVE: "bg-blue-100 text-blue-800",
+                  ABSENT: "bg-red-100 text-red-800",
+                  WFH: "bg-purple-100 text-purple-800",
+                };
+                return (
+                  <div
+                    key={att.id}
+                    className={`text-xs px-2 py-1 rounded truncate ${
+                      statusColors[att.status] || "bg-gray-100 text-gray-800"
+                    }`}
+                    title={`${att.employee_name} - ${
+                      att.status_rank || att.status
+                    } (${att.work_hours}h)`}
+                  >
+                    {att.employee_name}
+                    {att.status !== "PRESENT"
+                      ? ` - ${att.status}`
+                      : att.status_rank
+                      ? ` - ${att.status_rank}`
+                      : ""}
+                  </div>
+                );
+              })}
+              {dayAttendances.length > 2 && (
+                <div className="text-xs text-white/80 font-medium">
+                  +{dayAttendances.length - 2} คน
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-xs text-white/60 text-center mt-2">
+              คลิกเพื่อเพิ่มข้อมูล
             </div>
           )}
         </div>
@@ -419,6 +766,29 @@ export default function CRMAdvancedPage() {
               </svg>
               แสดงแบบปฏิทิน
             </button>
+            <button
+              onClick={() => setViewMode("calendar2")}
+              className={`px-6 py-2 rounded-lg transition-all shadow-lg font-medium flex items-center gap-2 ${
+                viewMode === "calendar2"
+                  ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              ตารางเข้างาน
+            </button>
           </div>
         </div>
       </div>
@@ -444,7 +814,9 @@ export default function CRMAdvancedPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold text-white text-center drop-shadow-lg">
-                สรุปนัดลูกค้าผ่าตัด(CRM)
+                {viewMode === "calendar2"
+                  ? "ตารางเข้างาน"
+                  : "สรุปนัดลูกค้าผ่าตัด(CRM)"}
               </h1>
               <p className="text-center text-blue-100 mt-1 font-medium">
                 {new Date().toLocaleDateString("th-TH", {
@@ -665,6 +1037,167 @@ export default function CRMAdvancedPage() {
 
                   {/* Calendar Days */}
                   {renderCalendar()}
+                </div>
+
+                {/* Legend */}
+                <div className="mt-6 space-y-3">
+                  <div className="text-center text-white font-bold text-lg mb-3">
+                    🌈 สีประจำวัน
+                  </div>
+                  <div className="grid grid-cols-7 gap-2">
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg ">
+                      <div className="w-8 h-8 bg-red-400/50 border-2 border-red-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        อาทิตย์
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-yellow-400/50 border-2 border-yellow-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        จันทร์
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-pink-400/50 border-2 border-pink-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        อังคาร
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-green-400/50 border-2 border-green-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        พุธ
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-orange-400/50 border-2 border-orange-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        พฤหัส
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-blue-400/50 border-2 border-blue-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        ศุกร์
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center gap-2 bg-white/20 px-3 py-2 rounded-lg">
+                      <div className="w-8 h-8 bg-purple-400/50 border-2 border-purple-400 rounded"></div>
+                      <span className="text-white text-xs font-medium">
+                        เสาร์
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-3 justify-center mt-4">
+                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                      <div className="w-4 h-4 bg-white/50 ring-4 ring-yellow-400 rounded"></div>
+                      <span className="text-white text-sm font-medium">
+                        วันนี้
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-lg">
+                      <div className="w-4 h-4 bg-white/50 ring-4 ring-white rounded"></div>
+                      <span className="text-white text-sm font-medium">
+                        วันที่เลือก
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Calendar View 2 */}
+          {viewMode === "calendar2" && (
+            <div className="px-8 pb-8">
+              {/* ปุ่มเพิ่มพนักงานและบันทึกการเข้างาน */}
+              <div className="mb-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowAttendanceForm(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg transition-all shadow-lg font-bold flex items-center gap-2"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                  บันทึกการเข้างาน
+                </button>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 shadow-2xl">
+                {/* Calendar Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <button
+                    onClick={handlePrevMonth2}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg transition-all shadow-lg font-medium"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </button>
+                  <div className="text-center">
+                    <h2 className="text-2xl font-bold text-white">
+                      {currentMonth2.toLocaleDateString("th-TH", {
+                        year: "numeric",
+                        month: "long",
+                      })}
+                    </h2>
+                    <p className="text-sm text-white/80 mt-1">
+                      {attendances.length} รายการในเดือนนี้
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleNextMonth2}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg transition-all shadow-lg font-medium"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-2">
+                  {/* Day Headers */}
+                  {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((day) => (
+                    <div
+                      key={day}
+                      className="text-center font-bold text-white py-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg"
+                    >
+                      {day}
+                    </div>
+                  ))}
+
+                  {/* Calendar Days */}
+                  {renderCalendar2()}
                 </div>
 
                 {/* Legend */}
@@ -1144,6 +1677,609 @@ export default function CRMAdvancedPage() {
               <button
                 onClick={closePopup}
                 className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg font-bold shadow-lg transition-all"
+              >
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Employee Form Modal */}
+      {showEmployeeForm && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowEmployeeForm(false)}
+        >
+          <div
+            className="bg-gradient-to-br from-white to-emerald-50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Form Header */}
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    เพิ่มข้อมูลพนักงาน
+                  </h2>
+                  <p className="text-emerald-100 text-sm mt-1">
+                    กรอกข้อมูลพนักงานใหม่
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEmployeeForm(false)}
+                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-all"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6 space-y-4">
+              {/* ชื่อ-นามสกุล */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-2">
+                  ชื่อ-นามสกุล <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={employeeForm.full_name}
+                  onChange={(e) =>
+                    handleEmployeeFormChange("full_name", e.target.value)
+                  }
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-800"
+                  placeholder="กรอกชื่อ-นามสกุล"
+                />
+              </div>
+
+              {/* ตำแหน่ง */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-2">
+                  ตำแหน่ง
+                </label>
+                <input
+                  type="text"
+                  value={employeeForm.role}
+                  onChange={(e) =>
+                    handleEmployeeFormChange("role", e.target.value)
+                  }
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-800"
+                  placeholder="เช่น พนักงานขาย, ผู้จัดการ"
+                />
+              </div>
+
+              {/* วันลาต่อปี */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2">
+                    วันลาต่อปี
+                  </label>
+                  <input
+                    type="number"
+                    value={employeeForm.yearly_leave_quota}
+                    onChange={(e) =>
+                      handleEmployeeFormChange(
+                        "yearly_leave_quota",
+                        parseInt(e.target.value)
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-800"
+                    min="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2">
+                    วันลาคงเหลือ
+                  </label>
+                  <input
+                    type="number"
+                    value={employeeForm.leave_remaining}
+                    onChange={(e) =>
+                      handleEmployeeFormChange(
+                        "leave_remaining",
+                        parseInt(e.target.value)
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-800"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              {/* เวลาทำงาน */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2">
+                    เวลาเข้างาน
+                  </label>
+                  <input
+                    type="time"
+                    value={employeeForm.work_start_time}
+                    onChange={(e) =>
+                      handleEmployeeFormChange(
+                        "work_start_time",
+                        e.target.value
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2">
+                    เวลาเลิกงาน
+                  </label>
+                  <input
+                    type="time"
+                    value={employeeForm.work_end_time}
+                    onChange={(e) =>
+                      handleEmployeeFormChange("work_end_time", e.target.value)
+                    }
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-emerald-500 focus:outline-none text-gray-800"
+                  />
+                </div>
+              </div>
+
+              {/* สถานะ */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="is_active"
+                  checked={employeeForm.is_active}
+                  onChange={(e) =>
+                    handleEmployeeFormChange("is_active", e.target.checked)
+                  }
+                  className="w-5 h-5 rounded border-2 border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+                <label htmlFor="is_active" className="text-gray-700 font-bold">
+                  พนักงานปฏิบัติงานอยู่
+                </label>
+              </div>
+            </div>
+
+            {/* Form Footer */}
+            <div className="bg-gray-100 p-4 rounded-b-2xl flex justify-end gap-3">
+              <button
+                onClick={() => setShowEmployeeForm(false)}
+                className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold shadow-lg transition-all"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSaveEmployee}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-lg font-bold shadow-lg transition-all"
+              >
+                บันทึก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Form Modal */}
+      {showAttendanceForm && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAttendanceForm(false)}
+        >
+          <div
+            className="bg-gradient-to-br from-white to-teal-50 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Form Header */}
+            <div className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    บันทึกการเข้างาน
+                  </h2>
+                  <p className="text-teal-100 text-sm mt-1">
+                    กรอกข้อมูลการเข้า-ออกงานของพนักงาน
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAttendanceForm(false)}
+                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-all"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Form Content */}
+            <div className="p-6 space-y-4">
+              {/* เลือกพนักงาน */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-2">
+                  พนักงาน <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={attendanceForm.employee_id}
+                  onChange={(e) =>
+                    handleAttendanceFormChange(
+                      "employee_id",
+                      parseInt(e.target.value)
+                    )
+                  }
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-teal-500 focus:outline-none text-gray-800"
+                >
+                  <option value={0}>เลือกพนักงาน</option>
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.full_name} - {emp.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* วันที่ */}
+              <div>
+                <label className="block text-gray-700 font-bold mb-2">
+                  วันที่ <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  value={attendanceForm.work_date}
+                  onChange={(e) =>
+                    handleAttendanceFormChange("work_date", e.target.value)
+                  }
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-teal-500 focus:outline-none text-gray-800"
+                />
+              </div>
+
+              {/* เวลาเข้า-ออก */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2">
+                    เวลาเข้างาน
+                  </label>
+                  <input
+                    type="time"
+                    value={attendanceForm.time_in}
+                    onChange={(e) =>
+                      handleAttendanceFormChange("time_in", e.target.value)
+                    }
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-teal-500 focus:outline-none text-gray-800"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-2">
+                    เวลาออกงาน
+                  </label>
+                  <input
+                    type="time"
+                    value={attendanceForm.time_out}
+                    onChange={(e) =>
+                      handleAttendanceFormChange("time_out", e.target.value)
+                    }
+                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-teal-500 focus:outline-none text-gray-800"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Form Footer */}
+            <div className="bg-gray-100 p-4 rounded-b-2xl flex justify-end gap-3">
+              <button
+                onClick={() => setShowAttendanceForm(false)}
+                className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-bold shadow-lg transition-all"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleSaveAttendance}
+                className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white rounded-lg font-bold shadow-lg transition-all"
+              >
+                บันทึก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Attendance Details Popup */}
+      {showAttendancePopup && selectedDateAttendances.length > 0 && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowAttendancePopup(false)}
+        >
+          <div
+            className="bg-gradient-to-br from-white to-teal-50 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Popup Header */}
+            <div className="bg-gradient-to-r from-teal-500 to-cyan-600 p-6 rounded-t-2xl flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm p-2 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-white">
+                    การเข้างานวันที่{" "}
+                    {new Date(selectedAttendanceDateStr).toLocaleDateString(
+                      "th-TH",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        weekday: "long",
+                      }
+                    )}
+                  </h2>
+                  <p className="text-teal-100 text-sm mt-1">
+                    ทั้งหมด {selectedDateAttendances.length} คน
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAttendancePopup(false)}
+                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-all"
+              >
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Popup Content */}
+            <div className="p-6">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-teal-500 to-cyan-600">
+                      <th className="px-4 py-3 text-left text-white font-bold rounded-tl-lg">
+                        พนักงาน
+                      </th>
+                      <th className="px-4 py-3 text-center text-white font-bold">
+                        เวลาเข้า
+                      </th>
+                      <th className="px-4 py-3 text-center text-white font-bold">
+                        เวลาออก
+                      </th>
+                      <th className="px-4 py-3 text-center text-white font-bold">
+                        สถานะ
+                      </th>
+                      <th className="px-4 py-3 text-center text-white font-bold">
+                        ชั่วโมงทำงาน
+                      </th>
+                      <th className="px-4 py-3 text-center text-white font-bold">
+                        OT
+                      </th>
+                      <th className="px-4 py-3 text-left text-white font-bold rounded-tr-lg">
+                        หมายเหตุ
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedDateAttendances.map((att, index) => {
+                      const statusColors: Record<string, string> = {
+                        PRESENT: "bg-green-100 text-green-800 border-green-300",
+                        LATE: "bg-yellow-100 text-yellow-800 border-yellow-300",
+                        LEAVE: "bg-blue-100 text-blue-800 border-blue-300",
+                        ABSENT: "bg-red-100 text-red-800 border-red-300",
+                        WFH: "bg-purple-100 text-purple-800 border-purple-300",
+                      };
+
+                      const statusLabels: Record<string, string> = {
+                        PRESENT: "มาทำงาน",
+                        LATE: "มาสาย",
+                        LEAVE: "ลา",
+                        ABSENT: "ขาดงาน",
+                        WFH: "WFH",
+                      };
+
+                      return (
+                        <tr
+                          key={att.id || index}
+                          className={`${
+                            index % 2 === 0
+                              ? "bg-white"
+                              : "bg-gradient-to-r from-teal-50 to-cyan-50"
+                          } hover:bg-teal-100 transition-colors border-b border-gray-200`}
+                        >
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <div className="bg-gradient-to-br from-teal-400 to-cyan-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm">
+                                {att.employee_name?.charAt(0) || "?"}
+                              </div>
+                              <span className="font-semibold text-gray-800">
+                                {att.employee_name || `ID: ${att.employee_id}`}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-lg font-medium">
+                              {att.time_in || "-"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span className="inline-block px-3 py-1 bg-orange-100 text-orange-800 rounded-lg font-medium">
+                              {att.time_out || "-"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-lg font-bold border-2 ${
+                                statusColors[att.status] ||
+                                "bg-gray-100 text-gray-800 border-gray-300"
+                              }`}
+                            >
+                              {statusLabels[att.status] || att.status}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-lg font-bold">
+                              {Number(att.work_hours || 0).toFixed(2)} ชม.
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-lg font-bold ${
+                                Number(att.overtime_hours || 0) > 0
+                                  ? "bg-purple-100 text-purple-800"
+                                  : "bg-gray-100 text-gray-500"
+                              }`}
+                            >
+                              {Number(att.overtime_hours || 0).toFixed(2)} ชม.
+                            </span>
+                          </td>
+                          <td className="px-4 py-4">
+                            {att.note ? (
+                              <div className="text-sm text-gray-700 bg-yellow-50 px-3 py-1 rounded-lg border border-yellow-200">
+                                {att.note}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 text-sm italic">
+                                ไม่มีหมายเหตุ
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summary Cards */}
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl p-4 border-2 border-green-300">
+                  <div className="text-green-700 font-bold text-sm mb-1">
+                    มาทำงาน
+                  </div>
+                  <div className="text-3xl font-extrabold text-green-800">
+                    {
+                      selectedDateAttendances.filter(
+                        (a) => a.status === "PRESENT"
+                      ).length
+                    }
+                  </div>
+                  <div className="text-green-600 text-xs mt-1">คน</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl p-4 border-2 border-yellow-300">
+                  <div className="text-yellow-700 font-bold text-sm mb-1">
+                    มาสาย
+                  </div>
+                  <div className="text-3xl font-extrabold text-yellow-800">
+                    {
+                      selectedDateAttendances.filter((a) => a.status === "LATE")
+                        .length
+                    }
+                  </div>
+                  <div className="text-yellow-600 text-xs mt-1">คน</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-xl p-4 border-2 border-blue-300">
+                  <div className="text-blue-700 font-bold text-sm mb-1">ลา</div>
+                  <div className="text-3xl font-extrabold text-blue-800">
+                    {
+                      selectedDateAttendances.filter(
+                        (a) => a.status === "LEAVE"
+                      ).length
+                    }
+                  </div>
+                  <div className="text-blue-600 text-xs mt-1">คน</div>
+                </div>
+
+                <div className="bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl p-4 border-2 border-purple-300">
+                  <div className="text-purple-700 font-bold text-sm mb-1">
+                    รวม OT
+                  </div>
+                  <div className="text-3xl font-extrabold text-purple-800">
+                    {selectedDateAttendances
+                      .reduce(
+                        (sum, a) => sum + Number(a.overtime_hours || 0),
+                        0
+                      )
+                      .toFixed(1)}
+                  </div>
+                  <div className="text-purple-600 text-xs mt-1">ชั่วโมง</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Popup Footer */}
+            <div className="bg-gray-100 p-4 rounded-b-2xl flex justify-end">
+              <button
+                onClick={() => setShowAttendancePopup(false)}
+                className="px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white rounded-lg font-bold shadow-lg transition-all"
               >
                 ปิด
               </button>

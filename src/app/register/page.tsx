@@ -345,7 +345,7 @@ export default function RegisterPage() {
                   htmlFor="name"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  ชื่อ <span className="text-red-500">*</span>
+                  ชื่อเล่น <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -386,7 +386,7 @@ export default function RegisterPage() {
                   htmlFor="lname"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  นามสกุล <span className="text-red-500">*</span>
+                  ชื่อจริง-นามสกุล <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -811,4 +811,4 @@ export default function RegisterPage() {
       </motion.div>
     </div>
   );
-}
+}
