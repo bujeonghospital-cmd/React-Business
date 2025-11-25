@@ -205,7 +205,9 @@ export default function FacebookAdsManagerPage() {
   const [selectedAdForPreview, setSelectedAdForPreview] =
     useState<AdInsight | null>(null);
   const [showVideoModal, setShowVideoModal] = useState(false);
-  const [topAdsSortBy, setTopAdsSortBy] = useState<"leads" | "cost">("leads");
+  const [topAdsSortBy, setTopAdsSortBy] = useState<"leads" | "cost" | "phone">(
+    "leads"
+  );
   const [dailySummaryData, setDailySummaryData] = useState<AdInsight[]>([]);
   const [dailySummaryLoading, setDailySummaryLoading] = useState(false);
   const [phoneLeadsData, setPhoneLeadsData] = useState<{
@@ -1584,6 +1586,19 @@ export default function FacebookAdsManagerPage() {
                       <span className="sm:hidden">💬 Inbox</span>
                     </button>
                     <button
+                      onClick={() => setTopAdsSortBy("phone")}
+                      className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
+                        topAdsSortBy === "phone"
+                          ? "bg-purple-600 text-white shadow-lg"
+                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      }`}
+                    >
+                      <span className="hidden sm:inline">
+                        📞 ชื่อ - เบอร์ (มาก → น้อย)
+                      </span>
+                      <span className="sm:hidden">📞 เบอร์</span>
+                    </button>
+                    <button
                       onClick={() => setTopAdsSortBy("cost")}
                       className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition-all ${
                         topAdsSortBy === "cost"
@@ -1679,6 +1694,13 @@ export default function FacebookAdsManagerPage() {
                             "onsite_conversion.total_messaging_connection"
                           );
                           return totalInboxB - totalInboxA;
+                        } else if (topAdsSortBy === "phone") {
+                          // เรียงตาม ชื่อ - เบอร์ จากมากไปน้อย
+                          const phoneLeadsA =
+                            topAdsPhoneLeads.get(a.ad_id) || 0;
+                          const phoneLeadsB =
+                            topAdsPhoneLeads.get(b.ad_id) || 0;
+                          return phoneLeadsB - phoneLeadsA;
                         } else {
                           // เรียงตาม cost per messaging connection จากน้อยไปมาก
                           const costA = a.cost_per_action_type?.find(

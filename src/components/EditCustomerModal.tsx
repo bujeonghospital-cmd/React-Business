@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { X, Save, Loader2 } from "lucide-react";
+import { X, Save, Loader2, Star } from "lucide-react";
 import { NotificationPopup } from "./NotificationPopup";
 
 interface CustomerData {
@@ -584,6 +584,40 @@ export const EditCustomerModal = ({
                             </option>
                           ))}
                         </select>
+                      </div>
+                    );
+                  }
+
+                  // Special handling for ติดดาว field - use star icon
+                  if (field.label === "ติดดาว") {
+                    const isStarred =
+                      customerData[actualFieldName] === "ติดดาว";
+                    return (
+                      <div key={field.value} className="group">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 transition-colors group-focus-within:text-cyan-600">
+                          {field.label}
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleFieldChange(
+                              actualFieldName,
+                              isStarred ? "" : "ติดดาว"
+                            )
+                          }
+                          className="w-full px-4 py-3 border-2 border-cyan-200 bg-white rounded-xl hover:border-cyan-300 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center gap-2 group"
+                        >
+                          <Star
+                            className={`w-6 h-6 transition-all duration-200 ${
+                              isStarred
+                                ? "fill-yellow-400 text-yellow-400"
+                                : "text-gray-400 group-hover:text-yellow-400"
+                            }`}
+                          />
+                          <span className="text-sm font-medium text-gray-700">
+                            {isStarred ? "ติดดาวแล้ว" : "คลิกเพื่อติดดาว"}
+                          </span>
+                        </button>
                       </div>
                     );
                   }

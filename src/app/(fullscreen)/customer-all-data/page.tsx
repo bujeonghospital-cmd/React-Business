@@ -86,26 +86,19 @@ const CustomerAllDataPage = () => {
   const [contactFilter, setContactFilter] = useState<string>("all");
   const [showContactMenu, setShowContactMenu] = useState(false);
   const [showFollowUpLastMenu, setShowFollowUpLastMenu] = useState(false);
-  const [followUpLastStart, setFollowUpLastStart] = useState<string>("");
-  const [followUpLastEnd, setFollowUpLastEnd] = useState<string>("");
+  const [followUpLastDate, setFollowUpLastDate] = useState<string>("");
   const [showFollowUpNextMenu, setShowFollowUpNextMenu] = useState(false);
-  const [followUpNextStart, setFollowUpNextStart] = useState<string>("");
-  const [followUpNextEnd, setFollowUpNextEnd] = useState<string>("");
+  const [followUpNextDate, setFollowUpNextDate] = useState<string>("");
   const [showConsultMenu, setShowConsultMenu] = useState(false);
-  const [consultStart, setConsultStart] = useState<string>("");
-  const [consultEnd, setConsultEnd] = useState<string>("");
+  const [consultDate, setConsultDate] = useState<string>("");
   const [showSurgeryMenu, setShowSurgeryMenu] = useState(false);
-  const [surgeryStart, setSurgeryStart] = useState<string>("");
-  const [surgeryEnd, setSurgeryEnd] = useState<string>("");
+  const [surgeryDate, setSurgeryDate] = useState<string>("");
   const [showGetNameMenu, setShowGetNameMenu] = useState(false);
-  const [getNameStart, setGetNameStart] = useState<string>("");
-  const [getNameEnd, setGetNameEnd] = useState<string>("");
+  const [getNameDate, setGetNameDate] = useState<string>("");
   const [showGetConsultApptMenu, setShowGetConsultApptMenu] = useState(false);
-  const [getConsultApptStart, setGetConsultApptStart] = useState<string>("");
-  const [getConsultApptEnd, setGetConsultApptEnd] = useState<string>("");
+  const [getConsultApptDate, setGetConsultApptDate] = useState<string>("");
   const [showGetSurgeryApptMenu, setShowGetSurgeryApptMenu] = useState(false);
-  const [getSurgeryApptStart, setGetSurgeryApptStart] = useState<string>("");
-  const [getSurgeryApptEnd, setGetSurgeryApptEnd] = useState<string>("");
+  const [getSurgeryApptDate, setGetSurgeryApptDate] = useState<string>("");
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -315,6 +308,25 @@ const CustomerAllDataPage = () => {
     fetchData();
     fetchStatusOptions();
     fetchTableSizeOptions();
+  }, []);
+
+  // Close all menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Check if click is outside all dropdown menus
+      if (!target.closest(".relative.group")) {
+        closeAllFilterMenus();
+      }
+    };
+
+    // Add event listener
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -599,12 +611,8 @@ const CustomerAllDataPage = () => {
         });
       }
     }
-    const filterByDateRange = (
-      columnName: string,
-      startDate: string,
-      endDate: string
-    ) => {
-      if (!startDate && !endDate) return;
+    const filterByDate = (columnName: string, dateValue: string) => {
+      if (!dateValue) return;
       const dateColumnIndex = tableData[0].headers.findIndex(
         (h) => h.trim() === columnName
       );
@@ -627,52 +635,23 @@ const CustomerAllDataPage = () => {
             rowDate = new Date(dateStr);
           }
           if (!rowDate || isNaN(rowDate.getTime())) return false;
-          const start = startDate ? new Date(startDate) : null;
-          const end = endDate ? new Date(endDate) : null;
+          const filterDate = new Date(dateValue);
 
           // Set time to start of day for comparison
-          if (start) {
-            start.setHours(0, 0, 0, 0);
-          }
-          if (end) {
-            end.setHours(23, 59, 59, 999);
-          }
+          filterDate.setHours(0, 0, 0, 0);
           rowDate.setHours(0, 0, 0, 0);
 
-          if (start && end) {
-            return rowDate >= start && rowDate <= end;
-          } else if (start) {
-            return rowDate >= start;
-          } else if (end) {
-            return rowDate <= end;
-          }
-          return true;
+          return rowDate.getTime() === filterDate.getTime();
         });
       }
     };
-    filterByDateRange(
-      "วันที่ติดตามครั้งล่าสุด",
-      followUpLastStart,
-      followUpLastEnd
-    );
-    filterByDateRange(
-      "วันที่ติดตามครั้งถัดไป",
-      followUpNextStart,
-      followUpNextEnd
-    );
-    filterByDateRange("วันที่ Consult", consultStart, consultEnd);
-    filterByDateRange("วันที่ผ่าตัด", surgeryStart, surgeryEnd);
-    filterByDateRange("วันที่ได้ชื่อ เบอร์", getNameStart, getNameEnd);
-    filterByDateRange(
-      "วันที่ได้นัด Consult",
-      getConsultApptStart,
-      getConsultApptEnd
-    );
-    filterByDateRange(
-      "วันที่ได้นัดผ่าตัด",
-      getSurgeryApptStart,
-      getSurgeryApptEnd
-    );
+    filterByDate("วันที่ติดตามครั้งล่าสุด", followUpLastDate);
+    filterByDate("วันที่ติดตามครั้งถัดไป", followUpNextDate);
+    filterByDate("วันที่ Consult", consultDate);
+    filterByDate("วันที่ผ่าตัด", surgeryDate);
+    filterByDate("วันที่ได้ชื่อ เบอร์", getNameDate);
+    filterByDate("วันที่ได้นัด Consult", getConsultApptDate);
+    filterByDate("วันที่ได้นัดผ่าตัด", getSurgeryApptDate);
     if (searchTerm) {
       filtered = filtered.filter((row) => {
         if (filterColumn === "all") {
@@ -713,21 +692,14 @@ const CustomerAllDataPage = () => {
     statusFilter,
     productFilter,
     contactFilter,
-    followUpLastStart,
+    followUpLastDate,
     currentUser,
-    followUpLastEnd,
-    followUpNextStart,
-    followUpNextEnd,
-    consultStart,
-    consultEnd,
-    surgeryStart,
-    surgeryEnd,
-    getNameStart,
-    getNameEnd,
-    getConsultApptStart,
-    getConsultApptEnd,
-    getSurgeryApptStart,
-    getSurgeryApptEnd,
+    followUpNextDate,
+    consultDate,
+    surgeryDate,
+    getNameDate,
+    getConsultApptDate,
+    getSurgeryApptDate,
   ]);
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -783,20 +755,13 @@ const CustomerAllDataPage = () => {
     statusFilter,
     productFilter,
     contactFilter,
-    followUpLastStart,
-    followUpLastEnd,
-    followUpNextStart,
-    followUpNextEnd,
-    consultStart,
-    consultEnd,
-    surgeryStart,
-    surgeryEnd,
-    getNameStart,
-    getNameEnd,
-    getConsultApptStart,
-    getConsultApptEnd,
-    getSurgeryApptStart,
-    getSurgeryApptEnd,
+    followUpLastDate,
+    followUpNextDate,
+    consultDate,
+    surgeryDate,
+    getNameDate,
+    getConsultApptDate,
+    getSurgeryApptDate,
   ]);
   if (isLoading) {
     return (
@@ -1111,29 +1076,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showFollowUpLastMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={followUpLastStart}
-                        onChange={(e) => setFollowUpLastStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={followUpLastEnd}
-                        onChange={(e) => setFollowUpLastEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={followUpLastDate}
+                      onChange={(e) => setFollowUpLastDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1179,29 +1131,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showFollowUpNextMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={followUpNextStart}
-                        onChange={(e) => setFollowUpNextStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-violet-500 focus:ring-2 focus:ring-violet-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={followUpNextEnd}
-                        onChange={(e) => setFollowUpNextEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-violet-500 focus:ring-2 focus:ring-violet-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={followUpNextDate}
+                      onChange={(e) => setFollowUpNextDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-violet-500 focus:ring-2 focus:ring-violet-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1247,29 +1186,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showConsultMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={consultStart}
-                        onChange={(e) => setConsultStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={consultEnd}
-                        onChange={(e) => setConsultEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={consultDate}
+                      onChange={(e) => setConsultDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-fuchsia-500 focus:ring-2 focus:ring-fuchsia-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1315,29 +1241,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showSurgeryMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={surgeryStart}
-                        onChange={(e) => setSurgeryStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={surgeryEnd}
-                        onChange={(e) => setSurgeryEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={surgeryDate}
+                      onChange={(e) => setSurgeryDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1383,29 +1296,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showGetNameMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={getNameStart}
-                        onChange={(e) => setGetNameStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={getNameEnd}
-                        onChange={(e) => setGetNameEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={getNameDate}
+                      onChange={(e) => setGetNameDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1451,29 +1351,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showGetConsultApptMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={getConsultApptStart}
-                        onChange={(e) => setGetConsultApptStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={getConsultApptEnd}
-                        onChange={(e) => setGetConsultApptEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={getConsultApptDate}
+                      onChange={(e) => setGetConsultApptDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1519,29 +1406,16 @@ const CustomerAllDataPage = () => {
               </button>
               {showGetSurgeryApptMenu && (
                 <div className="absolute top-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-4 w-72">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่เริ่มต้น
-                      </label>
-                      <input
-                        type="date"
-                        value={getSurgeryApptStart}
-                        onChange={(e) => setGetSurgeryApptStart(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-sm transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-2">
-                        วันที่สิ้นสุด
-                      </label>
-                      <input
-                        type="date"
-                        value={getSurgeryApptEnd}
-                        onChange={(e) => setGetSurgeryApptEnd(e.target.value)}
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-sm transition-all"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">
+                      เลือกวันที่
+                    </label>
+                    <input
+                      type="date"
+                      value={getSurgeryApptDate}
+                      onChange={(e) => setGetSurgeryApptDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-200 text-sm transition-all"
+                    />
                   </div>
                 </div>
               )}
@@ -1692,20 +1566,13 @@ const CustomerAllDataPage = () => {
                 statusFilter !== "all" ||
                 productFilter !== "all" ||
                 contactFilter !== "all" ||
-                followUpLastStart ||
-                followUpLastEnd ||
-                followUpNextStart ||
-                followUpNextEnd ||
-                consultStart ||
-                consultEnd ||
-                surgeryStart ||
-                surgeryEnd ||
-                getNameStart ||
-                getNameEnd ||
-                getConsultApptStart ||
-                getConsultApptEnd ||
-                getSurgeryApptStart ||
-                getSurgeryApptEnd) && (
+                followUpLastDate ||
+                followUpNextDate ||
+                consultDate ||
+                surgeryDate ||
+                getNameDate ||
+                getConsultApptDate ||
+                getSurgeryApptDate) && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <div className="flex items-center gap-2 mb-2">
                     <svg
@@ -1780,125 +1647,86 @@ const CustomerAllDataPage = () => {
                         </button>
                       </div>
                     )}
-                    {(followUpLastStart || followUpLastEnd) && (
+                    {followUpLastDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-emerald-300 rounded-full text-xs font-medium text-emerald-700 shadow-sm">
                         <span className="font-semibold">วันติดตาม-ล่าสุด:</span>
-                        <span>
-                          {followUpLastStart || "..."} -{" "}
-                          {followUpLastEnd || "..."}
-                        </span>
+                        <span>{followUpLastDate}</span>
                         <button
-                          onClick={() => {
-                            setFollowUpLastStart("");
-                            setFollowUpLastEnd("");
-                          }}
+                          onClick={() => setFollowUpLastDate("")}
                           className="ml-1 hover:bg-emerald-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    {(followUpNextStart || followUpNextEnd) && (
+                    {followUpNextDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-violet-300 rounded-full text-xs font-medium text-violet-700 shadow-sm">
                         <span className="font-semibold">วันติดตาม-ถัดไป:</span>
-                        <span>
-                          {followUpNextStart || "..."} -{" "}
-                          {followUpNextEnd || "..."}
-                        </span>
+                        <span>{followUpNextDate}</span>
                         <button
-                          onClick={() => {
-                            setFollowUpNextStart("");
-                            setFollowUpNextEnd("");
-                          }}
+                          onClick={() => setFollowUpNextDate("")}
                           className="ml-1 hover:bg-violet-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    {(consultStart || consultEnd) && (
+                    {consultDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-fuchsia-300 rounded-full text-xs font-medium text-fuchsia-700 shadow-sm">
                         <span className="font-semibold">วันที่ Consult:</span>
-                        <span>
-                          {consultStart || "..."} - {consultEnd || "..."}
-                        </span>
+                        <span>{consultDate}</span>
                         <button
-                          onClick={() => {
-                            setConsultStart("");
-                            setConsultEnd("");
-                          }}
+                          onClick={() => setConsultDate("")}
                           className="ml-1 hover:bg-fuchsia-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    {(surgeryStart || surgeryEnd) && (
+                    {surgeryDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-orange-300 rounded-full text-xs font-medium text-orange-700 shadow-sm">
                         <span className="font-semibold">วันที่ผ่าตัด:</span>
-                        <span>
-                          {surgeryStart || "..."} - {surgeryEnd || "..."}
-                        </span>
+                        <span>{surgeryDate}</span>
                         <button
-                          onClick={() => {
-                            setSurgeryStart("");
-                            setSurgeryEnd("");
-                          }}
+                          onClick={() => setSurgeryDate("")}
                           className="ml-1 hover:bg-orange-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    {(getNameStart || getNameEnd) && (
+                    {getNameDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-300 rounded-full text-xs font-medium text-blue-700 shadow-sm">
                         <span className="font-semibold">วันได้ชื่อ:</span>
-                        <span>
-                          {getNameStart || "..."} - {getNameEnd || "..."}
-                        </span>
+                        <span>{getNameDate}</span>
                         <button
-                          onClick={() => {
-                            setGetNameStart("");
-                            setGetNameEnd("");
-                          }}
+                          onClick={() => setGetNameDate("")}
                           className="ml-1 hover:bg-blue-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    {(getConsultApptStart || getConsultApptEnd) && (
+                    {getConsultApptDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-purple-300 rounded-full text-xs font-medium text-purple-700 shadow-sm">
                         <span className="font-semibold">
                           วันได้นัด Consult:
                         </span>
-                        <span>
-                          {getConsultApptStart || "..."} -{" "}
-                          {getConsultApptEnd || "..."}
-                        </span>
+                        <span>{getConsultApptDate}</span>
                         <button
-                          onClick={() => {
-                            setGetConsultApptStart("");
-                            setGetConsultApptEnd("");
-                          }}
+                          onClick={() => setGetConsultApptDate("")}
                           className="ml-1 hover:bg-purple-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
-                    {(getSurgeryApptStart || getSurgeryApptEnd) && (
+                    {getSurgeryApptDate && (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-pink-300 rounded-full text-xs font-medium text-pink-700 shadow-sm">
                         <span className="font-semibold">วันได้นัด ผ่าตัด:</span>
-                        <span>
-                          {getSurgeryApptStart || "..."} -{" "}
-                          {getSurgeryApptEnd || "..."}
-                        </span>
+                        <span>{getSurgeryApptDate}</span>
                         <button
-                          onClick={() => {
-                            setGetSurgeryApptStart("");
-                            setGetSurgeryApptEnd("");
-                          }}
+                          onClick={() => setGetSurgeryApptDate("")}
                           className="ml-1 hover:bg-pink-100 rounded-full p-0.5 transition-colors"
                         >
                           <X className="w-3 h-3" />
@@ -1912,20 +1740,13 @@ const CustomerAllDataPage = () => {
                         setStatusFilter("all");
                         setProductFilter("all");
                         setContactFilter("all");
-                        setFollowUpLastStart("");
-                        setFollowUpLastEnd("");
-                        setFollowUpNextStart("");
-                        setFollowUpNextEnd("");
-                        setConsultStart("");
-                        setConsultEnd("");
-                        setSurgeryStart("");
-                        setSurgeryEnd("");
-                        setGetNameStart("");
-                        setGetNameEnd("");
-                        setGetConsultApptStart("");
-                        setGetConsultApptEnd("");
-                        setGetSurgeryApptStart("");
-                        setGetSurgeryApptEnd("");
+                        setFollowUpLastDate("");
+                        setFollowUpNextDate("");
+                        setConsultDate("");
+                        setSurgeryDate("");
+                        setGetNameDate("");
+                        setGetConsultApptDate("");
+                        setGetSurgeryApptDate("");
                       }}
                       className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full text-xs font-medium shadow-sm transition-colors"
                     >
@@ -1947,20 +1768,13 @@ const CustomerAllDataPage = () => {
                   statusFilter !== "all" ||
                   productFilter !== "all" ||
                   contactFilter !== "all" ||
-                  followUpLastStart ||
-                  followUpLastEnd ||
-                  followUpNextStart ||
-                  followUpNextEnd ||
-                  consultStart ||
-                  consultEnd ||
-                  surgeryStart ||
-                  surgeryEnd ||
-                  getNameStart ||
-                  getNameEnd ||
-                  getConsultApptStart ||
-                  getConsultApptEnd ||
-                  getSurgeryApptStart ||
-                  getSurgeryApptEnd) &&
+                  followUpLastDate ||
+                  followUpNextDate ||
+                  consultDate ||
+                  surgeryDate ||
+                  getNameDate ||
+                  getConsultApptDate ||
+                  getSurgeryApptDate) &&
                   ` (กรองจาก ${tableData[0].data.length} รายการทั้งหมด)`}
               </div>
             </div>
