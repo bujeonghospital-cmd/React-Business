@@ -1,10 +1,9 @@
-import { DefaultSeoProps } from "next-seo";
-
 /**
  * SEO Configuration สำหรับ BJH Bangkok
- * ใช้กับ next-seo library เพื่อจัดการ meta tags ทั้งหมด
+ * สำหรับ Next.js 15 App Router ใช้ Metadata API แทน next-seo
+ * Config นี้เก็บไว้เป็น reference สำหรับค่า default
  */
-export const SEO_CONFIG: DefaultSeoProps = {
+export const SEO_CONFIG = {
   titleTemplate: "%s | BJH Bangkok",
   defaultTitle:
     "BJH Bangkok | Thai Packaging & Printing | บรรจุภัณฑ์และงานพิมพ์คุณภาพ",

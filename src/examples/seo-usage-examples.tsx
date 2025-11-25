@@ -1,54 +1,75 @@
 /**
- * ตัวอย่างการใช้งาน SEO Components
- * สำหรับหน้าต่างๆ ในโปรเจ็ค BJH Bangkok
+ * ตัวอย่างการใช้งาน SEO สำหรับ Next.js 15 App Router
+ *
+ * หมายเหตุ: ไฟล์นี้เป็นเพียงตัวอย่างโค้ด ไม่ได้ใช้งานจริง
+ * สำหรับคำแนะนำการใช้งานจริง ดูที่: SEO_NEXT15_GUIDE.md
  */
 
-// ============================================
-// ตัวอย่างที่ 1: หน้า About
-// ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
-import { createBreadcrumbSchema } from "@/lib/seo.config";
+import { Metadata } from "next";
+import {
+  createBreadcrumbSchema,
+  createArticleSchema,
+  createProductSchema,
+  createFAQSchema,
+} from "@/lib/seo.config";
 
-export default function AboutPage() {
+// ============================================
+// ตัวอย่างที่ 1: หน้า About (src/app/about/page.tsx)
+// ============================================
+
+export const aboutMetadata: Metadata = {
+  title: "เกี่ยวกับเรา - ประวัติและวิสัยทัศน์",
+  description:
+    "BJH Bangkok มีประวัติกว่า 30 ปี ในการให้บริการด้านบรรจุภัณฑ์และการพิมพ์คุณภาพสูง",
+  alternates: {
+    canonical: "/about",
+  },
+  openGraph: {
+    title: "เกี่ยวกับ BJH Bangkok",
+    description: "ผู้นำด้านบรรจุภัณฑ์และการพิมพ์ในประเทศไทย",
+    url: "https://app.bjhbangkok.com/about",
+    images: [
+      {
+        url: "https://app.bjhbangkok.com/images/about-banner.jpg",
+        width: 1200,
+        height: 630,
+        alt: "BJH Bangkok Office",
+      },
+    ],
+  },
+};
+
+export function AboutPageExample() {
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "หน้าแรก", url: "/" },
+    { name: "เกี่ยวกับเรา", url: "/about" },
+  ]);
+
   return (
     <>
-      <PageSEO
-        title="เกี่ยวกับเรา - ประวัติและวิสัยทัศน์"
-        description="BJH Bangkok มีประวัติกว่า 30 ปี ในการให้บริการด้านบรรจุภัณฑ์และการพิมพ์คุณภาพสูง"
-        canonical="/about"
-        openGraph={{
-          title: "เกี่ยวกับ BJH Bangkok",
-          description: "ผู้นำด้านบรรจุภัณฑ์และการพิมพ์ในประเทศไทย",
-          images: [
-            {
-              url: "https://app.bjhbangkok.com/images/about-banner.jpg",
-              width: 1200,
-              height: 630,
-              alt: "BJH Bangkok Office",
-            },
-          ],
-        }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-
-      <JsonLd
-        data={createBreadcrumbSchema([
-          { name: "หน้าแรก", url: "/" },
-          { name: "เกี่ยวกับเรา", url: "/about" },
-        ])}
-      />
-
       <h1>เกี่ยวกับ BJH Bangkok</h1>
-      {/* เนื้อหาหน้า About */}
+      <p>เนื้อหาหน้า About...</p>
     </>
   );
 }
 
 // ============================================
-// ตัวอย่างที่ 2: หน้า Contact
+// ตัวอย่างที่ 2: หน้า Contact (src/app/contact/page.tsx)
 // ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
 
-export default function ContactPage() {
+export const contactMetadata: Metadata = {
+  title: "ติดต่อเรา",
+  description: "ติดต่อ BJH Bangkok - โทร 02-xxx-xxxx หรือ info@bjhbangkok.com",
+  alternates: {
+    canonical: "/contact",
+  },
+};
+
+export function ContactPageExample() {
   const contactSchema = {
     "@context": "https://schema.org",
     "@type": "ContactPage",
@@ -58,14 +79,10 @@ export default function ContactPage() {
 
   return (
     <>
-      <PageSEO
-        title="ติดต่อเรา"
-        description="ติดต่อ BJH Bangkok - โทร 02-xxx-xxxx หรือ info@bjhbangkok.com"
-        canonical="/contact"
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
       />
-
-      <JsonLd data={contactSchema} />
-
       <h1>ติดต่อเรา</h1>
       {/* ฟอร์มติดต่อ */}
     </>
@@ -73,11 +90,22 @@ export default function ContactPage() {
 }
 
 // ============================================
-// ตัวอย่างที่ 3: หน้าข่าวสาร (List)
+// ตัวอย่างที่ 3: หน้าข่าวสาร List (src/app/news/page.tsx)
 // ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
 
-export default function NewsPage() {
+export const newsListMetadata: Metadata = {
+  title: "ข่าวสารและกิจกรรม",
+  description: "ติดตามข่าวสารและกิจกรรมล่าสุดของ BJH Bangkok",
+  alternates: {
+    canonical: "/news",
+  },
+  openGraph: {
+    type: "website",
+    title: "ข่าวสารและกิจกรรม BJH Bangkok",
+  },
+};
+
+export function NewsListPageExample() {
   const newsSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -87,18 +115,10 @@ export default function NewsPage() {
 
   return (
     <>
-      <PageSEO
-        title="ข่าวสารและกิจกรรม"
-        description="ติดตามข่าวสารและกิจกรรมล่าสุดของ BJH Bangkok"
-        canonical="/news"
-        openGraph={{
-          type: "website",
-          title: "ข่าวสารและกิจกรรม BJH Bangkok",
-        }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(newsSchema) }}
       />
-
-      <JsonLd data={newsSchema} />
-
       <h1>ข่าวสารและกิจกรรม</h1>
       {/* รายการข่าว */}
     </>
@@ -106,119 +126,101 @@ export default function NewsPage() {
 }
 
 // ============================================
-// ตัวอย่างที่ 4: หน้าข่าวสาร (Detail)
+// ตัวอย่างที่ 4: หน้าข่าวสาร Detail (src/app/news/[slug]/page.tsx)
 // ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
-import { createArticleSchema, createBreadcrumbSchema } from "@/lib/seo.config";
 
-export default function NewsDetailPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  // ข้อมูลจริงควรดึงจาก database
+export function NewsDetailPageExample() {
+  // ข้อมูลตัวอย่าง
   const article = {
     title: "BJH Bangkok เปิดตัวบรรจุภัณฑ์รักษ์โลกรุ่นใหม่",
-    description:
-      "บริษัทเปิดตัวบรรจุภัณฑ์เพื่อสิ่งแวดล้อม 100% biodegradable ตอบโจทย์ ESG",
+    description: "บริษัทเปิดตัวบรรจุภัณฑ์เพื่อสิ่งแวดล้อม 100% biodegradable",
     image: "https://app.bjhbangkok.com/images/news/eco-packaging.jpg",
     datePublished: "2024-11-25",
     dateModified: "2024-11-25",
   };
 
+  const articleSchema = createArticleSchema(article);
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "หน้าแรก", url: "/" },
+    { name: "ข่าวสาร", url: "/news" },
+    { name: article.title, url: "/news/eco-packaging" },
+  ]);
+
   return (
     <>
-      <PageSEO
-        title={article.title}
-        description={article.description}
-        canonical={`/news/${params.slug}`}
-        openGraph={{
-          type: "article",
-          article: {
-            publishedTime: article.datePublished,
-            modifiedTime: article.dateModified,
-            authors: ["BJH Bangkok"],
-            tags: ["บรรจุภัณฑ์", "ESG", "สิ่งแวดล้อม"],
-          },
-          images: [
-            {
-              url: article.image,
-              width: 1200,
-              height: 630,
-              alt: article.title,
-            },
-          ],
-        }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
-
-      <JsonLd data={createArticleSchema(article)} />
-
-      <JsonLd
-        data={createBreadcrumbSchema([
-          { name: "หน้าแรก", url: "/" },
-          { name: "ข่าวสาร", url: "/news" },
-          { name: article.title, url: `/news/${params.slug}` },
-        ])}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-
       <article>
         <h1>{article.title}</h1>
         <time dateTime={article.datePublished}>
           {new Date(article.datePublished).toLocaleDateString("th-TH")}
         </time>
-        {/* เนื้อหาข่าว */}
+        <p>{article.description}</p>
       </article>
     </>
   );
 }
 
-// ============================================
-// ตัวอย่างที่ 5: หน้าผลิตภัณฑ์ (Detail)
-// ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
-import { createProductSchema, createBreadcrumbSchema } from "@/lib/seo.config";
+// Metadata สำหรับ Dynamic Route
+export async function generateNewsDetailMetadata(
+  slug: string
+): Promise<Metadata> {
+  // ในการใช้งานจริง ดึงข้อมูลจาก API/Database
+  const article = {
+    title: "BJH Bangkok เปิดตัวบรรจุภัณฑ์รักษ์โลกรุ่นใหม่",
+    description: "บริษัทเปิดตัวบรรจุภัณฑ์เพื่อสิ่งแวดล้อม 100% biodegradable",
+    image: "https://app.bjhbangkok.com/images/news/eco-packaging.jpg",
+  };
 
-export default function ProductDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+  return {
+    title: article.title,
+    description: article.description,
+    alternates: {
+      canonical: `/news/${slug}`,
+    },
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description: article.description,
+      images: [{ url: article.image }],
+    },
+  };
+}
+
+// ============================================
+// ตัวอย่างที่ 5: หน้าผลิตภัณฑ์ (src/app/products/[id]/page.tsx)
+// ============================================
+
+export function ProductDetailPageExample() {
   const product = {
     name: "กล่องกระดาษลูกฟูก Premium",
-    description:
-      "กล่องกระดาษลูกฟูกคุณภาพสูง ทนทาน กันกระแทก เหมาะสำหรับสินค้าทุกประเภท",
+    description: "กล่องกระดาษลูกฟูกคุณภาพสูง ทนทาน กันกระแทก",
     image: "https://app.bjhbangkok.com/images/products/corrugated-box.jpg",
   };
 
+  const productSchema = createProductSchema(product);
+  const breadcrumbSchema = createBreadcrumbSchema([
+    { name: "หน้าแรก", url: "/" },
+    { name: "ผลิตภัณฑ์", url: "/products" },
+    { name: product.name, url: "/products/corrugated-box" },
+  ]);
+
   return (
     <>
-      <PageSEO
-        title={product.name}
-        description={product.description}
-        canonical={`/products/${params.id}`}
-        openGraph={{
-          type: "product",
-          images: [
-            {
-              url: product.image,
-              width: 800,
-              height: 600,
-              alt: product.name,
-            },
-          ],
-        }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
-
-      <JsonLd data={createProductSchema(product)} />
-
-      <JsonLd
-        data={createBreadcrumbSchema([
-          { name: "หน้าแรก", url: "/" },
-          { name: "ผลิตภัณฑ์", url: "/products" },
-          { name: product.name, url: `/products/${params.id}` },
-        ])}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-
       <div>
         <h1>{product.name}</h1>
         <img src={product.image} alt={product.name} />
@@ -229,17 +231,22 @@ export default function ProductDetailPage({
 }
 
 // ============================================
-// ตัวอย่างที่ 6: หน้า FAQ
+// ตัวอย่างที่ 6: หน้า FAQ (src/app/faq/page.tsx)
 // ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
-import { createFAQSchema } from "@/lib/seo.config";
 
-export default function FAQPage() {
+export const faqMetadata: Metadata = {
+  title: "คำถามที่พบบ่อย (FAQ)",
+  description: "คำตอบสำหรับคำถามที่พบบ่อยเกี่ยวกับ BJH Bangkok",
+  alternates: {
+    canonical: "/faq",
+  },
+};
+
+export function FAQPageExample() {
   const faqs = [
     {
       question: "BJH Bangkok ให้บริการด้านอะไรบ้าง?",
-      answer:
-        "เราให้บริการด้านบรรจุภัณฑ์และการพิมพ์คุณภาพสูง รวมถึงกล่องกระดาษ ฉลากสินค้า และบรรจุภัณฑ์พิเศษตามสั่ง",
+      answer: "เราให้บริการด้านบรรจุภัณฑ์และการพิมพ์คุณภาพสูง",
     },
     {
       question: "ระยะเวลาในการผลิตเท่าไหร่?",
@@ -248,26 +255,18 @@ export default function FAQPage() {
     },
     {
       question: "มีขั้นต่ำในการสั่งซื้อหรือไม่?",
-      answer:
-        "มีขั้นต่ำในการสั่งซื้อตามประเภทผลิตภัณฑ์ กรุณาติดต่อฝ่ายขายเพื่อสอบถามรายละเอียด",
-    },
-    {
-      question: "สามารถออกแบบบรรจุภัณฑ์ให้ได้หรือไม่?",
-      answer:
-        "ได้ครับ เรามีทีมออกแบบมืออาชีพพร้อมให้คำปรึกษาและออกแบบบรรจุภัณฑ์ที่เหมาะสมกับแบรนด์ของคุณ",
+      answer: "มีขั้นต่ำในการสั่งซื้อตามประเภทผลิตภัณฑ์ กรุณาติดต่อฝ่ายขาย",
     },
   ];
 
+  const faqSchema = createFAQSchema(faqs);
+
   return (
     <>
-      <PageSEO
-        title="คำถามที่พบบ่อย (FAQ)"
-        description="คำตอบสำหรับคำถามที่พบบ่อยเกี่ยวกับบริการและผลิตภัณฑ์ของ BJH Bangkok"
-        canonical="/faq"
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-
-      <JsonLd data={createFAQSchema(faqs)} />
-
       <div>
         <h1>คำถามที่พบบ่อย (FAQ)</h1>
         {faqs.map((faq, index) => (
@@ -282,11 +281,18 @@ export default function FAQPage() {
 }
 
 // ============================================
-// ตัวอย่างที่ 7: หน้า Services
+// ตัวอย่างที่ 7: หน้า Services (src/app/services/page.tsx)
 // ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
 
-export default function ServicesPage() {
+export const servicesMetadata: Metadata = {
+  title: "บริการของเรา",
+  description: "บริการด้านบรรจุภัณฑ์และการพิมพ์ครบวงจร จาก BJH Bangkok",
+  alternates: {
+    canonical: "/services",
+  },
+};
+
+export function ServicesPageExample() {
   const serviceSchema = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -305,60 +311,56 @@ export default function ServicesPage() {
 
   return (
     <>
-      <PageSEO
-        title="บริการของเรา"
-        description="บริการด้านบรรจุภัณฑ์และการพิมพ์ครบวงจร ตั้งแต่การออกแบบ ผลิต จนถึงจัดส่ง"
-        canonical="/services"
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
       />
-
-      <JsonLd data={serviceSchema} />
-
       <h1>บริการของเรา</h1>
-      {/* รายการบริการ */}
+      <p>บริการครบวงจรด้านบรรจุภัณฑ์และการพิมพ์...</p>
     </>
   );
 }
 
 // ============================================
-// ตัวอย่างที่ 8: หน้า Blog Post
+// ตัวอย่างที่ 8: Blog Post (src/app/blog/[slug]/page.tsx)
 // ============================================
-import { PageSEO, JsonLd } from "@/components/SEO";
-import { createArticleSchema } from "@/lib/seo.config";
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
+export function BlogPostPageExample() {
   const post = {
     title: "5 เทรนด์บรรจุภัณฑ์ที่ต้องจับตามองในปี 2025",
-    description:
-      "เทรนด์บรรจุภัณฑ์ล่าสุดที่จะเปลี่ยนโฉมหน้าอุตสาหกรรม ตั้งแต่ ESG จนถึง Smart Packaging",
+    description: "เทรนด์บรรจุภัณฑ์ล่าสุดที่จะเปลี่ยนโฉมหน้าอุตสาหกรรม",
     image: "https://app.bjhbangkok.com/images/blog/trends-2025.jpg",
     datePublished: "2024-11-20",
     author: "BJH Bangkok Marketing Team",
   };
 
+  const articleSchema = createArticleSchema({
+    ...post,
+    author: post.author,
+  });
+
   return (
     <>
-      <PageSEO
-        title={post.title}
-        description={post.description}
-        canonical={`/blog/${params.slug}`}
-        openGraph={{
-          type: "article",
-          images: [{ url: post.image }],
-        }}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
-
-      <JsonLd
-        data={createArticleSchema({
-          ...post,
-          author: post.author,
-        })}
-      />
-
       <article>
         <h1>{post.title}</h1>
         <p className="author">โดย {post.author}</p>
-        {/* เนื้อหาบล็อก */}
+        <p>{post.description}</p>
       </article>
     </>
   );
 }
+
+/**
+ * สรุปวิธีใช้งาน:
+ *
+ * 1. สร้างไฟล์ page.tsx ในแต่ละ route
+ * 2. Export metadata สำหรับ SEO
+ * 3. เพิ่ม Schema JSON-LD ในหน้าที่ต้องการ
+ * 4. ใช้ helper functions จาก seo.config.ts
+ *
+ * ดูรายละเอียดเพิ่มเติมใน: SEO_NEXT15_GUIDE.md
+ */
