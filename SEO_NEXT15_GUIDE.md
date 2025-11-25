@@ -1,6 +1,7 @@
 # ⚠️ การแก้ไข SEO สำหรับ Next.js 15
 
 ## ปัญหาที่พบ
+
 - ❌ `next-seo` ไม่รองรับ Next.js 15 App Router
 - ❌ Error: Element type is invalid
 
@@ -9,10 +10,12 @@
 ### Next.js 15 App Router ใช้ Metadata API แทน next-seo
 
 ตอนนี้ SEO ทั้งหมดถูกจัดการโดย:
+
 - **`metadata` export** ใน `layout.tsx` (มีอยู่แล้ว ✅)
 - **Schema JSON-LD** ใน `<head>` (มีอยู่แล้ว ✅)
 
 ### ไฟล์ที่แก้ไขแล้ว:
+
 1. ✅ `src/components/SEO/DefaultSEO.tsx` - เปลี่ยนเป็น return null
 2. ✅ `src/components/SEO/PageSEO.tsx` - ใช้ Head component แทน
 3. ✅ `src/app/layout.tsx` - ลบ DefaultSEO component
@@ -22,6 +25,7 @@
 ## 🎯 วิธีใช้ SEO ใน Next.js 15
 
 ### สำหรับหน้าแรก (Root Layout)
+
 ใช้ `metadata` export ที่มีอยู่แล้วใน `src/app/layout.tsx`:
 
 ```tsx
@@ -37,20 +41,22 @@ export const metadata: Metadata = {
 ```
 
 ### สำหรับแต่ละหน้า (Page Level)
+
 เพิ่ม `metadata` export ในแต่ละ page.tsx:
 
 **ตัวอย่าง: `src/app/about/page.tsx`**
+
 ```tsx
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'เกี่ยวกับเรา',
-  description: 'ประวัติและวิสัยทัศน์ของ BJH Bangkok',
-  keywords: ['BJH Bangkok', 'เกี่ยวกับ', 'ประวัติ'],
+  title: "เกี่ยวกับเรา",
+  description: "ประวัติและวิสัยทัศน์ของ BJH Bangkok",
+  keywords: ["BJH Bangkok", "เกี่ยวกับ", "ประวัติ"],
   openGraph: {
-    title: 'เกี่ยวกับ BJH Bangkok',
-    description: 'ประวัติและวิสัยทัศน์ของบริษัท',
-    url: 'https://app.bjhbangkok.com/about',
+    title: "เกี่ยวกับ BJH Bangkok",
+    description: "ประวัติและวิสัยทัศน์ของบริษัท",
+    url: "https://app.bjhbangkok.com/about",
   },
 };
 
@@ -65,17 +71,19 @@ export default function AboutPage() {
 ```
 
 ### สำหรับ Dynamic Routes
+
 **ตัวอย่าง: `src/app/news/[slug]/page.tsx`**
+
 ```tsx
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export async function generateMetadata({ params }): Promise<Metadata> {
   const post = await getPost(params.slug);
-  
+
   return {
     title: post.title,
     description: post.description,
-    keywords: ['BJH Bangkok', 'ข่าวสาร', post.category],
+    keywords: ["BJH Bangkok", "ข่าวสาร", post.category],
     openGraph: {
       title: post.title,
       description: post.description,
@@ -96,8 +104,9 @@ export default function NewsPage({ params }) {
 ### ในหน้าต่างๆ เพิ่ม Schema:
 
 **ตัวอย่าง: หน้าข่าวสาร**
+
 ```tsx
-import { createArticleSchema } from '@/lib/seo.config';
+import { createArticleSchema } from "@/lib/seo.config";
 
 export default function NewsDetailPage({ params }) {
   const article = {
@@ -112,10 +121,10 @@ export default function NewsDetailPage({ params }) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(createArticleSchema(article))
+          __html: JSON.stringify(createArticleSchema(article)),
         }}
       />
-      
+
       <article>
         <h1>{article.title}</h1>
         {/* เนื้อหา */}
@@ -145,16 +154,18 @@ export default function NewsDetailPage({ params }) {
 ## 🚀 ตัวอย่างการใช้งาน
 
 ### 1. หน้า About
+
 สร้างไฟล์ `src/app/about/page.tsx`:
 
 ```tsx
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'เกี่ยวกับ BJH Bangkok',
-  description: 'BJH Bangkok ก่อตั้งขึ้นเมื่อปี 1991 ด้วยวิสัยทัศน์ในการเป็นผู้นำด้านบรรจุภัณฑ์และงานพิมพ์',
+  title: "เกี่ยวกับ BJH Bangkok",
+  description:
+    "BJH Bangkok ก่อตั้งขึ้นเมื่อปี 1991 ด้วยวิสัยทัศน์ในการเป็นผู้นำด้านบรรจุภัณฑ์และงานพิมพ์",
   alternates: {
-    canonical: '/about',
+    canonical: "/about",
   },
 };
 
@@ -169,16 +180,17 @@ export default function AboutPage() {
 ```
 
 ### 2. หน้า Contact
+
 สร้างไฟล์ `src/app/contact/page.tsx`:
 
 ```tsx
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'ติดต่อ BJH Bangkok',
-  description: 'ติดต่อ BJH Bangkok - โทร 02-xxx-xxxx หรือ info@bjhbangkok.com',
+  title: "ติดต่อ BJH Bangkok",
+  description: "ติดต่อ BJH Bangkok - โทร 02-xxx-xxxx หรือ info@bjhbangkok.com",
   alternates: {
-    canonical: '/contact',
+    canonical: "/contact",
   },
 };
 
@@ -193,17 +205,24 @@ export default function ContactPage() {
 ```
 
 ### 3. หน้า Products
+
 สร้างไฟล์ `src/app/products/page.tsx`:
 
 ```tsx
-import { Metadata } from 'next';
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'ผลิตภัณฑ์ - BJH Bangkok',
-  description: 'ผลิตภัณฑ์บรรจุภัณฑ์และงานพิมพ์คุณภาพสูงจาก BJH Bangkok',
-  keywords: ['BJH Bangkok', 'ผลิตภัณฑ์', 'บรรจุภัณฑ์', 'งานพิมพ์', 'กล่องกระดาษ'],
+  title: "ผลิตภัณฑ์ - BJH Bangkok",
+  description: "ผลิตภัณฑ์บรรจุภัณฑ์และงานพิมพ์คุณภาพสูงจาก BJH Bangkok",
+  keywords: [
+    "BJH Bangkok",
+    "ผลิตภัณฑ์",
+    "บรรจุภัณฑ์",
+    "งานพิมพ์",
+    "กล่องกระดาษ",
+  ],
   alternates: {
-    canonical: '/products',
+    canonical: "/products",
   },
 };
 
@@ -222,17 +241,20 @@ export default function ProductsPage() {
 ## 📊 ตรวจสอบ SEO
 
 ### 1. View Page Source
+
 - เปิดเว็บไซต์
 - กด `Ctrl+U` (View Source)
 - ค้นหา "BJH Bangkok"
 - ตรวจสอบ meta tags และ Schema
 
 ### 2. Google Rich Results Test
+
 - ไปที่: https://search.google.com/test/rich-results
 - ใส่: `https://app.bjhbangkok.com`
 - ตรวจสอบว่า Schema ถูกต้อง
 
 ### 3. Facebook Debugger
+
 - ไปที่: https://developers.facebook.com/tools/debug/
 - ใส่ URL
 - ตรวจสอบ Open Graph
@@ -242,6 +264,7 @@ export default function ProductsPage() {
 ## 🎯 สรุป
 
 ### ทำงานแล้ว (ไม่ต้องแก้):
+
 - ✅ Metadata ใน layout.tsx
 - ✅ Open Graph
 - ✅ Twitter Card
@@ -251,6 +274,7 @@ export default function ProductsPage() {
 - ✅ robots.txt
 
 ### ที่ต้องทำ (Optional):
+
 - เพิ่ม metadata ในแต่ละหน้า (about, contact, products, etc.)
 - เพิ่ม Schema JSON-LD เฉพาะหน้า (Article, Product, FAQ)
 
@@ -264,7 +288,8 @@ export default function ProductsPage() {
 
 ---
 
-**หมายเหตุ:** 
+**หมายเหตุ:**
+
 - Components ใน `src/components/SEO/` เก็บไว้เผื่อใช้ในอนาคต
 - ตอนนี้ใช้ Metadata API ของ Next.js 15 แทน
 - SEO ทำงานปกติโดยไม่ต้องใช้ next-seo library
