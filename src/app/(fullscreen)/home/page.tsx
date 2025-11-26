@@ -210,8 +210,8 @@ export default function FullscreenHomePage() {
         {
           title: "รวม File ทั้งหมด (Clip รูป)",
           icon: <FaImage />,
-          status: "⚙️",
-          link: "/marketing-files",
+          status: "",
+          link: "/all-files-gallery",
         },
         {
           title: "ตั้ง AI Chatbot",

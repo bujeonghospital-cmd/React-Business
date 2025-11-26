@@ -49,7 +49,7 @@ export default function Video({ setIsLoading }: VideoProps) {
           disablePictureInPicture
         >
           {/* <source src="/images/video/tpp-thanakon.webm" type="video/webm" /> */}
-          <source src="/images/video/tpp-thanakon.mp4" type="video/mp4" />
+          <source src="/images/video/BJH_BANGKOK.mp4" type="video/mp4" />
         </video>
         {/* <img
           className="bg-fallback"
@@ -60,4 +60,4 @@ export default function Video({ setIsLoading }: VideoProps) {
       </section>
     </ScaledCanvas>
   );
-}
+}
