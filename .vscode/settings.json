@@ -46,5 +46,8 @@
   // Terminal performance optimization
   "terminal.integrated.gpuAcceleration": "off",
   "terminal.integrated.fontFamily": "Cascadia Code, Consolas, 'Courier New'",
-  "terminal.integrated.fontSize": 14
+  "terminal.integrated.fontSize": 14,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  }
 }
