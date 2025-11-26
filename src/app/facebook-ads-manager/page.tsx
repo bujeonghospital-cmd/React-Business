@@ -175,6 +175,12 @@ export default function FacebookAdsManagerPage() {
   const [topAdsLimit, setTopAdsLimit] = useState<5 | 10 | 15 | 20 | 30 | "all">(
     20
   );
+  const [adsetDetailsData, setAdsetDetailsData] = useState<any[]>([]);
+  const [adsetDetailsLoading, setAdsetDetailsLoading] = useState(false);
+  const [selectedAdDetail, setSelectedAdDetail] = useState<AdInsight | null>(
+    null
+  );
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Re-parse Facebook SDK when modal opens
   useEffect(() => {
@@ -640,6 +646,25 @@ export default function FacebookAdsManagerPage() {
     }
   }, []);
 
+  const fetchAdsetDetailsData = useCallback(async () => {
+    try {
+      setAdsetDetailsLoading(true);
+      const url =
+        "https://graph.facebook.com/v24.0/act_454323590676166/insights?level=adset&fields=adset_id,adset_name,campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,actions&action_breakdowns=action_type&date_preset=today&access_token=EAAPb1ZBYCiNcBPzNxxSUntCZCTVHyl5AkAZBIiwCmDzrWKMLU4VEHJxRve7oqUDSaMs8om9pdVWFLzUdeTbTvkGPuTeuQ4KvGFizMy3VsSid8vgmjZB8OMoLySRmXxyAUpAwyyhSqOO8tSZAU6IYpxarsXBbZCDzFdy8u279HxSXtyWMpIolRtjJEWLdmfU5SwZCsP5";
+      const response = await fetch(url);
+      const result = await response.json();
+      if (result.data) {
+        setAdsetDetailsData(result.data);
+      } else {
+        setAdsetDetailsData([]);
+      }
+    } catch (err) {
+      setAdsetDetailsData([]);
+    } finally {
+      setAdsetDetailsLoading(false);
+    }
+  }, []);
+
   const fetchDailySummaryData = useCallback(async () => {
     try {
       setDailySummaryLoading(true);
@@ -669,6 +694,7 @@ export default function FacebookAdsManagerPage() {
           fetchFacebookBalance(),
           fetchPhoneCount(),
           fetchDailySummaryData(),
+          fetchAdsetDetailsData(),
         ]);
       } catch (error) {
         setError("เกิดข้อผิดพลาดในการโหลดข้อมูล");
@@ -685,6 +711,7 @@ export default function FacebookAdsManagerPage() {
         fetchFacebookBalance(),
         fetchPhoneCount(),
         fetchDailySummaryData(),
+        fetchAdsetDetailsData(),
       ]);
     }, 120000);
 
@@ -698,6 +725,7 @@ export default function FacebookAdsManagerPage() {
     fetchFacebookBalance,
     fetchPhoneCount,
     fetchDailySummaryData,
+    fetchAdsetDetailsData,
   ]);
 
   const formatNumber = (value: string | number) => {
@@ -1001,6 +1029,166 @@ export default function FacebookAdsManagerPage() {
               >
                 ✓ ตกลง
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal - ตารางข้อมูลแบบละเอียด */}
+      {showDetailModal && selectedAdDetail && (
+        <div
+          className="modal-overlay fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDetailModal(false);
+              setSelectedAdDetail(null);
+            }
+          }}
+        >
+          <div
+            className="video-modal-container bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between z-10 rounded-t-2xl">
+              <div className="flex-1">
+                <h3 className="text-xl font-bold text-white">
+                  รายละเอียดโฆษณา
+                </h3>
+                <p className="text-sm text-blue-100 mt-1">
+                  {selectedAdDetail.adset_name}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedAdDetail(null);
+                }}
+                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-all text-2xl w-10 h-10 flex items-center justify-center ml-4"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* ตารางข้อมูลละเอียด */}
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
+                        รายการ
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        การกระทำสำเร็จแบบ On-Facebook
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        ต้นทุนต่อผลลัพธ์
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        จำนวนครั้งที่แสดงผล
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        การเข้าถึง
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        ความถี่
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        จำนวนเงินที่ใช้
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        สิ้นสุด
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        ต้นทุนต่อ 1,000 คนที่เข้าถึง (CPM)
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        ผลลัพธ์
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        ต้นทุนต่อผลลัพธ์
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        CTR (อัตราการคลิกผ่าน) ทั้งหมด
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        CPC (ต้นทุนต่อการคลิกลิงก์) ทั้งหมด
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        การคลิก (ทั้งหมด)
+                      </th>
+                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
+                        การตั้งค่า
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="hover:bg-blue-50">
+                      <td className="border border-gray-300 px-4 py-3 font-medium text-gray-800">
+                        {selectedAdDetail.adset_name || "—"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {getResultsByActionType(
+                          selectedAdDetail.actions,
+                          "onsite_conversion.messaging_first_reply"
+                        ) || "—"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {(() => {
+                          const cost = selectedAdDetail.cost_per_action_type?.find(
+                            (c) => c.action_type === "onsite_conversion.messaging_first_reply"
+                          );
+                          return cost ? formatCurrency(cost.value) : "—";
+                        })()}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {formatNumber(selectedAdDetail.impressions)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {selectedAdDetail.reach ? formatNumber(selectedAdDetail.reach) : "—"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {selectedAdDetail.frequency ? formatNumber(selectedAdDetail.frequency) : "—"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center font-semibold text-blue-700">
+                        {formatCurrency(selectedAdDetail.spend)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {selectedAdDetail.date_stop || "—"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {formatCurrency(selectedAdDetail.cpm)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center font-semibold text-green-700">
+                        {getResultsByActionType(
+                          selectedAdDetail.actions,
+                          "onsite_conversion.total_messaging_connection"
+                        ) || "—"}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {(() => {
+                          const cost = selectedAdDetail.cost_per_action_type?.find(
+                            (c) => c.action_type === "onsite_conversion.total_messaging_connection"
+                          );
+                          return cost ? formatCurrency(cost.value) : "—";
+                        })()}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {formatPercentage(selectedAdDetail.ctr)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {formatCurrency(selectedAdDetail.cpc)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {formatNumber(selectedAdDetail.clicks)}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
+                        {selectedAdDetail.campaign_name || "—"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -1317,31 +1505,111 @@ export default function FacebookAdsManagerPage() {
 
         {/* Grid: Two TOP Ads tables + Daily Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8 mt-4 sm:mt-8">
-          {/* TOP Ads Table - Left */}
+          {/* TOP Ads Table -  */}
           <div className="lg:col-span-6">
-            <TopAdsTable
-              title="🏆 TOP Ads (Left)"
-              insights={getTopAdsFilteredInsights()}
-              adCreatives={adCreatives}
-              topAdsSortBy={topAdsSortBy}
-              setTopAdsSortBy={setTopAdsSortBy}
-              topAdsLimit={topAdsLimit}
-              setTopAdsLimit={setTopAdsLimit}
-              topAdsPhoneLeads={topAdsPhoneLeads}
-              topAdsPhoneLeadsLoading={topAdsPhoneLeadsLoading}
-              creativesLoading={creativesLoading}
-              getResultsByActionType={getResultsByActionType}
-              formatCurrency={formatCurrency}
-              formatNumber={formatNumber}
-              setSelectedAdForPreview={setSelectedAdForPreview}
-              setShowVideoModal={setShowVideoModal}
-            />
-          </div>
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mt-4 sm:mt-8">
+              <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-4 sm:px-8 py-4 sm:py-8 relative overflow-hidden">
+                <h2 className="text-xl sm:text-3xl font-bold text-white flex items-center justify-between gap-2 sm:gap-3 relative z-10">
+                  <span>📋ชุดโฆษณา</span>
+                  <span className="md:hidden text-xs font-normal opacity-75">
+                    👉 เลื่อนดูเพิ่ม
+                  </span>
+                </h2>
+              </div>
 
+              {/* Main Data Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-max">
+                  <thead className="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                      {/* <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        รูป
+                      </th> */}
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        ชื่อโฆษณา
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        แคมเปญ
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        ใช้จ่าย
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        รายใหม่
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        เริ่มสนทนา
+                      </th>
+                      <th className="text-center py-3 px-4 font-semibold text-gray-700 text-sm whitespace-nowrap">
+                        ต้นทุน/สนทนา
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInsights.map((ad) => {
+                      const creative = adCreatives.get(ad.ad_id);
+                      const messagingFirstReply = getResultsByActionType(
+                        ad.actions,
+                        "onsite_conversion.messaging_first_reply"
+                      );
+                      const messagingConnection = getResultsByActionType(
+                        ad.actions,
+                        "onsite_conversion.total_messaging_connection"
+                      );
+                      const costPerMessagingConnection =
+                        ad.cost_per_action_type?.find(
+                          (cost) =>
+                            cost.action_type ===
+                            "onsite_conversion.total_messaging_connection"
+                        );
+
+                      return (
+                        <tr
+                          key={ad.ad_id}
+                          className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
+                          onClick={() => {
+                            setSelectedAdDetail(ad);
+                            setShowDetailModal(true);
+                          }}
+                        >
+                          <td className="py-3 px-4 text-center text-gray-800 font-medium text-sm">
+                            <div className="min-w-[150px] max-w-[200px] truncate">
+                              {ad.adset_name || "—"}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center text-gray-600 text-sm">
+                            <div className="min-w-[120px] max-w-[180px] truncate">
+                              {ad.campaign_name || "—"}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center font-semibold text-blue-700 text-sm">
+                            {formatCurrency(ad.spend)}
+                          </td>
+                          <td className="py-3 px-4 text-center font-semibold text-green-700 text-sm">
+                            {messagingFirstReply}
+                          </td>
+                          <td className="py-3 px-4 text-center font-semibold text-teal-700 text-sm">
+                            {messagingConnection}
+                          </td>
+                          <td className="py-3 px-4 text-center text-gray-700 text-sm">
+                            {costPerMessagingConnection
+                              ? formatCurrency(costPerMessagingConnection.value)
+                              : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
           {/* TOP Ads Table - Right */}
           <div className="lg:col-span-6">
             <TopAdsTable
-              title="🏆 TOP Ads (Right)"
+              title={`🏆 TOP ${
+                topAdsLimit === "all" ? "ทั้งหมด" : topAdsLimit
+              } Ads`}
               insights={getTopAdsFilteredInsights()}
               adCreatives={adCreatives}
               topAdsSortBy={topAdsSortBy}
@@ -1610,7 +1878,7 @@ function TopAdsTable({
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              💬 Inbox
+              💬 Total Inbox (มาก → น้อย)
             </button>
             <button
               onClick={() => setTopAdsSortBy("phone")}
@@ -1620,7 +1888,7 @@ function TopAdsTable({
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              📞 เบอร์
+              📞 ชื่อ - เบอร์ (มาก → น้อย)
             </button>
             <button
               onClick={() => setTopAdsSortBy("cost")}
@@ -1630,7 +1898,7 @@ function TopAdsTable({
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              💰 Cost
+              💰 ต้นทุน (น้อย → มาก)
             </button>
           </div>
           <select
