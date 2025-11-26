@@ -181,6 +181,9 @@ export default function FacebookAdsManagerPage() {
     null
   );
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedAdsetDetails, setSelectedAdsetDetails] = useState<any[]>([]);
+  const [adsetDetailsModalLoading, setAdsetDetailsModalLoading] =
+    useState(false);
 
   // Re-parse Facebook SDK when modal opens
   useEffect(() => {
@@ -665,6 +668,47 @@ export default function FacebookAdsManagerPage() {
     }
   }, []);
 
+  const fetchAdsetDetailsForModal = useCallback(
+    async (adsetId: string, adsetName: string) => {
+      try {
+        setAdsetDetailsModalLoading(true);
+        // ใช้ adset_id เพื่อดึงข้อมูล ads ภายใน adset นั้น
+        const url = `https://graph.facebook.com/v24.0/${adsetId}/insights?level=ad&fields=ad_id,ad_name,adset_id,adset_name,campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,actions,reach,frequency,date_start,date_stop,cost_per_action_type&action_breakdowns=action_type&date_preset=last_30d&access_token=EAAPb1ZBYCiNcBPzNxxSUntCZCTVHyl5AkAZBIiwCmDzrWKMLU4VEHJxRve7oqUDSaMs8om9pdVWFLzUdeTbTvkGPuTeuQ4KvGFizMy3VsSid8vgmjZB8OMoLySRmXxyAUpAwyyhSqOO8tSZAU6IYpxarsXBbZCDzFdy8u279HxSXtyWMpIolRtjJEWLdmfU5SwZCsP5`;
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.data && result.data.length > 0) {
+          // ดึงข้อมูล creative สำหรับแต่ละ ad_id
+          const detailsWithCreatives = await Promise.all(
+            result.data.map(async (ad: any) => {
+              try {
+                const creativeResponse = await fetch(
+                  `/api/facebook-ads-creative?ad_id=${ad.ad_id}`
+                );
+                const creativeResult = await creativeResponse.json();
+                return {
+                  ...ad,
+                  creative: creativeResult.success ? creativeResult.data : null,
+                };
+              } catch (error) {
+                return { ...ad, creative: null };
+              }
+            })
+          );
+
+          setSelectedAdsetDetails(detailsWithCreatives);
+        } else {
+          setSelectedAdsetDetails([]);
+        }
+      } catch (err) {
+        setSelectedAdsetDetails([]);
+      } finally {
+        setAdsetDetailsModalLoading(false);
+      }
+    },
+    []
+  );
+
   const fetchDailySummaryData = useCallback(async () => {
     try {
       setDailySummaryLoading(true);
@@ -1054,9 +1098,6 @@ export default function FacebookAdsManagerPage() {
                 <h3 className="text-xl font-bold text-white">
                   รายละเอียดโฆษณา
                 </h3>
-                <p className="text-sm text-blue-100 mt-1">
-                  {selectedAdDetail.adset_name}
-                </p>
               </div>
               <button
                 onClick={() => {
@@ -1070,125 +1111,221 @@ export default function FacebookAdsManagerPage() {
             </div>
 
             <div className="p-6">
-              {/* ตารางข้อมูลละเอียด */}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-semibold text-gray-700">
-                        รายการ
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        การกระทำสำเร็จแบบ On-Facebook
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        ต้นทุนต่อผลลัพธ์
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        จำนวนครั้งที่แสดงผล
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        การเข้าถึง
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        ความถี่
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        จำนวนเงินที่ใช้
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        สิ้นสุด
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        ต้นทุนต่อ 1,000 คนที่เข้าถึง (CPM)
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        ผลลัพธ์
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        ต้นทุนต่อผลลัพธ์
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        CTR (อัตราการคลิกผ่าน) ทั้งหมด
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        CPC (ต้นทุนต่อการคลิกลิงก์) ทั้งหมด
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        การคลิก (ทั้งหมด)
-                      </th>
-                      <th className="border border-gray-300 px-4 py-3 text-center text-sm font-semibold text-gray-700">
-                        การตั้งค่า
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="hover:bg-blue-50">
-                      <td className="border border-gray-300 px-4 py-3 font-medium text-gray-800">
-                        {selectedAdDetail.adset_name || "—"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {getResultsByActionType(
-                          selectedAdDetail.actions,
-                          "onsite_conversion.messaging_first_reply"
-                        ) || "—"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {(() => {
-                          const cost = selectedAdDetail.cost_per_action_type?.find(
-                            (c) => c.action_type === "onsite_conversion.messaging_first_reply"
-                          );
-                          return cost ? formatCurrency(cost.value) : "—";
-                        })()}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {formatNumber(selectedAdDetail.impressions)}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {selectedAdDetail.reach ? formatNumber(selectedAdDetail.reach) : "—"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {selectedAdDetail.frequency ? formatNumber(selectedAdDetail.frequency) : "—"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center font-semibold text-blue-700">
-                        {formatCurrency(selectedAdDetail.spend)}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {selectedAdDetail.date_stop || "—"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {formatCurrency(selectedAdDetail.cpm)}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center font-semibold text-green-700">
-                        {getResultsByActionType(
-                          selectedAdDetail.actions,
-                          "onsite_conversion.total_messaging_connection"
-                        ) || "—"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {(() => {
-                          const cost = selectedAdDetail.cost_per_action_type?.find(
-                            (c) => c.action_type === "onsite_conversion.total_messaging_connection"
-                          );
-                          return cost ? formatCurrency(cost.value) : "—";
-                        })()}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {formatPercentage(selectedAdDetail.ctr)}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {formatCurrency(selectedAdDetail.cpc)}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {formatNumber(selectedAdDetail.clicks)}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-700">
-                        {selectedAdDetail.campaign_name || "—"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              {/* ตารางข้อมูลละเอียดแบบ Nested */}
+              {adsetDetailsModalLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-600"></div>
+                  <p className="ml-4 text-gray-700 text-lg">
+                    กำลังโหลดข้อมูล...
+                  </p>
+                </div>
+              ) : selectedAdsetDetails.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  ไม่พบข้อมูล
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          ไอคอน
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-left text-xs font-semibold text-gray-700">
+                          รายการ
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          การกระทำสำเร็จ
+                          <br />
+                          On-Facebook
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          ต้นทุนต่อ
+                          <br />
+                          ผลลัพธ์
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          จำนวนครั้ง
+                          <br />
+                          แสดงผล
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          การเข้าถึง
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          ความถี่
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          จำนวนเงิน
+                          <br />
+                          ที่ใช้
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          สิ้นสุด
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          CPM
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          ผลลัพธ์
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          ต้นทุนต่อ
+                          <br />
+                          ผลลัพธ์
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          CTR
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          CPC
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          การคลิก
+                          <br />
+                          ทั้งหมด
+                        </th>
+                        <th className="border border-gray-300 px-2 py-2 text-center text-xs font-semibold text-gray-700">
+                          การตั้งค่า
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedAdsetDetails.map((detail: any, index: number) => {
+                        const thumbnailUrl =
+                          detail.creative?.thumbnail_url ||
+                          detail.creative?.image_url;
+
+                        return (
+                          <tr
+                            key={detail.ad_id + index}
+                            className="hover:bg-blue-50"
+                          >
+                            <td className="border border-gray-300 px-2 py-2">
+                              <div className="flex justify-center items-center">
+                                {thumbnailUrl ? (
+                                  <div
+                                    className="w-12 h-12 cursor-pointer"
+                                    onClick={() => {
+                                      setSelectedAdForPreview(detail);
+                                      setShowVideoModal(true);
+                                      setShowDetailModal(false);
+                                    }}
+                                  >
+                                    <img
+                                      src={thumbnailUrl}
+                                      alt="Ad preview"
+                                      className="w-full h-full object-cover rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                                      onError={(e) => {
+                                        e.currentTarget.src =
+                                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64'%3E%3Crect width='64' height='64' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%239ca3af' font-size='12'%3ENo Image%3C/text%3E%3C/svg%3E";
+                                      }}
+                                    />
+                                  </div>
+                                ) : (
+                                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-gray-400 text-xs">
+                                      📊
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2">
+                              <div className="min-w-[120px] max-w-[200px]">
+                                <div className="font-medium text-gray-800 text-sm truncate">
+                                  {detail.adset_name || "—"}
+                                </div>
+                                <div className="text-xs text-gray-500 truncate mt-1">
+                                  ข้อมูล: {detail.date_start}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {(() => {
+                                const action = detail.actions?.find(
+                                  (a: any) =>
+                                    a.action_type ===
+                                    "onsite_conversion.messaging_first_reply"
+                                );
+                                return action
+                                  ? parseInt(action.value || "0")
+                                  : "—";
+                              })()}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {(() => {
+                                const cost = detail.cost_per_action_type?.find(
+                                  (c: any) =>
+                                    c.action_type ===
+                                    "onsite_conversion.messaging_first_reply"
+                                );
+                                return cost ? formatCurrency(cost.value) : "—";
+                              })()}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {formatNumber(detail.impressions)}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {detail.reach ? formatNumber(detail.reach) : "—"}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {detail.frequency
+                                ? formatNumber(detail.frequency)
+                                : "—"}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center font-semibold text-blue-700 text-sm">
+                              {formatCurrency(detail.spend)}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-xs">
+                              {detail.date_stop || "—"}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {formatCurrency(detail.cpm)}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center font-semibold text-green-700 text-sm">
+                              {(() => {
+                                const action = detail.actions?.find(
+                                  (a: any) =>
+                                    a.action_type ===
+                                    "onsite_conversion.total_messaging_connection"
+                                );
+                                return action
+                                  ? parseInt(action.value || "0")
+                                  : "—";
+                              })()}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {(() => {
+                                const cost = detail.cost_per_action_type?.find(
+                                  (c: any) =>
+                                    c.action_type ===
+                                    "onsite_conversion.total_messaging_connection"
+                                );
+                                return cost ? formatCurrency(cost.value) : "—";
+                              })()}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {formatPercentage(detail.ctr)}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {formatCurrency(detail.cpc)}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              {formatNumber(detail.clicks)}
+                            </td>
+                            <td className="border border-gray-300 px-2 py-2 text-center text-gray-700 text-sm">
+                              <div className="min-w-[100px] max-w-[150px] truncate">
+                                {detail.campaign_name || "—"}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1567,9 +1704,14 @@ export default function FacebookAdsManagerPage() {
                         <tr
                           key={ad.ad_id}
                           className="border-b border-gray-100 hover:bg-blue-50 transition-colors cursor-pointer"
-                          onClick={() => {
+                          onClick={async () => {
                             setSelectedAdDetail(ad);
                             setShowDetailModal(true);
+                            // ดึงข้อมูลทั้งหมดภายใน adset นี้
+                            await fetchAdsetDetailsForModal(
+                              ad.adset_id,
+                              ad.adset_name
+                            );
                           }}
                         >
                           <td className="py-3 px-4 text-center text-gray-800 font-medium text-sm">
