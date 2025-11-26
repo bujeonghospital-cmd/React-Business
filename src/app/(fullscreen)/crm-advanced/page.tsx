@@ -2057,7 +2057,7 @@ export default function CRMAdvancedPage() {
                   </span>
                   <span className="bg-white text-purple-600 px-4 py-2 rounded-lg font-bold shadow-lg">
                     {records
-                      .reduce((sum, r) => sum + r.proposedAmount, 0)
+                      .reduce((sum, r) => sum + (r.proposedAmount || r.proposed_amount || 0), 0)
                       .toLocaleString()}{" "}
                     บาท
                   </span>
@@ -2065,7 +2065,6 @@ export default function CRMAdvancedPage() {
               </div>
             </div>
           )}
-          )
         </div>
       </div>
 
