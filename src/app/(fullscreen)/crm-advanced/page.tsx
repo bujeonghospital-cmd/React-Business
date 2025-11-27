@@ -531,21 +531,21 @@ export default function CRMAdvancedPage() {
     const today = getLocalDateString();
     setStartDate(today);
     fetchRecords(today, today);
-  }, [fetchRecords]);
+  }, []);
 
   // ค้นหาอัตโนมัติเมื่อเปลี่ยนวันที่
   useEffect(() => {
     if (startDate && viewMode === "table") {
       fetchRecords(startDate, startDate);
     }
-  }, [startDate, viewMode, fetchRecords]);
+  }, [startDate, viewMode]);
 
   // โหลดข้อมูลตามเดือนที่เลือกในปฏิทิน
   useEffect(() => {
     if (viewMode === "calendar") {
       fetchRecordsByMonth(currentMonth);
     }
-  }, [currentMonth, viewMode, fetchRecordsByMonth]);
+  }, [currentMonth, viewMode]);
 
   // โหลดข้อมูลตามเดือนที่เลือกในปฏิทิน 2
   useEffect(() => {
@@ -638,7 +638,7 @@ export default function CRMAdvancedPage() {
     fetchLegacyAppointments(targetDate);
   }, [customerSegment, fetchLegacyAppointments, startDate, viewMode]);
 
-  const fetchRecords = useCallback(async (start?: string, end?: string) => {
+  const fetchRecords = async (start?: string, end?: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -665,9 +665,9 @@ export default function CRMAdvancedPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  const fetchRecordsByMonth = useCallback(async (date: Date) => {
+  const fetchRecordsByMonth = async (date: Date) => {
     try {
       setLoading(true);
       setError(null);
@@ -690,7 +690,7 @@ export default function CRMAdvancedPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   const handleDateFilter = () => {
     if (startDate) {
