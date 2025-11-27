@@ -33,9 +33,9 @@ const buildDisplayName = (appointment: Appointment | null) => {
 
 export async function POST(
   _request: NextRequest,
-  { params }: { params: { appointCode?: string } }
+  { params }: { params: Promise<{ appointCode?: string }> }
 ) {
-  const appointCode = params.appointCode;
+  const { appointCode } = await params;
   if (!appointCode) {
     return NextResponse.json({ success: false, error: "Missing appointCode" }, { status: 400 });
   }
@@ -68,7 +68,6 @@ export async function POST(
     doctor_code: appointment.doctor_code || undefined,
     start_date: appointment.start_date || null,
     doc_type: "OPD",
-    organize: appointment.organize || appointment.dest_name || "BJH",
     display_name: displayName || undefined,
     cc: appointment.activity || undefined,
     note_result: appointment.note || undefined,

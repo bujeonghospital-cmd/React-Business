@@ -6,9 +6,9 @@ import {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { cn?: string } }
+  { params }: { params: Promise<{ cn?: string }> }
 ) {
-  const cn = params.cn;
+  const { cn } = await params;
   if (!cn) {
     return NextResponse.json({ success: false, error: "Missing customer CN" }, { status: 400 });
   }
@@ -19,9 +19,9 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { cn?: string } }
+  { params }: { params: Promise<{ cn?: string }> }
 ) {
-  const cn = params.cn;
+  const { cn } = await params;
   if (!cn) {
     return NextResponse.json({ success: false, error: "Missing customer CN" }, { status: 400 });
   }

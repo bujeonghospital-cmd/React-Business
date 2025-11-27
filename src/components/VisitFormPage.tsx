@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useRouter, useParams } from "next/navigation";
 
 type VisitFormMode = "create" | "edit";
 
@@ -8,8 +8,10 @@ interface VisitFormPageProps {
 }
 
 const VisitFormPage: React.FC<VisitFormPageProps> = ({ mode }) => {
-    const { cn, vn } = useParams<{ cn: string; vn?: string }>();
-    const navigate = useNavigate();
+    const params = useParams<{ cn: string; vn?: string }>();
+    const cn = params.cn;
+    const vn = params.vn;
+    const router = useRouter();
 
     const [doctorCode, setDoctorCode] = useState("");
     const [roomCode, setRoomCode] = useState("");
@@ -99,7 +101,7 @@ const VisitFormPage: React.FC<VisitFormPageProps> = ({ mode }) => {
             }
 
             await response.json();
-            navigate(`/customers/${cn}/visits`);
+            router.push(`/customers/${cn}/visits`);
         } catch (err: any) {
             setError(err.message || "เกิดข้อผิดพลาด");
         } finally {
@@ -213,7 +215,7 @@ const VisitFormPage: React.FC<VisitFormPageProps> = ({ mode }) => {
                 <button
                     type="button"
                     className="rounded border border-gray-300 px-4 py-2"
-                    onClick={() => navigate(-1)}
+                    onClick={() => router.back()}
                 >
                     ยกเลิก
                 </button>

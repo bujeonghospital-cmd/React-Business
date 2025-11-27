@@ -7,9 +7,9 @@ import {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { appointCode?: string } }
+  { params }: { params: Promise<{ appointCode?: string }> }
 ) {
-  const appointCode = params.appointCode;
+  const { appointCode } = await params;
   if (!appointCode) {
     return NextResponse.json({ success: false, error: "Missing appointCode" }, { status: 400 });
   }
@@ -24,9 +24,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { appointCode?: string } }
+  { params }: { params: Promise<{ appointCode?: string }> }
 ) {
-  const appointCode = params.appointCode;
+  const { appointCode } = await params;
   if (!appointCode) {
     return NextResponse.json({ success: false, error: "Missing appointCode" }, { status: 400 });
   }
@@ -42,9 +42,9 @@ export async function PUT(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { appointCode?: string } }
+  { params }: { params: Promise<{ appointCode?: string }> }
 ) {
-  const appointCode = params.appointCode;
+  const { appointCode } = await params;
   if (!appointCode) {
     return NextResponse.json({ success: false, error: "Missing appointCode" }, { status: 400 });
   }

@@ -1,9 +1,10 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useRouter, useParams } from "next/navigation";
 import VisitListPanel from "./VisitListPanel";
 
 const VisitListPage: React.FC = () => {
-    const { cn } = useParams<{ cn: string }>();
-    const navigate = useNavigate();
+    const params = useParams<{ cn: string }>();
+    const cn = params.cn;
+    const router = useRouter();
 
     if (!cn) {
         return <p className="text-sm text-red-600">CN ไม่ถูกต้อง</p>;
@@ -16,7 +17,7 @@ const VisitListPage: React.FC = () => {
                 <button
                     type="button"
                     className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    onClick={() => navigate(`/customers/${cn}/visits/new`)}
+                    onClick={() => router.push(`/customers/${cn}/visits/new`)}
                 >
                     เพิ่ม Visit
                 </button>
@@ -24,7 +25,7 @@ const VisitListPage: React.FC = () => {
 
             <VisitListPanel
                 cn={cn}
-                onRowClick={(visit) => navigate(`/customers/${cn}/visits/${visit.vn}`)}
+                onRowClick={(visit) => router.push(`/customers/${cn}/visits/${visit.vn}`)}
             />
         </div>
     );
