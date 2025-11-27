@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Visit } from "../types/visit";
 
 interface VisitListPanelProps {
@@ -24,7 +24,7 @@ const VisitListPanel: React.FC<VisitListPanelProps> = ({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchVisits = async (signal?: AbortSignal) => {
+    const fetchVisits = useCallback(async (signal?: AbortSignal) => {
         if (!cn) {
             setVisits([]);
             setError("cn ไม่ถูกต้อง");
@@ -50,13 +50,13 @@ const VisitListPanel: React.FC<VisitListPanelProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, [cn]);
 
     useEffect(() => {
         const controller = new AbortController();
         fetchVisits(controller.signal);
         return () => controller.abort();
-    }, [cn, refreshSignal]);
+    }, [cn, refreshSignal, fetchVisits]);
 
     const handleRowClick = (visit: Visit) => {
         onRowClick?.(visit);
