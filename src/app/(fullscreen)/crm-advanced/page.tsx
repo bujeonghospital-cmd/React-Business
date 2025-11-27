@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Appointment } from "@/types/appointment";
 import CustomerRegistrationModal, {
@@ -38,6 +38,9 @@ const formatTimeDisplay = (time: string | undefined | null): string => {
 };
 
 // Helper สำหรับย่อหมายเหตุให้แสดงเพียงไม่กี่ประโยค
+const COMPANY_NAME_LABEL = "บริษัท โรงพยาบาล บีเจเอช จำกัด";
+const FOLLOW_NOTE_LABEL = "ลูกค้า Follow อ่านหมายเหตุ";
+
 const getNotePreview = (
   raw: string | null | undefined,
   maxSentences = 2
@@ -82,6 +85,18 @@ const getLegacyCustomerName = (appointment: Appointment): string => {
   }
 
   return "-";
+};
+
+const sanitizeProductName = (value?: string | null): string => {
+  const trimmed = value?.trim();
+  if (!trimmed || trimmed === "null" || trimmed === "undefined") {
+    return "-";
+  }
+  return trimmed === COMPANY_NAME_LABEL ? "-" : trimmed;
+};
+
+const hasLegacySaleDate = (appointment: Appointment): boolean => {
+  return Boolean(appointment.bind_date && appointment.bind_date.trim());
 };
 
 const getLegacyDateParts = (dateTime: string | null) => {
@@ -171,6 +186,29 @@ interface HRAttendance {
   note: string;
 }
 
+type CustomerSegment = "new" | "old";
+
+interface CombinedTableRow {
+  kind: CustomerSegment;
+  id: string;
+  sortKey: number;
+  timeLabel: string;
+  dateLabel?: string;
+  status: string;
+  customerName: string;
+  phone: string;
+  product: string;
+  doctor: string;
+  contact: string;
+  amountValue?: number;
+  appointmentCode?: string;
+  star: boolean;
+  country: string;
+  notePreview: string;
+  rawRecord?: CRMRecord;
+  rawLegacy?: Appointment;
+}
+
 export default function CRMAdvancedPage() {
   const router = useRouter();
   const [records, setRecords] = useState<CRMRecord[]>([]);
@@ -183,7 +221,7 @@ export default function CRMAdvancedPage() {
   );
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [currentMonth2, setCurrentMonth2] = useState<Date>(new Date());
-  const [customerSegment, setCustomerSegment] = useState<"new" | "old">("new");
+  const [activeSegments, setActiveSegments] = useState<CustomerSegment[]>(["new"]);
   const [selectedDateRecords, setSelectedDateRecords] = useState<CRMRecord[]>(
     []
   );
@@ -220,9 +258,7 @@ export default function CRMAdvancedPage() {
     useState<string>("");
   const [editingAttendance, setEditingAttendance] =
     useState<HRAttendance | null>(null);
-  const [noteModalRecord, setNoteModalRecord] = useState<CRMRecord | null>(
-    null
-  );
+  const [noteModalRecord, setNoteModalRecord] = useState<CRMRecord | null>(null);
 
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerForm, setCustomerForm] = useState<CustomerFormData | null>(
@@ -241,6 +277,24 @@ export default function CRMAdvancedPage() {
   const [legacyRecords, setLegacyRecords] = useState<Appointment[]>([]);
   const [legacyLoading, setLegacyLoading] = useState(false);
   const [legacyError, setLegacyError] = useState<string | null>(null);
+
+  const showingNew = activeSegments.includes("new");
+  const showingOld = activeSegments.includes("old");
+  const showingBoth = showingNew && showingOld;
+
+  const toggleSegment = (segment: CustomerSegment) => {
+    setActiveSegments((prev) => {
+      const hasSegment = prev.includes(segment);
+      if (hasSegment) {
+        if (prev.length === 1) {
+          return prev;
+        }
+        return prev.filter((item) => item !== segment);
+      }
+      return [...prev, segment];
+    });
+  };
+
 
   const dateFieldKeys: Array<keyof CustomerFormData> = [
     "birthdate",
@@ -630,13 +684,13 @@ export default function CRMAdvancedPage() {
   }, []);
 
   useEffect(() => {
-    if (viewMode !== "table" || customerSegment !== "old") {
+    if (viewMode !== "table" || !showingOld) {
       return;
     }
 
     const targetDate = startDate && startDate.trim() ? startDate : getLocalDateString();
     fetchLegacyAppointments(targetDate);
-  }, [customerSegment, fetchLegacyAppointments, startDate, viewMode]);
+  }, [showingOld, fetchLegacyAppointments, startDate, viewMode]);
 
   const fetchRecords = async (start?: string, end?: string) => {
     try {
@@ -715,7 +769,7 @@ export default function CRMAdvancedPage() {
     } else {
       // ถ้าอยู่ในโหมดตาราง ให้โหลดข้อมูลวันนี้
       fetchRecords(today, today);
-      if (customerSegment === "old") {
+      if (showingOld) {
         fetchLegacyAppointments(today);
       }
     }
@@ -1077,14 +1131,101 @@ export default function CRMAdvancedPage() {
     return Number.MAX_SAFE_INTEGER;
   };
 
-  const sortedByAppointment = [...records].sort((a, b) =>
-    parseAppointmentTimeValue(a.appointmentTime) -
-    parseAppointmentTimeValue(b.appointmentTime)
-  );
+  const minutesFromDateTime = (value?: string | null): number => {
+    if (!value) {
+      return Number.MAX_SAFE_INTEGER;
+    }
 
-  const legacyRecordsSorted = [...legacyRecords].sort(
-    (a, b) => parseLegacyDateValue(a.start_date) - parseLegacyDateValue(b.start_date)
-  );
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.getHours() * 60 + parsed.getMinutes();
+    }
+
+    return parseAppointmentTimeValue(value);
+  };
+
+  const getNewRecordSortKey = (record: CRMRecord): number => {
+    const byAppointmentTime = parseAppointmentTimeValue(record.appointmentTime || "");
+    if (byAppointmentTime !== Number.MAX_SAFE_INTEGER) {
+      return byAppointmentTime;
+    }
+
+    if (record.surgery_date) {
+      return minutesFromDateTime(record.surgery_date);
+    }
+
+    if (record.consult_date) {
+      return minutesFromDateTime(record.consult_date);
+    }
+
+    return Number.MAX_SAFE_INTEGER;
+  };
+
+  const getLegacySortKey = (appointment: Appointment): number => {
+    return minutesFromDateTime(appointment.start_date);
+  };
+
+  const sortedByAppointment = useMemo(() => {
+    return [...records].sort((a, b) => getNewRecordSortKey(a) - getNewRecordSortKey(b));
+  }, [records]);
+
+  const legacyRecordsSorted = useMemo(() => {
+    return legacyRecords
+      .filter(hasLegacySaleDate)
+      .sort((a, b) => getLegacySortKey(a) - getLegacySortKey(b));
+  }, [legacyRecords]);
+
+  const combinedRows = useMemo<CombinedTableRow[]>(() => {
+    if (!showingBoth) {
+      return [];
+    }
+
+    const rows: CombinedTableRow[] = [];
+
+    sortedByAppointment.forEach((record) => {
+      rows.push({
+        kind: "new",
+        id: `new-${record.id}`,
+        sortKey: getNewRecordSortKey(record),
+        timeLabel: formatTimeDisplay(record.appointmentTime),
+        status: record.status || "-",
+        customerName: record.customer_name || "-",
+        phone: record.phone || "-",
+        product: sanitizeProductName(record.interested_product || record.interestedProduct),
+        doctor: record.doctor || "-",
+        contact: record.contact_staff || "-",
+        amountValue: record.proposed_amount ?? record.proposedAmount ?? undefined,
+        star: Boolean(record.star_flag),
+        country: record.country || "-",
+        notePreview: getNotePreview(record.note),
+        rawRecord: record,
+      });
+    });
+
+    legacyRecordsSorted.forEach((appointment, index) => {
+      const { dateLabel, timeLabel } = getLegacyDateParts(appointment.start_date);
+      rows.push({
+        kind: "old",
+        id: `old-${appointment.appoint_code || appointment.code || index}`,
+        sortKey: getLegacySortKey(appointment),
+        timeLabel,
+        dateLabel,
+        status: appointment.activity || "รอติดต่อ",
+        customerName: getLegacyCustomerName(appointment),
+        phone: formatLegacyPhoneNumber(appointment.mobilephone),
+        product: FOLLOW_NOTE_LABEL,
+        doctor: appointment.doctor_name || "-",
+        contact: appointment.organize || appointment.bind_code || "-",
+        appointmentCode: appointment.appoint_code || appointment.code || undefined,
+        star: Boolean(appointment.vn && appointment.vn.trim()),
+        country: "-",
+        notePreview: getNotePreview(appointment.note),
+        rawLegacy: appointment,
+      });
+    });
+
+    return rows.sort((a, b) => a.sortKey - b.sortKey);
+  }, [legacyRecordsSorted, showingBoth, sortedByAppointment]);
 
   const legacySelectedDate = startDate && startDate.trim() ? startDate : getLocalDateString();
   const legacySelectedDateLabel = (() => {
@@ -2006,8 +2147,9 @@ export default function CRMAdvancedPage() {
               <div className="flex flex-wrap gap-3 justify-center">
                 <button
                   type="button"
-                  onClick={() => setCustomerSegment("new")}
-                  className={`rounded-full px-6 py-2 text-sm font-semibold uppercase tracking-wide transition ${customerSegment === "new"
+                  onClick={() => toggleSegment("new")}
+                  aria-pressed={showingNew}
+                  className={`rounded-full px-6 py-2 text-sm font-semibold uppercase tracking-wide transition ${showingNew
                     ? "bg-white text-blue-700 shadow-lg"
                     : "bg-white/40 text-white border border-white/40"
                     }`}
@@ -2016,8 +2158,9 @@ export default function CRMAdvancedPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCustomerSegment("old")}
-                  className={`rounded-full px-6 py-2 text-sm font-semibold uppercase tracking-wide transition ${customerSegment === "old"
+                  onClick={() => toggleSegment("old")}
+                  aria-pressed={showingOld}
+                  className={`rounded-full px-6 py-2 text-sm font-semibold uppercase tracking-wide transition ${showingOld
                     ? "bg-slate-50 text-slate-900 shadow-lg"
                     : "bg-white/20 text-white border border-white/30"
                     }`}
@@ -2025,7 +2168,275 @@ export default function CRMAdvancedPage() {
                   ลูกค้าเก่า
                 </button>
               </div>
-              {customerSegment === "new" ? (
+              {showingBoth ? (
+                <div className="overflow-x-auto w-full rounded-3xl border border-white/30 shadow-2xl transition bg-white">
+                  <div className="flex flex-wrap items-center justify-between gap-4 px-6 pt-6 pb-2 text-slate-700">
+                    <div className="font-semibold">
+                      ลูกค้าใหม่ + ลูกค้าเก่า ({combinedRows.length} รายการ)
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 font-semibold text-blue-700">
+                        ใหม่: {sortedByAppointment.length}
+                      </span>
+                      <span className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 font-semibold text-purple-700">
+                        เก่า: {legacyRecordsSorted.length}
+                      </span>
+                    </div>
+                  </div>
+
+                  {legacyError && (
+                    <div className="bg-red-500/10 border border-red-200 text-red-700 rounded-2xl px-6 py-4 mx-6 my-4 flex flex-wrap items-center justify-between gap-4">
+                      <span className="font-medium">{legacyError}</span>
+                      <button
+                        type="button"
+                        onClick={() => fetchLegacyAppointments(legacySelectedDate)}
+                        className="px-4 py-2 bg-red-500 text-white rounded-lg shadow hover:bg-red-600 transition"
+                      >
+                        ลองอีกครั้ง
+                      </button>
+                    </div>
+                  )}
+
+                  {legacyLoading ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="bg-white/60 rounded-2xl p-8 shadow-2xl">
+                        <div className="flex items-center gap-4">
+                          <svg
+                            className="animate-spin h-8 w-8 text-indigo-500"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          <span className="text-indigo-700 font-semibold text-lg">
+                            กำลังโหลดข้อมูลทั้งหมด...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : !loading && combinedRows.length === 0 ? (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="bg-white/20 backdrop-blur-md rounded-2xl p-8 shadow-2xl text-center">
+                        <svg
+                          className="w-16 h-16 text-blue-200 mx-auto mb-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-6 0h6m-3-9h.01M4 6h16M4 10h16M4 14h16"
+                          />
+                        </svg>
+                        <h3 className="text-blue-800 font-bold text-xl mb-2">
+                          ไม่มีข้อมูลลูกค้าในวันนี้
+                        </h3>
+                        <p className="text-blue-600/80">
+                          ลองเลือกวันอื่น หรือรีโหลดข้อมูลอีกครั้ง
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <table className="w-full border-collapse table-fixed">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500">
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            เวลาที่นัด
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ประเภท
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            สถานะ
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ชื่อลูกค้า
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            เบอร์โทร
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ผลิตภัณฑ์ / บริการ
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            แพทย์
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ผู้ดูแล
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ยอด / รหัส
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ติดดาว
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white border-r border-white/20 tracking-wide">
+                            ประเทศ
+                          </th>
+                          <th className="px-4 py-5 text-center text-sm font-bold text-white tracking-wide">
+                            หมายเหตุ
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {combinedRows.map((row, index) => (
+                          <tr
+                            key={row.id}
+                            className={`${row.kind === "new"
+                              ? index % 2 === 0
+                                ? "bg-gradient-to-r from-slate-50 to-blue-50"
+                                : "bg-gradient-to-r from-blue-100 to-indigo-100"
+                              : index % 2 === 0
+                                ? "bg-gradient-to-r from-white via-indigo-50 to-purple-50"
+                                : "bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50"
+                              } hover:bg-gradient-to-r hover:from-blue-200/70 hover:to-indigo-200/70 transition-all duration-200`}
+                          >
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              <div className="font-semibold text-indigo-700">
+                                {row.timeLabel}
+                              </div>
+                              {row.dateLabel && row.dateLabel !== "-" && (
+                                <div className="text-xs text-gray-500">{row.dateLabel}</div>
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              <span className={`inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-bold ${row.kind === "new"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-purple-100 text-purple-700"
+                                }`}>
+                                {row.kind === "new" ? "ลูกค้าใหม่" : "ลูกค้าเก่า"}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              <span className="inline-block px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full text-xs font-bold shadow-lg">
+                                {row.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.kind === "new" && row.rawRecord ? (
+                                <button
+                                  type="button"
+                                  onClick={() => openCustomerModal(row.rawRecord as CRMRecord)}
+                                  className="inline-block font-semibold text-blue-600 underline-offset-2 transition hover:underline"
+                                >
+                                  {row.customerName}
+                                </button>
+                              ) : (
+                                row.customerName
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.phone}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.kind === "old" ? (
+                                <div className="font-semibold text-purple-700">{FOLLOW_NOTE_LABEL}</div>
+                              ) : (
+                                row.product
+                              )}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.doctor}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.contact}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.kind === "new"
+                                ? row.amountValue !== undefined
+                                  ? `${row.amountValue.toLocaleString()} บาท`
+                                  : "-"
+                                : row.appointmentCode || "-"}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 bg-gradient-to-r from-amber-100 to-yellow-100 text-center">
+                              <div className="flex items-center justify-center">
+                                {row.star ? (
+                                  <svg className="w-6 h-6 text-yellow-500 fill-current" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                  </svg>
+                                ) : (
+                                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-700 text-center">
+                              {row.country || "-"}
+                            </td>
+                            <td className="px-4 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
+                              {row.kind === "new" && row.rawRecord
+                                ? (() => {
+                                  const notePreview = row.notePreview;
+                                  if (notePreview === "-") {
+                                    return "-";
+                                  }
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => openNoteModal(row.rawRecord as CRMRecord)}
+                                      className="w-full px-4 py-2 bg-white/70 hover:bg-white/90 text-blue-600 font-semibold rounded-lg shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                      title="กดเพื่อดูหมายเหตุทั้งหมด"
+                                    >
+                                      <span
+                                        className="block text-sm text-gray-800 text-left pl-2"
+                                        style={{
+                                          display: "-webkit-box",
+                                          WebkitLineClamp: 2,
+                                          WebkitBoxOrient: "vertical",
+                                          overflow: "hidden",
+                                        }}
+                                      >
+                                        {notePreview}
+                                      </span>
+                                      <span className="mt-1 block text-xs text-blue-500 text-left pl-2">
+                                        ดูเพิ่มเติม
+                                      </span>
+                                    </button>
+                                  );
+                                })()
+                                : (
+                                  <div
+                                    className="text-sm text-gray-700"
+                                    title={row.notePreview === "-" ? undefined : row.notePreview}
+                                    style={{
+                                      display: "-webkit-box",
+                                      WebkitLineClamp: 2,
+                                      WebkitBoxOrient: "vertical",
+                                      overflow: "hidden",
+                                    }}
+                                  >
+                                    {row.notePreview}
+                                  </div>
+                                )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              ) : showingNew ? (
                 <div className="overflow-x-auto w-full rounded-3xl border border-white/30 shadow-2xl transition bg-white">
                   {!loading && sortedByAppointment.length === 0 ? (
                     <div className="flex justify-center items-center py-12">
@@ -2150,7 +2561,7 @@ export default function CRMAdvancedPage() {
                               {record.phone}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-300 text-center">
-                              {record.interested_product}
+                              {sanitizeProductName(record.interested_product || record.interestedProduct)}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-300 font-medium text-center">
                               {record.doctor}
@@ -2361,7 +2772,7 @@ export default function CRMAdvancedPage() {
                       <tbody>
                         {legacyRecordsSorted.map((appointment, index) => {
                           const { dateLabel, timeLabel } = getLegacyDateParts(appointment.start_date);
-                          const productName = appointment.dest_name || appointment.activity || "-";
+                          const productName = FOLLOW_NOTE_LABEL;
                           const statusLabel = appointment.activity || "รอติดต่อ";
                           const contactName = appointment.organize || appointment.bind_code || "-";
                           const notePreview = getNotePreview(appointment.note);
@@ -2394,7 +2805,7 @@ export default function CRMAdvancedPage() {
                                 {formatLegacyPhoneNumber(appointment.mobilephone)}
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
-                                {productName}
+                                <div className="font-semibold text-purple-700">{productName}</div>
                               </td>
                               <td className="px-6 py-4 text-sm text-gray-800 border-r border-gray-200 text-center">
                                 {appointment.doctor_name || "-"}
@@ -2456,7 +2867,7 @@ export default function CRMAdvancedPage() {
             </div>
           )}
           {/* Footer Summary */}
-          {viewMode === "table" && customerSegment === "new" && (
+          {viewMode === "table" && showingNew && (
             <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 px-8 py-6 border-t-4 border-indigo-600">
               <div className="flex justify-between items-center">
                 <div className="text-base text-white flex items-center gap-2">
@@ -2481,7 +2892,7 @@ export default function CRMAdvancedPage() {
               </div>
             </div>
           )}
-          {viewMode === "table" && customerSegment === "old" && (
+          {viewMode === "table" && showingOld && (
             <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 px-8 py-6 border-t-4 border-purple-600">
               <div className="flex flex-wrap justify-between items-center gap-4 text-white">
                 <div className="flex items-center gap-3 text-base">
@@ -2653,7 +3064,7 @@ export default function CRMAdvancedPage() {
                     <div>
                       <p className="text-gray-600 font-medium">💊 ผลิตภัณฑ์</p>
                       <p className="text-gray-800 font-bold">
-                        {record.interested_product}
+                        {sanitizeProductName(record.interested_product || record.interestedProduct)}
                       </p>
                     </div>
                     <div>
