@@ -40,10 +40,42 @@ class AdCreative {
   });
 
   factory AdCreative.fromJson(Map<String, dynamic> json) {
+    // Debug logging to trace thumbnail URLs
+    print('🔍 AdCreative.fromJson parsing: ${json.keys.toList()}');
+    print('   - id: ${json['id']}');
+    print('   - thumbnail_url: ${json['thumbnail_url']}');
+    print('   - image_url: ${json['image_url']}');
+    print('   - video_id: ${json['video_id']}');
+
+    // Try to get image_url from object_story_spec if not directly available
+    String? imageUrl = json['image_url'];
+    if (imageUrl == null || imageUrl.isEmpty) {
+      final objectStorySpec = json['object_story_spec'];
+      if (objectStorySpec != null && objectStorySpec is Map) {
+        // Try video_data.image_url
+        final videoData = objectStorySpec['video_data'];
+        if (videoData != null &&
+            videoData is Map &&
+            videoData['image_url'] != null) {
+          imageUrl = videoData['image_url'];
+          print('   - Found image_url from video_data: $imageUrl');
+        }
+        // Try link_data.picture
+        final linkData = objectStorySpec['link_data'];
+        if (imageUrl == null &&
+            linkData != null &&
+            linkData is Map &&
+            linkData['picture'] != null) {
+          imageUrl = linkData['picture'];
+          print('   - Found image_url from link_data.picture: $imageUrl');
+        }
+      }
+    }
+
     return AdCreative(
       id: json['id']?.toString() ?? '',
       thumbnailUrl: json['thumbnail_url'],
-      imageUrl: json['image_url'],
+      imageUrl: imageUrl,
       videoId: json['video_id'],
       objectStorySpec: json['object_story_spec'],
       effectiveObjectStoryId: json['effective_object_story_id'],

@@ -4,7 +4,6 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'dart:async';
 import '../models/ad_insight.dart';
 import '../services/facebook_ads_service.dart';
-import '../services/language_service.dart';
 import '../widgets/date_range_picker.dart' as custom_picker;
 import '../widgets/daily_summary_table.dart';
 import '../widgets/top_ads_table.dart';
@@ -169,13 +168,24 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
   }
 
   Future<void> _fetchAdCreatives() async {
+    print('🎨 _fetchAdCreatives starting...');
     setState(() {
       _isCreativesLoading = true;
     });
 
     try {
       final adIds = _insights.map((ad) => ad.adId).toList();
+      print('🎨 Fetching creatives for ${adIds.length} ads: $adIds');
+
       final creatives = await _service.fetchAdCreatives(adIds);
+      print('🎨 Received ${creatives.length} creatives');
+
+      // Log each creative's thumbnail/image status
+      creatives.forEach((adId, creative) {
+        print(
+            '🎨 Creative $adId: thumbnail=${creative.thumbnailUrl}, image=${creative.imageUrl}');
+      });
+
       final phoneLeads = await _service.fetchPhoneLeads(adIds: adIds);
 
       setState(() {
@@ -183,7 +193,9 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
         _phoneLeads = phoneLeads;
         _isCreativesLoading = false;
       });
+      print('🎨 _fetchAdCreatives complete, state updated');
     } catch (e) {
+      print('❌ _fetchAdCreatives error: $e');
       setState(() {
         _isCreativesLoading = false;
       });
@@ -517,6 +529,17 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
                   const SizedBox(height: 16),
                   _buildDailySummarySection(),
 
+                  // Video Gallery Section
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: VideoGalleryWidget(
+                      insights: _insights,
+                      adCreatives: _adCreatives,
+                      isLoading: _isCreativesLoading,
+                    ),
+                  ),
+
                   // TOP 20 Ads Table
                   const SizedBox(height: 16),
                   Padding(
@@ -537,19 +560,6 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
                     child: TopAdSetTable(
                       insights: _insights,
                       phoneLeads: _phoneLeads,
-                    ),
-                  ),
-
-                  // Video Gallery Section
-                  const SizedBox(height: 16),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: VideoGalleryWidget(
-                      insights: _insights,
-                      adCreatives: _adCreatives,
-                      isLoading: _isCreativesLoading,
-                      title: 'Video Ads',
-                      maxItems: 10,
                     ),
                   ),
 

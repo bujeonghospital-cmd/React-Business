@@ -82,20 +82,38 @@ class FacebookAdsService {
   // Fetch Ad Creative
   Future<AdCreative?> fetchAdCreative(String adId) async {
     try {
-      final url = '$baseUrl/facebook-ads-creative?ad_id=$adId';
+      // Use Next.js API for creative data since Railway doesn't have this endpoint
+      final url = '$nextApiUrl/facebook-ads-creative?ad_id=$adId';
+      print('🖼️ Fetching creative for ad: $adId from: $url');
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode != 200) {
+        print(
+            '❌ Creative fetch failed for $adId: Status ${response.statusCode}');
         return null;
       }
 
       final data = jsonDecode(response.body);
       if (data['success'] != true) {
+        print('❌ Creative API error for $adId: ${data['error']}');
         return null;
       }
 
-      return AdCreative.fromJson(data['data']);
+      final creativeData = data['data'];
+      if (creativeData == null) {
+        print('⚠️ No creative data returned for $adId');
+        return null;
+      }
+
+      // Debug log the URLs
+      print(
+          '📷 Creative $adId - thumbnail_url: ${creativeData['thumbnail_url']}');
+      print('📷 Creative $adId - image_url: ${creativeData['image_url']}');
+      print('🎬 Creative $adId - video_id: ${creativeData['video_id']}');
+
+      return AdCreative.fromJson(creativeData);
     } catch (e) {
+      print('❌ Error fetching creative for $adId: $e');
       return null;
     }
   }
