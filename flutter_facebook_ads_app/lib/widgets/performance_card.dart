@@ -18,61 +18,64 @@ class PerformanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
       decoration: BoxDecoration(
         gradient: gradient,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),
-            blurRadius: 12,
+            blurRadius: isMobile ? 8 : 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isMobile ? 12 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.9),
+                fontSize: isMobile ? 12 : 14,
                 fontWeight: FontWeight.w600,
-                shadows: [
+                shadows: const [
                   Shadow(
                     color: Colors.black26,
                     blurRadius: 2,
                   ),
                 ],
               ),
-              maxLines: 2,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Center(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    value,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: isSmallText ? 18 : 24,
-                      fontWeight: FontWeight.bold,
-                      height: isSmallText ? 1.2 : 1.0,
-                      shadows: const [
-                        Shadow(
-                          color: Colors.black26,
-                          blurRadius: 3,
-                        ),
-                      ],
-                    ),
-                    textAlign: TextAlign.center,
+            const Spacer(),
+            Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isSmallText
+                        ? (isMobile ? 16 : 20)
+                        : (isMobile ? 20 : 28),
+                    fontWeight: FontWeight.bold,
+                    height: 1.1,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black26,
+                        blurRadius: 3,
+                      ),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
@@ -80,15 +83,16 @@ class PerformanceCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle!,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 10,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.7),
+                  fontSize: isMobile ? 9 : 11,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            ],
+            ] else
+              const Spacer(),
           ],
         ),
       ),

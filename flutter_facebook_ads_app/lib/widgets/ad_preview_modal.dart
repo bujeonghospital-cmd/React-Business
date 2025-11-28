@@ -14,15 +14,15 @@ class AdPreviewModal extends StatelessWidget {
   }) : super(key: key);
 
   String _formatCurrency(double value) {
-    return '฿${NumberFormat('#,##0.00', 'th_TH').format(value)}';
+    return '฿${NumberFormat('#,##0.00', 'en_US').format(value)}';
   }
 
   String _formatNumber(int value) {
-    return NumberFormat('#,##0', 'th_TH').format(value);
+    return NumberFormat('#,##0', 'en_US').format(value);
   }
 
   String _formatPercentage(double value) {
-    return '${NumberFormat('#,##0.00', 'th_TH').format(value)}%';
+    return '${NumberFormat('#,##0.00', 'en_US').format(value)}%';
   }
 
   Future<void> _launchUrl(String url) async {
@@ -34,6 +34,8 @@ class AdPreviewModal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
     final thumbnailUrl = creative?.thumbnailUrl ?? creative?.imageUrl;
     final videoId = creative?.videoId;
     final effectiveStoryId = creative?.effectiveObjectStoryId;
@@ -68,7 +70,7 @@ class AdPreviewModal extends StatelessWidget {
 
               // Header
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(isMobile ? 16 : 20),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: Colors.grey[200]!),
@@ -82,8 +84,8 @@ class AdPreviewModal extends StatelessWidget {
                         children: [
                           Text(
                             ad.adName,
-                            style: const TextStyle(
-                              fontSize: 18,
+                            style: TextStyle(
+                              fontSize: isMobile ? 16 : 18,
                               fontWeight: FontWeight.bold,
                             ),
                             maxLines: 2,
@@ -93,7 +95,7 @@ class AdPreviewModal extends StatelessWidget {
                           Text(
                             'Campaign: ${ad.campaignName}',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: isMobile ? 12 : 13,
                               color: Colors.grey[600],
                             ),
                             maxLines: 1,
@@ -117,13 +119,14 @@ class AdPreviewModal extends StatelessWidget {
               Expanded(
                 child: ListView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(isMobile ? 16 : 20),
                   children: [
                     // Preview Image/Video
                     if (thumbnailUrl != null)
                       Container(
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius:
+                              BorderRadius.circular(isMobile ? 12 : 16),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.1),
@@ -133,7 +136,8 @@ class AdPreviewModal extends StatelessWidget {
                           ],
                         ),
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius:
+                              BorderRadius.circular(isMobile ? 12 : 16),
                           child: Image.network(
                             thumbnailUrl,
                             fit: BoxFit.cover,
@@ -151,78 +155,130 @@ class AdPreviewModal extends StatelessWidget {
                         ),
                       ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: isMobile ? 16 : 20),
 
                     // Open in Facebook Buttons
                     if (videoId != null || effectiveStoryId != null) ...[
-                      Row(
-                        children: [
-                          if (videoId != null)
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  _launchUrl(
-                                      'https://www.facebook.com/ads/library/?id=$videoId');
-                                },
-                                icon: const Icon(Icons.video_library),
-                                label: const Text('ดูใน FB Ads Library'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.blue[600],
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                      if (isMobile)
+                        Column(
+                          children: [
+                            if (videoId != null)
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    _launchUrl(
+                                        'https://www.facebook.com/ads/library/?id=$videoId');
+                                  },
+                                  icon:
+                                      const Icon(Icons.video_library, size: 18),
+                                  label: const Text('View in FB Ads Library'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[600],
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          if (videoId != null && effectiveStoryId != null)
-                            const SizedBox(width: 12),
-                          if (effectiveStoryId != null)
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  final postUrl =
-                                      'https://www.facebook.com/${effectiveStoryId.replaceFirst('_', '/posts/')}';
-                                  _launchUrl(postUrl);
-                                },
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('เปิดโพสต์'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.indigo[600],
-                                  foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                            if (videoId != null && effectiveStoryId != null)
+                              const SizedBox(height: 10),
+                            if (effectiveStoryId != null)
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    final postUrl =
+                                        'https://www.facebook.com/${effectiveStoryId.replaceFirst('_', '/posts/')}';
+                                    _launchUrl(postUrl);
+                                  },
+                                  icon: const Icon(Icons.open_in_new, size: 18),
+                                  label: const Text('Open Post'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.indigo[600],
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            if (videoId != null)
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    _launchUrl(
+                                        'https://www.facebook.com/ads/library/?id=$videoId');
+                                  },
+                                  icon: const Icon(Icons.video_library),
+                                  label: const Text('View in FB Ads Library'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[600],
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            if (videoId != null && effectiveStoryId != null)
+                              const SizedBox(width: 12),
+                            if (effectiveStoryId != null)
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    final postUrl =
+                                        'https://www.facebook.com/${effectiveStoryId.replaceFirst('_', '/posts/')}';
+                                    _launchUrl(postUrl);
+                                  },
+                                  icon: const Icon(Icons.open_in_new),
+                                  label: const Text('Open Post'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.indigo[600],
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      SizedBox(height: isMobile ? 16 : 20),
                     ],
 
                     // Performance Stats
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(isMobile ? 12 : 16),
                       decoration: BoxDecoration(
                         color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'ประสิทธิภาพโฆษณา',
+                          Text(
+                            'Ad Performance',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: isMobile ? 14 : 16,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: isMobile ? 12 : 16),
                           Row(
                             children: [
                               Expanded(
@@ -230,19 +286,21 @@ class AdPreviewModal extends StatelessWidget {
                                   '💰 Spent',
                                   _formatCurrency(ad.spend),
                                   Colors.blue,
+                                  isMobile,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: isMobile ? 8 : 12),
                               Expanded(
                                 child: _buildMetricCard(
                                   '💬 Results',
                                   _formatNumber(ad.messagingFirstReply),
                                   Colors.green,
+                                  isMobile,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
+                          SizedBox(height: isMobile ? 8 : 12),
                           Row(
                             children: [
                               Expanded(
@@ -250,14 +308,16 @@ class AdPreviewModal extends StatelessWidget {
                                   '💵 CPC',
                                   _formatCurrency(ad.cpc),
                                   Colors.purple,
+                                  isMobile,
                                 ),
                               ),
-                              const SizedBox(width: 12),
+                              SizedBox(width: isMobile ? 8 : 12),
                               Expanded(
                                 child: _buildMetricCard(
                                   '📊 CTR',
                                   _formatPercentage(ad.ctr),
                                   Colors.orange,
+                                  isMobile,
                                 ),
                               ),
                             ],
@@ -266,14 +326,14 @@ class AdPreviewModal extends StatelessWidget {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
+                    SizedBox(height: isMobile ? 16 : 20),
 
                     // Ad Details
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: EdgeInsets.all(isMobile ? 12 : 16),
                       decoration: BoxDecoration(
                         color: Colors.blue[50],
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(isMobile ? 12 : 16),
                         border: Border.all(color: Colors.blue[200]!),
                       ),
                       child: Column(
@@ -282,29 +342,35 @@ class AdPreviewModal extends StatelessWidget {
                           Row(
                             children: [
                               Icon(Icons.info_outline,
-                                  size: 20, color: Colors.blue[700]),
+                                  size: isMobile ? 18 : 20,
+                                  color: Colors.blue[700]),
                               const SizedBox(width: 8),
-                              const Text(
-                                'รายละเอียดโฆษณา',
+                              Text(
+                                'Ad Details',
                                 style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: isMobile ? 14 : 16,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          SizedBox(height: isMobile ? 12 : 16),
+                          _buildDetailRow('Impressions',
+                              _formatNumber(ad.impressions), isMobile),
                           _buildDetailRow(
-                              'Impressions', _formatNumber(ad.impressions)),
-                          _buildDetailRow('Clicks', _formatNumber(ad.clicks)),
-                          _buildDetailRow('CPM', _formatCurrency(ad.cpm)),
+                              'Clicks', _formatNumber(ad.clicks), isMobile),
+                          _buildDetailRow(
+                              'CPM', _formatCurrency(ad.cpm), isMobile),
                           if (ad.reach != null)
-                            _buildDetailRow('Reach', _formatNumber(ad.reach!)),
-                          _buildDetailRow('Total Inbox',
-                              _formatNumber(ad.totalMessagingConnection)),
-                          _buildDetailRow('ต้นทุน/สนทนา',
-                              _formatCurrency(costPerConnection)),
-                          _buildDetailRow('Date', ad.dateStart),
+                            _buildDetailRow(
+                                'Reach', _formatNumber(ad.reach!), isMobile),
+                          _buildDetailRow(
+                              'Total Inbox',
+                              _formatNumber(ad.totalMessagingConnection),
+                              isMobile),
+                          _buildDetailRow('Cost/Conversation',
+                              _formatCurrency(costPerConnection), isMobile),
+                          _buildDetailRow('Date', ad.dateStart, isMobile),
                         ],
                       ),
                     ),
@@ -318,12 +384,13 @@ class AdPreviewModal extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricCard(String label, String value, Color color) {
+  Widget _buildMetricCard(
+      String label, String value, Color color, bool isMobile) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: EdgeInsets.all(isMobile ? 10 : 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(isMobile ? 10 : 12),
         border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
@@ -332,7 +399,7 @@ class AdPreviewModal extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: isMobile ? 11 : 12,
               color: color,
               fontWeight: FontWeight.w600,
             ),
@@ -343,7 +410,7 @@ class AdPreviewModal extends StatelessWidget {
             child: Text(
               value,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: isMobile ? 15 : 18,
                 color: color,
                 fontWeight: FontWeight.bold,
               ),
@@ -354,24 +421,24 @@ class AdPreviewModal extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(String label, String value, bool isMobile) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: isMobile ? 5 : 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               color: Colors.grey[700],
               fontWeight: FontWeight.w500,
             ),
           ),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 13,
+            style: TextStyle(
+              fontSize: isMobile ? 12 : 13,
               fontWeight: FontWeight.bold,
             ),
           ),

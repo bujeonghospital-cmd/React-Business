@@ -11,17 +11,17 @@ class DailySummaryTable extends StatelessWidget {
   }) : super(key: key);
 
   String _formatCurrency(double value) {
-    return '฿${NumberFormat('#,##0.00', 'th_TH').format(value)}';
+    return '฿${NumberFormat('#,##0.00', 'en_US').format(value)}';
   }
 
   String _formatNumber(int value) {
-    return NumberFormat('#,##0', 'th_TH').format(value);
+    return NumberFormat('#,##0', 'en_US').format(value);
   }
 
   String _formatDate(String dateStr) {
     try {
       final date = DateTime.parse(dateStr);
-      return DateFormat('dd/MM').format(date);
+      return DateFormat('MMM dd, yyyy').format(date);
     } catch (e) {
       return dateStr;
     }
@@ -29,11 +29,14 @@ class DailySummaryTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     if (summaries.isEmpty) {
       return Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -42,16 +45,17 @@ class DailySummaryTable extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(isMobile ? 20 : 24),
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.calendar_today, size: 48, color: Colors.grey[400]),
+              Icon(Icons.calendar_today,
+                  size: isMobile ? 40 : 48, color: Colors.grey[400]),
               const SizedBox(height: 12),
               Text(
-                'ไม่มีข้อมูลสรุปรายวัน',
+                'No daily summary data',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: isMobile ? 14 : 16,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
                 ),
@@ -65,7 +69,7 @@ class DailySummaryTable extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -77,7 +81,7 @@ class DailySummaryTable extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with Gradient
+          // Header with Gradient - Matching page.tsx
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -87,28 +91,35 @@ class DailySummaryTable extends StatelessWidget {
                   Colors.red[600]!,
                 ],
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(isMobile ? 16 : 24),
+                topRight: Radius.circular(isMobile ? 16 : 24),
               ),
             ),
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isMobile ? 16 : 20),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    '📅 สรุปรายวัน (ย้อนหลัง 30 วัน)',
+                    '📅 Daily Summary (Last 30 Days)',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: isMobile ? 16 : 18,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    softWrap: true,
                   ),
                 ),
-                const SizedBox(width: 12),
+                if (isMobile)
+                  Text(
+                    '👉 Scroll',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.75),
+                    ),
+                  ),
+                if (!isMobile) const SizedBox(width: 12),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -117,7 +128,7 @@ class DailySummaryTable extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${summaries.length} วัน',
+                    '${summaries.length} days',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -132,158 +143,168 @@ class DailySummaryTable extends StatelessWidget {
           // Table
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columnSpacing: 20,
-              horizontalMargin: 16,
-              headingRowHeight: 56,
-              dataRowHeight: 60,
-              headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
-              columns: const [
-                DataColumn(
-                  label: Text(
-                    'วันที่',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: screenWidth - 24),
+              child: DataTable(
+                columnSpacing: isMobile ? 16 : 24,
+                horizontalMargin: isMobile ? 12 : 16,
+                headingRowHeight: isMobile ? 48 : 56,
+                dataRowMinHeight: isMobile ? 50 : 56,
+                dataRowMaxHeight: isMobile ? 56 : 64,
+                headingRowColor: MaterialStateProperty.all(Colors.grey[50]),
+                columns: [
+                  DataColumn(
+                    label: Text(
+                      'Date',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 12 : 14,
+                        color: Colors.grey[700],
+                      ),
                     ),
                   ),
-                ),
-                DataColumn(
-                  label: Text(
-                    'ใช้จ่ายรวม',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  DataColumn(
+                    label: Text(
+                      'Total Spend',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 12 : 14,
+                        color: Colors.grey[700],
+                      ),
                     ),
+                    numeric: true,
                   ),
-                  numeric: true,
-                ),
-                DataColumn(
-                  label: Text(
-                    'New Inbox',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  DataColumn(
+                    label: Text(
+                      'New Inbox',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 12 : 14,
+                        color: Colors.grey[700],
+                      ),
                     ),
+                    numeric: true,
                   ),
-                  numeric: true,
-                ),
-                DataColumn(
-                  label: Text(
-                    'Total Inbox',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  DataColumn(
+                    label: Text(
+                      'Total Inbox',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 12 : 14,
+                        color: Colors.grey[700],
+                      ),
                     ),
+                    numeric: true,
                   ),
-                  numeric: true,
-                ),
-                DataColumn(
-                  label: Text(
-                    'Phone Lead',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                  DataColumn(
+                    label: Text(
+                      'Phone Leads',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 12 : 14,
+                        color: Colors.grey[700],
+                      ),
                     ),
+                    numeric: true,
                   ),
-                  numeric: true,
-                ),
-              ],
-              rows: summaries.map((summary) {
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _formatDate(summary.date),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue[700],
-                            fontSize: 13,
+                ],
+                rows: summaries.map((summary) {
+                  return DataRow(
+                    cells: [
+                      DataCell(
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 12,
+                            vertical: isMobile ? 4 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _formatDate(summary.date),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue[700],
+                              fontSize: isMobile ? 11 : 13,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Text(
-                        _formatCurrency(summary.totalSpend),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _formatNumber(summary.newInbox),
+                      DataCell(
+                        Text(
+                          _formatCurrency(summary.totalSpend),
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green[700],
-                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            fontSize: isMobile ? 12 : 14,
+                            color: Colors.blue[600],
                           ),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.orange[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _formatNumber(summary.totalInbox),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[700],
-                            fontSize: 13,
+                      DataCell(
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 10,
+                            vertical: isMobile ? 4 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _formatNumber(summary.newInbox),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                              fontSize: isMobile ? 12 : 14,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.purple[50],
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _formatNumber(summary.phoneLeads),
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.purple[700],
-                            fontSize: 13,
+                      DataCell(
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 10,
+                            vertical: isMobile ? 4 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.teal[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _formatNumber(summary.totalInbox),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.teal[700],
+                              fontSize: isMobile ? 12 : 14,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              }).toList(),
+                      DataCell(
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 10,
+                            vertical: isMobile ? 4 : 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.purple[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _formatNumber(summary.phoneLeads),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.purple[700],
+                              fontSize: isMobile ? 12 : 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
           ),
         ],

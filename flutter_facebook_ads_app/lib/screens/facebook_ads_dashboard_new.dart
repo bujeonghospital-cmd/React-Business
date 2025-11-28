@@ -47,6 +47,7 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
   DateTime? _customDateStart;
   DateTime? _customDateEnd;
   String _topAdsSortBy = 'leads';
+  int _topAdsLimit = 20;
 
   // Auto-refresh timer
   Timer? _autoRefreshTimer;
@@ -242,6 +243,7 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
 
   @override
   Widget build(BuildContext context) {
+    // Loading State - Matching page.tsx design
     if (_isLoading) {
       return Scaffold(
         body: Container(
@@ -256,22 +258,27 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
-                  strokeWidth: 4,
+                SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: CircularProgressIndicator(
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Colors.blue[600]!),
+                    strokeWidth: 4,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'กำลังโหลดข้อมูล...',
+                  'Loading data...',
                   style: TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
                     color: Colors.grey[700],
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'โปรดรอสักครู่',
+                  'Please wait',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey[500],
@@ -284,59 +291,78 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
       );
     }
 
+    // Error State - Matching page.tsx design
     if (_error != null) {
       return Scaffold(
         body: Container(
-          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.grey[50],
+          ),
+          padding: const EdgeInsets.all(16),
           child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  '⚠️',
-                  style: TextStyle(fontSize: 64),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'เกิดข้อผิดพลาด',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500),
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  _error!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '⚠️',
+                    style: TextStyle(fontSize: 48),
                   ),
-                ),
-                const SizedBox(height: 32),
-                ElevatedButton(
-                  onPressed: _loadAllData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'ลองอีกครั้ง',
+                  const SizedBox(height: 16),
+                  Text(
+                    'An error occurred',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: Colors.grey[800],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text(
+                    _error!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _loadAllData,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[600],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'Try Again',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -344,15 +370,6 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
     }
 
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.grey[800],
-        title: const Text(
-          'Facebook Ads Manager',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
       body: SafeArea(
         child: Container(
           decoration: BoxDecoration(
@@ -371,40 +388,114 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
             ),
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildDateFilterBar(),
-                    const SizedBox(height: 16),
-                    _buildPerformanceCardsSection(),
-                    const SizedBox(height: 16),
-                    _buildDailySummarySection(),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TopAdsSection(
-                        insights: _insights,
-                        adCreatives: _adCreatives,
-                        phoneLeads: _phoneLeads,
-                        sortBy: _topAdsSortBy,
-                        isCreativesLoading: _isCreativesLoading,
-                        onSortChanged: (sortBy) {
-                          setState(() {
-                            _topAdsSortBy = sortBy;
-                          });
-                        },
-                        onAdTap: _showAdPreview,
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Back Button Header - Matching page.tsx
+                  Container(
+                    color: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 12),
+                    child: Row(
+                      children: [
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => Navigator.of(context).pop(),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.blue[500]!,
+                                    Colors.blue[600]!
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.blue.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '←',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Back to Home',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildReportSection(),
+                  ),
+
+                  // Date Filter Bar - Matching page.tsx
+                  _buildDateFilterBar(),
+
+                  // Performance Cards Section
+                  const SizedBox(height: 12),
+                  _buildPerformanceCardsSection(),
+
+                  // Daily Summary Section
+                  const SizedBox(height: 16),
+                  _buildDailySummarySection(),
+
+                  // Top Ads Section
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TopAdsSection(
+                      insights: _insights,
+                      adCreatives: _adCreatives,
+                      phoneLeads: _phoneLeads,
+                      sortBy: _topAdsSortBy,
+                      limit: _topAdsLimit,
+                      isCreativesLoading: _isCreativesLoading,
+                      onSortChanged: (sortBy) {
+                        setState(() {
+                          _topAdsSortBy = sortBy;
+                        });
+                      },
+                      onLimitChanged: (limit) {
+                        setState(() {
+                          _topAdsLimit = limit;
+                        });
+                      },
+                      onAdTap: _showAdPreview,
                     ),
-                  ],
-                ),
+                  ),
+
+                  // Report Section
+                  const SizedBox(height: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: _buildReportSection(),
+                  ),
+
+                  const SizedBox(height: 32),
+                ],
               ),
             ),
           ),
@@ -414,56 +505,171 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
   }
 
   Widget _buildDateFilterBar() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          children: [
-            _buildDateRangeChip('วันนี้', 'today'),
-            _buildDateRangeChip('เมื่อวาน', 'yesterday'),
-            _buildDateRangeChip('7 วัน', 'last_7d'),
-            _buildDateRangeChip('14 วัน', 'last_14d'),
-            _buildDateRangeChip('30 วัน', 'last_30d'),
-            _buildDateRangeChip('เดือนนี้', 'this_month'),
-            _buildCustomDateChip(),
-          ],
-        ),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+        border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
       ),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 12 : 16,
+        vertical: 12,
+      ),
+      child: isMobile
+          ? _buildMobileDateDropdown()
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildDateRangeChip('Today', 'today'),
+                  _buildDateRangeChip('Yesterday', 'yesterday'),
+                  _buildDateRangeChip('7 Days', 'last_7d'),
+                  _buildDateRangeChip('14 Days', 'last_14d'),
+                  _buildDateRangeChip('30 Days', 'last_30d'),
+                  _buildDateRangeChip('This Month', 'this_month'),
+                  _buildCustomDateChip(),
+                  if (_dateRange == 'custom' &&
+                      _customDateStart != null &&
+                      _customDateEnd != null)
+                    Container(
+                      margin: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue[200]!),
+                      ),
+                      child: Text(
+                        '${_formatDate(_customDateStart!)} - ${_formatDate(_customDateEnd!)}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildMobileDateDropdown() {
+    return Row(
+      children: [
+        Text(
+          '📅',
+          style: TextStyle(fontSize: 16),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey[300]!, width: 2),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white,
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: _dateRange,
+                isExpanded: true,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+                items: [
+                  DropdownMenuItem(value: 'today', child: Text('Today')),
+                  DropdownMenuItem(
+                      value: 'yesterday', child: Text('Yesterday')),
+                  DropdownMenuItem(
+                      value: 'last_7d', child: Text('Last 7 Days')),
+                  DropdownMenuItem(
+                      value: 'last_14d', child: Text('Last 14 Days')),
+                  DropdownMenuItem(
+                      value: 'last_30d', child: Text('Last 30 Days')),
+                  DropdownMenuItem(
+                      value: 'this_month', child: Text('This Month')),
+                  DropdownMenuItem(value: 'custom', child: Text('🗓️ Custom')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    if (value == 'custom') {
+                      _showDatePicker();
+                    } else {
+                      setState(() {
+                        _dateRange = value;
+                      });
+                      _loadAllData();
+                    }
+                  }
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildPerformanceCardsSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final cardHeight = isMobile ? 100.0 : 140.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // First Row: Total Spend + New/Total Inbox
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 140,
+                  height: cardHeight,
                   child: PerformanceCard(
-                    title: '💰 ใช้จ่ายรวม',
+                    title: '💰 Total Spend',
                     value: _formatCurrency(_getTotalSpend()),
                     gradient: LinearGradient(
-                      colors: [Colors.blue[500]!, Colors.blue[700]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue[500]!,
+                        Colors.blue[600]!,
+                        Colors.blue[700]!
+                      ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isMobile ? 8 : 12),
               Expanded(
                 child: SizedBox(
-                  height: 140,
+                  height: cardHeight,
                   child: PerformanceCard(
-                    title: '💬 New/Total Inbox',
+                    title: '💬 New / Total Inbox',
                     value:
-                        '${_formatNumber(_getTotalNewInbox())}\n${_formatNumber(_getTotalInbox())}',
+                        '${_formatNumber(_getTotalNewInbox())} / ${_formatNumber(_getTotalInbox())}',
                     gradient: LinearGradient(
-                      colors: [Colors.teal[500]!, Colors.cyan[600]!],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.teal[500]!,
+                        Colors.teal[600]!,
+                        Colors.cyan[600]!
+                      ],
                     ),
                     isSmallText: true,
                   ),
@@ -471,14 +677,15 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isMobile ? 8 : 16),
+          // Second Row: FB Balance + Phone Leads
           Row(
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 140,
+                  height: cardHeight,
                   child: PerformanceCard(
-                    title: '💵 เงินคงเหลือ FB',
+                    title: '💵 FB Balance',
                     value: _formatCurrency(_facebookBalance),
                     subtitle: 'Facebook Balance',
                     gradient: LinearGradient(
@@ -493,20 +700,20 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: isMobile ? 8 : 12),
               Expanded(
                 child: SizedBox(
-                  height: 140,
+                  height: cardHeight,
                   child: PerformanceCard(
-                    title: '📞 ชื่อ - เบอร์',
+                    title: '📞 Phone Leads',
                     value: _formatNumber(_phoneCount),
-                    subtitle: 'Phone Leads วันนี้',
+                    subtitle: 'Phone Leads Today',
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
+                        Colors.purple[500]!,
                         Colors.purple[600]!,
-                        Colors.deepPurple[500]!,
                         Colors.indigo[700]!,
                       ],
                     ),
@@ -521,42 +728,25 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
   }
 
   Widget _buildDailySummarySection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              gradient: const LinearGradient(
-                colors: [Color(0xFF8E24AA), Color(0xFF5E35B1)],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.purple.withOpacity(0.2),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: const SizedBox.shrink(),
-          ),
-          const SizedBox(height: 12),
-          DailySummaryTable(
-            summaries: _dailySummaries,
-          ),
-        ],
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 12 : 16),
+      child: DailySummaryTable(
+        summaries: _dailySummaries,
       ),
     );
   }
 
   Widget _buildReportSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -567,8 +757,9 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
       ),
       child: Column(
         children: [
+          // Header with Gradient - Matching page.tsx
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -577,38 +768,43 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
                   Colors.purple[600]!,
                 ],
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(isMobile ? 16 : 24),
+                topRight: Radius.circular(isMobile ? 16 : 24),
               ),
             ),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    '📋 Report ย้อนหลัง 30 วัน',
+                    '📋 Report - Last 30 Days',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: isMobile ? 16 : 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    softWrap: true,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
+                if (isMobile)
+                  Text(
+                    '👉 Scroll',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.white.withOpacity(0.75),
+                    ),
                   ),
+                if (!isMobile) const SizedBox(width: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${_insights.length} รายการ',
+                    '${_insights.length} items',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -619,37 +815,39 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
               ],
             ),
           ),
+
+          // View Mode Tabs - Matching page.tsx
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(isMobile ? 12 : 16),
             color: Colors.grey[50],
             child: Row(
               children: [
                 Expanded(
-                  child: _buildViewModeTab('แคมเปญ', 'campaigns'),
-                ),
-                const SizedBox(width: 8),
+                    child:
+                        _buildViewModeTab('Campaigns', 'campaigns', isMobile)),
+                SizedBox(width: isMobile ? 6 : 8),
                 Expanded(
-                  child: _buildViewModeTab('ชุดโฆษณา', 'adsets'),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildViewModeTab('โฆษณา', 'ads'),
-                ),
+                    child: _buildViewModeTab('Ad Sets', 'adsets', isMobile)),
+                SizedBox(width: isMobile ? 6 : 8),
+                Expanded(child: _buildViewModeTab('Ads', 'ads', isMobile)),
               ],
             ),
           ),
+
+          // Empty State
           if (_insights.isEmpty)
             Padding(
               padding: const EdgeInsets.all(32),
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.inbox, size: 64, color: Colors.grey[400]),
+                    Icon(Icons.inbox,
+                        size: isMobile ? 48 : 64, color: Colors.grey[400]),
                     const SizedBox(height: 16),
                     Text(
-                      'ไม่มีข้อมูล',
+                      'No data available',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: isMobile ? 16 : 18,
                         color: Colors.grey[600],
                         fontWeight: FontWeight.bold,
                       ),
@@ -659,154 +857,229 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
               ),
             )
           else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              itemCount: _insights.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final ad = _insights[index];
-                final creative = _adCreatives[ad.adId];
-                final thumbnailUrl =
-                    creative?.thumbnailUrl ?? creative?.imageUrl;
-                final costPerConnection = ad.getCostPerAction(
-                  'onsite_conversion.total_messaging_connection',
-                );
-                final phoneLeadCount = _phoneLeads[ad.adId] ??
-                    ad.phoneLeads ??
-                    ad.totalMessagingConnection;
+            // Table Header
+            Column(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 8 : 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    border:
+                        Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                  ),
+                  child: Row(
+                    children: [
+                      if (_viewMode == 'ads')
+                        SizedBox(
+                            width: isMobile ? 56 : 72,
+                            child: Center(
+                                child: Text('Image',
+                                    style: _tableHeaderStyle(isMobile)))),
+                      Expanded(
+                          flex: 2,
+                          child: Text('Ad Name',
+                              style: _tableHeaderStyle(isMobile))),
+                      Expanded(
+                          flex: 2,
+                          child: Center(
+                              child: Text('Campaign',
+                                  style: _tableHeaderStyle(isMobile)))),
+                      Expanded(
+                          flex: 1,
+                          child: Center(
+                              child: Text('Spent',
+                                  style: _tableHeaderStyle(isMobile)))),
+                      Expanded(
+                          flex: 1,
+                          child: Center(
+                              child: Text('New',
+                                  style: _tableHeaderStyle(isMobile)))),
+                      Expanded(
+                          flex: 1,
+                          child: Center(
+                              child: Text('Inbox',
+                                  style: _tableHeaderStyle(isMobile)))),
+                      Expanded(
+                          flex: 1,
+                          child: Center(
+                              child: Text('Cost/Lead',
+                                  style: _tableHeaderStyle(isMobile)))),
+                    ],
+                  ),
+                ),
+                // Data Rows
+                ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  padding: EdgeInsets.zero,
+                  itemCount: _insights.length,
+                  separatorBuilder: (context, index) =>
+                      Divider(height: 1, color: Colors.grey[200]),
+                  itemBuilder: (context, index) {
+                    final ad = _insights[index];
+                    final creative = _adCreatives[ad.adId];
+                    final thumbnailUrl =
+                        creative?.thumbnailUrl ?? creative?.imageUrl;
+                    final costPerConnection = ad.getCostPerAction(
+                      'onsite_conversion.total_messaging_connection',
+                    );
 
-                return Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _showAdPreview(ad),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.grey[200]!),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 12,
-                            offset: const Offset(0, 6),
+                    return Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _showAdPreview(ad),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isMobile ? 8 : 16,
+                            vertical: isMobile ? 10 : 12,
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              if (_viewMode == 'ads' && thumbnailUrl != null)
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    thumbnailUrl,
-                                    width: 64,
-                                    height: 64,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: 64,
-                                        height: 64,
-                                        color: Colors.grey[200],
-                                        child: Icon(
-                                          Icons.image,
-                                          color: Colors.grey[400],
-                                        ),
-                                      );
-                                    },
+                              // Thumbnail
+                              if (_viewMode == 'ads')
+                                SizedBox(
+                                  width: isMobile ? 56 : 72,
+                                  child: Center(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: thumbnailUrl != null
+                                          ? Image.network(
+                                              thumbnailUrl,
+                                              width: isMobile ? 48 : 56,
+                                              height: isMobile ? 48 : 56,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                return Container(
+                                                  width: isMobile ? 48 : 56,
+                                                  height: isMobile ? 48 : 56,
+                                                  color: Colors.grey[200],
+                                                  child: Icon(Icons.image,
+                                                      color: Colors.grey[400],
+                                                      size: 24),
+                                                );
+                                              },
+                                            )
+                                          : Container(
+                                              width: isMobile ? 48 : 56,
+                                              height: isMobile ? 48 : 56,
+                                              color: Colors.grey[100],
+                                              child: Icon(Icons.image_outlined,
+                                                  color: Colors.grey[400],
+                                                  size: 24),
+                                            ),
+                                    ),
                                   ),
                                 ),
-                              if (_viewMode == 'ads' && thumbnailUrl != null)
-                                const SizedBox(width: 12),
+                              // Ad Name
                               Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      ad.adName,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 15,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      ad.campaignName,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey[600],
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
+                                flex: 2,
+                                child: Text(
+                                  ad.adName,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: isMobile ? 12 : 14,
+                                    color: Colors.grey[800],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey[400],
+                              // Campaign Name
+                              Expanded(
+                                flex: 2,
+                                child: Center(
+                                  child: Text(
+                                    ad.campaignName,
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 11 : 13,
+                                      color: Colors.grey[600],
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              // Spent
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    _formatCurrency(ad.spend),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isMobile ? 11 : 13,
+                                      color: Colors.blue[700],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // New Inbox
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    '${ad.messagingFirstReply}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isMobile ? 11 : 13,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Total Inbox
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    '${ad.totalMessagingConnection}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isMobile ? 11 : 13,
+                                      color: Colors.teal[700],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // Cost per Lead
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child: Text(
+                                    costPerConnection > 0
+                                        ? _formatCurrency(costPerConnection)
+                                        : '—',
+                                    style: TextStyle(
+                                      fontSize: isMobile ? 11 : 13,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              _buildInsightStatChip(
-                                icon: Icons.monetization_on_outlined,
-                                label: 'ใช้ไป ${_formatCurrency(ad.spend)}',
-                                background: Colors.blue[50]!,
-                                iconColor: Colors.blue[700],
-                              ),
-                              _buildInsightStatChip(
-                                icon: Icons.mail_outline,
-                                label:
-                                    'ตอบแล้ว ${_formatNumber(ad.messagingFirstReply)}',
-                                background: Colors.green[50]!,
-                                iconColor: Colors.green[700],
-                              ),
-                              _buildInsightStatChip(
-                                icon: Icons.record_voice_over_outlined,
-                                label:
-                                    'Inbox ${_formatNumber(ad.totalMessagingConnection)}',
-                                background: Colors.orange[50]!,
-                                iconColor: Colors.orange[700],
-                              ),
-                              _buildInsightStatChip(
-                                icon: Icons.call_outlined,
-                                label: 'โทร ${_formatNumber(phoneLeadCount)}',
-                                background: Colors.purple[50]!,
-                                iconColor: Colors.purple[700],
-                              ),
-                              _buildInsightStatChip(
-                                icon: Icons.price_change_outlined,
-                                label:
-                                    '฿/Lead ${_formatCurrency(costPerConnection)}',
-                                background: Colors.indigo[50]!,
-                                iconColor: Colors.indigo[700],
-                              ),
-                            ],
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
+                    );
+                  },
+                ),
+              ],
             ),
         ],
       ),
+    );
+  }
+
+  TextStyle _tableHeaderStyle(bool isMobile) {
+    return TextStyle(
+      fontWeight: FontWeight.w600,
+      fontSize: isMobile ? 11 : 13,
+      color: Colors.grey[700],
     );
   }
 
@@ -860,70 +1133,39 @@ class _FacebookAdsDashboardNewState extends State<FacebookAdsDashboardNew>
     );
   }
 
-  Widget _buildViewModeTab(String label, String mode) {
+  Widget _buildViewModeTab(String label, String mode, bool isMobile) {
     final isSelected = _viewMode == mode;
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _viewMode = mode;
-        });
-        _loadAllData();
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue[100] : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? Colors.blue[300]! : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-              color: isSelected ? Colors.blue[700] : Colors.grey[700],
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _viewMode = mode;
+          });
+          _loadAllData();
+        },
+        borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: isMobile ? 10 : 12),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue[100] : Colors.white,
+            borderRadius: BorderRadius.circular(isMobile ? 8 : 12),
+            border: Border.all(
+              color: isSelected ? Colors.blue[300]! : Colors.grey[300]!,
+              width: isSelected ? 2 : 1,
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInsightStatChip({
-    required IconData icon,
-    required String label,
-    required Color background,
-    Color? iconColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: iconColor ?? Colors.black87),
-          const SizedBox(width: 6),
-          Flexible(
+          child: Center(
             child: Text(
               label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
+              style: TextStyle(
+                fontSize: isMobile ? 12 : 13,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                color: isSelected ? Colors.blue[700] : Colors.grey[700],
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

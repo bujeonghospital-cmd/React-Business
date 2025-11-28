@@ -70,9 +70,8 @@ class FacebookAdsService {
       }
 
       final List<dynamic> insightsData = data['data'] ?? [];
-      final insights = insightsData
-          .map((json) => AdInsight.fromJson(json))
-          .toList();
+      final insights =
+          insightsData.map((json) => AdInsight.fromJson(json)).toList();
 
       return insights;
     } catch (e) {
@@ -184,27 +183,41 @@ class FacebookAdsService {
     }
   }
 
-  // Fetch Facebook Balance
+  // Fetch Facebook Balance - Direct Facebook API call
   Future<double> fetchFacebookBalance() async {
     try {
-      // Use Next.js API directly
-      final url = '$nextApiUrl/facebook-ads-balance';
-      print('🔍 Fetching Facebook Balance from: $url');
+      const accessToken =
+          'EAAPb1ZBYCiNcBPzNxxSUntCZCTVHyl5AkAZBIiwCmDzrWKMLU4VEHJxRve7oqUDSaMs8om9pdVWFLzUdeTbTvkGPuTeuQ4KvGFizMy3VsSid8vgmjZB8OMoLySRmXxyAUpAwyyhSqOO8tSZAU6IYpxarsXBbZCDzFdy8u279HxSXtyWMpIolRtjJEWLdmfU5SwZCsP5';
+      const accountId = 'act_454323590676166';
+
+      final url =
+          'https://graph.facebook.com/v24.0/$accountId?fields=account_id,name,balance,amount_spent,currency,funding_source_details&access_token=$accessToken';
+      print('🔍 Fetching Facebook Balance from Facebook API');
 
       final response = await http.get(Uri.parse(url));
 
       print('📊 Balance Response Status: ${response.statusCode}');
-      print('📊 Balance Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['data'] != null) {
-          final balance =
-              double.tryParse(
-                data['data']['available_balance']?.toString() ?? '0',
-              ) ??
-              0;
-          print('✅ Facebook Balance: $balance');
+
+        // Extract balance from display_string like "ยอดคงเหลือที่ใช้ได้ (฿1,530.04 THB)"
+        if (data['funding_source_details']?['display_string'] != null) {
+          final displayString =
+              data['funding_source_details']['display_string'];
+          final match = RegExp(r'฿([\d,]+\.?\d*)').firstMatch(displayString);
+          if (match != null) {
+            final balance =
+                double.tryParse(match.group(1)!.replaceAll(',', '')) ?? 0;
+            print('✅ Facebook Balance: $balance');
+            return balance;
+          }
+        }
+
+        // Fallback to balance field (in cents)
+        if (data['balance'] != null) {
+          final balance = (data['balance'] as int) / 100.0;
+          print('✅ Facebook Balance (from balance field): $balance');
           return balance;
         }
       }
@@ -217,22 +230,37 @@ class FacebookAdsService {
     }
   }
 
-  // Fetch Phone Count
+  // Fetch Phone Count - Use Google Sheets film data
   Future<int> fetchPhoneCount() async {
     try {
-      // Use Next.js API directly
-      final url = '$nextApiUrl/phone-count';
+      // Use Railway API for film-data which has today's phone leads
+      final url = '$baseUrl/film-data';
       print('🔍 Fetching Phone Count from: $url');
 
       final response = await http.get(Uri.parse(url));
 
       print('📞 Phone Count Response Status: ${response.statusCode}');
-      print('📞 Phone Count Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        if (data['success'] == true && data['count'] != null) {
-          final count = data['count'] as int;
+        if (data['success'] == true && data['data'] != null) {
+          // Count today's entries
+          final today = DateTime.now();
+          final todayStr = '${today.day}/${today.month}/${today.year}';
+
+          final List<dynamic> entries = data['data'];
+          int count = 0;
+
+          for (var entry in entries) {
+            // Check if entry date matches today
+            final entryDate = entry['วันที่โทร'] ?? entry['date'] ?? '';
+            if (entryDate.toString().contains(todayStr) ||
+                entryDate.toString().contains(
+                    '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}')) {
+              count++;
+            }
+          }
+
           print('✅ Phone Count: $count');
           return count;
         }
@@ -301,9 +329,8 @@ class FacebookAdsService {
       }
 
       final List<dynamic> insightsData = data['data'] ?? [];
-      final insights = insightsData
-          .map((json) => AdInsight.fromJson(json))
-          .toList();
+      final insights =
+          insightsData.map((json) => AdInsight.fromJson(json)).toList();
 
       // Group by date
       final Map<String, DailySummary> dailyMap = {};

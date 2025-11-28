@@ -9,8 +9,10 @@ class TopAdsSection extends StatelessWidget {
   final Map<String, AdCreative> adCreatives;
   final Map<String, int> phoneLeads;
   final String sortBy;
+  final int limit;
   final bool isCreativesLoading;
   final Function(String) onSortChanged;
+  final Function(int) onLimitChanged;
   final Function(AdInsight) onAdTap;
 
   const TopAdsSection({
@@ -19,17 +21,19 @@ class TopAdsSection extends StatelessWidget {
     required this.adCreatives,
     required this.phoneLeads,
     required this.sortBy,
+    required this.limit,
     required this.isCreativesLoading,
     required this.onSortChanged,
+    required this.onLimitChanged,
     required this.onAdTap,
   }) : super(key: key);
 
   String _formatCurrency(double value) {
-    return '฿${NumberFormat('#,##0.00', 'th_TH').format(value)}';
+    return '฿${NumberFormat('#,##0.00', 'en_US').format(value)}';
   }
 
   String _formatNumber(int value) {
-    return NumberFormat('#,##0', 'th_TH').format(value);
+    return NumberFormat('#,##0', 'en_US').format(value);
   }
 
   List<AdInsight> _getSortedTopAds() {
@@ -38,6 +42,12 @@ class TopAdsSection extends StatelessWidget {
     if (sortBy == 'leads') {
       sortedAds.sort((a, b) =>
           b.totalMessagingConnection.compareTo(a.totalMessagingConnection));
+    } else if (sortBy == 'phone') {
+      sortedAds.sort((a, b) {
+        final aPhone = phoneLeads[a.adId] ?? 0;
+        final bPhone = phoneLeads[b.adId] ?? 0;
+        return bPhone.compareTo(aPhone);
+      });
     } else {
       sortedAds.sort((a, b) {
         final aCost =
@@ -48,18 +58,20 @@ class TopAdsSection extends StatelessWidget {
       });
     }
 
-    return sortedAds.take(20).toList();
+    return limit == -1 ? sortedAds : sortedAds.take(limit).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     final topAds = _getSortedTopAds();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
 
     if (topAds.isEmpty) {
       return Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -68,16 +80,17 @@ class TopAdsSection extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(32),
+        padding: EdgeInsets.all(isMobile ? 24 : 32),
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.emoji_events, size: 64, color: Colors.grey[400]),
+              Icon(Icons.emoji_events,
+                  size: isMobile ? 48 : 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
-                'ไม่มีข้อมูล TOP Ads',
+                'No TOP Ads data',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: isMobile ? 16 : 18,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.bold,
                 ),
@@ -91,7 +104,7 @@ class TopAdsSection extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(isMobile ? 16 : 24),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -102,49 +115,45 @@ class TopAdsSection extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Header
+          // Header with gradient - Matching page.tsx
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: EdgeInsets.all(isMobile ? 16 : 24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Colors.purple[600]!, Colors.pink[600]!],
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(isMobile ? 16 : 24),
+                topRight: Radius.circular(isMobile ? 16 : 24),
               ),
             ),
             child: Column(
               children: [
                 Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        '🏆 TOP 20 Ads',
+                        '🏆 TOP ${limit == -1 ? "All" : limit} Ads',
                         style: TextStyle(
-                          fontSize: 22,
+                          fontSize: isMobile ? 18 : 22,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        softWrap: true,
                       ),
                     ),
-                    const SizedBox(width: 12),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${topAds.length} โฆษณา',
-                        style: const TextStyle(
-                          fontSize: 12,
+                        '${topAds.length} ads',
+                        style: TextStyle(
+                          fontSize: isMobile ? 11 : 12,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -153,25 +162,71 @@ class TopAdsSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 12),
-                // Sort Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildSortButton(
+
+                // Sort Buttons - 3 buttons like page.tsx
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildSortButton(
                         context,
                         '💬 Total Inbox',
                         'leads',
+                        isMobile,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildSortButton(
+                      const SizedBox(width: 8),
+                      _buildSortButton(
                         context,
-                        '💰 ต้นทุน',
-                        'cost',
+                        '📞 Phone Leads',
+                        'phone',
+                        isMobile,
                       ),
+                      const SizedBox(width: 8),
+                      _buildSortButton(
+                        context,
+                        '💰 Cost',
+                        'cost',
+                        isMobile,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Limit Dropdown - Matching page.tsx
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.yellow[400]!, Colors.orange[400]!],
                     ),
-                  ],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.yellow[600]!, width: 2),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: limit,
+                      dropdownColor: Colors.yellow[50],
+                      icon: Icon(Icons.keyboard_arrow_down,
+                          color: Colors.grey[800]),
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontWeight: FontWeight.w600,
+                        fontSize: isMobile ? 12 : 14,
+                      ),
+                      items: [
+                        DropdownMenuItem(value: 5, child: Text('⭐ Top 5')),
+                        DropdownMenuItem(value: 10, child: Text('⭐ Top 10')),
+                        DropdownMenuItem(value: 15, child: Text('⭐ Top 15')),
+                        DropdownMenuItem(value: 20, child: Text('⭐ Top 20')),
+                        DropdownMenuItem(value: 30, child: Text('⭐ Top 30')),
+                        DropdownMenuItem(value: -1, child: Text('⭐ Top All')),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) onLimitChanged(value);
+                      },
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -195,7 +250,7 @@ class TopAdsSection extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    'กำลังโหลดรูปภาพโฆษณา...',
+                    'Loading ad images...',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -206,25 +261,182 @@ class TopAdsSection extends StatelessWidget {
               ),
             ),
 
-          // Ads List
+          // Table Header - Matching page.tsx
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 8 : 16,
+              vertical: 12,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                    width: isMobile ? 32 : 40,
+                    child: Center(
+                        child: Text('#', style: _headerStyle(isMobile)))),
+                SizedBox(
+                    width: isMobile ? 56 : 72,
+                    child: Center(
+                        child: Text('Ad', style: _headerStyle(isMobile)))),
+                Expanded(
+                    flex: 2,
+                    child: Center(
+                        child: Text('Spent', style: _headerStyle(isMobile)))),
+                Expanded(
+                    flex: 1,
+                    child: Center(
+                        child: Text('New', style: _headerStyle(isMobile)))),
+                Expanded(
+                    flex: 1,
+                    child: Center(
+                        child: Text('Total', style: _headerStyle(isMobile)))),
+                Expanded(
+                    flex: 1,
+                    child: Center(
+                        child: Text('📞', style: _headerStyle(isMobile)))),
+                Expanded(
+                    flex: 2,
+                    child: Center(
+                        child: Text('Cost', style: _headerStyle(isMobile)))),
+              ],
+            ),
+          ),
+
+          // Ads List - Table style matching page.tsx
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
             itemCount: topAds.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            separatorBuilder: (context, index) =>
+                Divider(height: 1, color: Colors.grey[200]),
             itemBuilder: (context, index) {
               final ad = topAds[index];
               final creative = adCreatives[ad.adId];
               final phoneLeadCount = phoneLeads[ad.adId] ?? 0;
               final rank = index + 1;
+              final thumbnailUrl = creative?.thumbnailUrl ?? creative?.imageUrl;
+              final costPerConnection = ad.getCostPerAction(
+                  'onsite_conversion.total_messaging_connection');
 
-              return _buildAdCard(
-                context,
-                ad,
-                creative,
-                phoneLeadCount,
-                rank,
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => onAdTap(ad),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isMobile ? 8 : 16,
+                      vertical: isMobile ? 8 : 12,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.blue[50]!.withOpacity(0.3),
+                          Colors.purple[50]!.withOpacity(0.3),
+                          Colors.pink[50]!.withOpacity(0.3)
+                        ],
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        // Rank
+                        SizedBox(
+                          width: isMobile ? 32 : 40,
+                          child: Center(
+                            child: Text(
+                              '$rank',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: isMobile ? 14 : 16,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Thumbnail
+                        SizedBox(
+                          width: isMobile ? 56 : 72,
+                          child: Center(
+                              child: _buildThumbnail(thumbnailUrl, isMobile)),
+                        ),
+                        // Spend
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Text(
+                              _formatCurrency(ad.spend),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isMobile ? 12 : 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // New Inbox
+                        Expanded(
+                          flex: 1,
+                          child: Center(
+                            child: Text(
+                              '${ad.messagingFirstReply}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isMobile ? 12 : 14,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Total Inbox
+                        Expanded(
+                          flex: 1,
+                          child: Center(
+                            child: Text(
+                              '${ad.totalMessagingConnection}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isMobile ? 12 : 14,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Phone Leads
+                        Expanded(
+                          flex: 1,
+                          child: Center(
+                            child: Text(
+                              '$phoneLeadCount',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isMobile ? 12 : 14,
+                                color: Colors.purple[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Cost per Lead
+                        Expanded(
+                          flex: 2,
+                          child: Center(
+                            child: Text(
+                              costPerConnection > 0
+                                  ? _formatCurrency(costPerConnection)
+                                  : '—',
+                              style: TextStyle(
+                                fontSize: isMobile ? 12 : 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               );
             },
           ),
@@ -233,257 +445,83 @@ class TopAdsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildSortButton(BuildContext context, String label, String value) {
+  TextStyle _headerStyle(bool isMobile) {
+    return TextStyle(
+      fontWeight: FontWeight.w600,
+      fontSize: isMobile ? 11 : 13,
+      color: Colors.grey[700],
+    );
+  }
+
+  Widget _buildSortButton(
+      BuildContext context, String label, String value, bool isMobile) {
     final isSelected = sortBy == value;
-    return ElevatedButton(
-      onPressed: () => onSortChanged(value),
-      style: ElevatedButton.styleFrom(
-        backgroundColor:
-            isSelected ? Colors.white : Colors.white.withOpacity(0.2),
-        foregroundColor: isSelected ? Colors.purple[700] : Colors.white,
-        elevation: isSelected ? 4 : 0,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAdCard(
-    BuildContext context,
-    AdInsight ad,
-    AdCreative? creative,
-    int phoneLeadCount,
-    int rank,
-  ) {
-    final thumbnailUrl = creative?.thumbnailUrl ?? creative?.imageUrl;
-    final costPerConnection =
-        ad.getCostPerAction('onsite_conversion.total_messaging_connection');
-
-    return InkWell(
-      onTap: () => onAdTap(ad),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: rank <= 3 ? Colors.amber[400]! : Colors.grey[200]!,
-            width: rank <= 3 ? 2 : 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onSortChanged(value),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 10 : 16,
+            vertical: isMobile ? 8 : 10,
           ),
-          boxShadow: [
-            if (rank <= 3)
-              BoxShadow(
-                color: Colors.amber.withOpacity(0.2),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 78,
-                height: 78,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned.fill(
-                      child: _buildThumbnail(thumbnailUrl),
-                    ),
-                    Positioned(
-                      top: -6,
-                      left: -6,
-                      child: _buildRankBadge(rank),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      ad.adName,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      ad.campaignName,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        _buildStatChip(
-                          icon: Icons.monetization_on_outlined,
-                          label: _formatCurrency(ad.spend),
-                          background: Colors.blue[50]!,
-                          iconColor: Colors.blue[700],
-                        ),
-                        _buildStatChip(
-                          icon: Icons.chat_bubble_outline,
-                          label: _formatNumber(ad.messagingFirstReply),
-                          background: Colors.green[50]!,
-                          iconColor: Colors.green[700],
-                        ),
-                        _buildStatChip(
-                          icon: Icons.call_outlined,
-                          label: _formatNumber(phoneLeadCount),
-                          background: Colors.purple[50]!,
-                          iconColor: Colors.purple[700],
-                        ),
-                        _buildStatChip(
-                          icon: Icons.price_change_outlined,
-                          label: '฿/Lead ${_formatCurrency(costPerConnection)}',
-                          background: Colors.orange[50]!,
-                          iconColor: Colors.orange[700],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2))
+                  ]
+                : null,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: isMobile ? 11 : 13,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              color: isSelected ? Colors.purple[700] : Colors.white,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildRankBadge(int rank) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: rank == 1
-              ? [Colors.amber[400]!, Colors.amber[600]!]
-              : rank == 2
-                  ? [Colors.grey[300]!, Colors.grey[400]!]
-                  : rank == 3
-                      ? [Colors.orange[300]!, Colors.orange[400]!]
-                      : [Colors.blue[300]!, Colors.blue[400]!],
-        ),
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          '#$rank',
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildThumbnail(String? thumbnailUrl) {
+  Widget _buildThumbnail(String? thumbnailUrl, bool isMobile) {
+    final size = isMobile ? 48.0 : 64.0;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(8),
       child: thumbnailUrl != null
           ? CachedNetworkImage(
               imageUrl: thumbnailUrl,
-              width: 72,
-              height: 72,
+              width: size,
+              height: size,
               fit: BoxFit.cover,
               placeholder: (context, url) => Shimmer.fromColors(
                 baseColor: Colors.grey[300]!,
                 highlightColor: Colors.grey[100]!,
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  color: Colors.white,
-                ),
+                child:
+                    Container(width: size, height: size, color: Colors.white),
               ),
               errorWidget: (context, url, error) => Container(
-                width: 72,
-                height: 72,
+                width: size,
+                height: size,
                 color: Colors.grey[200],
-                child: Icon(
-                  Icons.image,
-                  size: 28,
-                  color: Colors.grey[400],
-                ),
+                child: Icon(Icons.image,
+                    size: size * 0.4, color: Colors.grey[400]),
               ),
             )
           : Container(
-              width: 72,
-              height: 72,
-              color: const Color(0xffF2F2F2),
-              child: const Icon(
-                Icons.image_outlined,
-                size: 30,
-                color: Colors.grey,
-              ),
+              width: size,
+              height: size,
+              color: Colors.grey[100],
+              child: Icon(Icons.image_outlined,
+                  size: size * 0.4, color: Colors.grey[400]),
             ),
-    );
-  }
-
-  Widget _buildStatChip({
-    required IconData icon,
-    required String label,
-    required Color background,
-    Color? iconColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: iconColor ?? Colors.black87),
-          const SizedBox(width: 4),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              softWrap: false,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
